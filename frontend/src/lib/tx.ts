@@ -3,9 +3,7 @@
  * Send a write through the injected wallet and follow it to a decision.
  * Phases: signing -> submitted -> validators (reading sources / deciding) -> done | failed.
  */
-import { getReadClient, getWalletClient, plain } from "./genlayer";
 import { friendly } from "./errors";
-import { transactionsStatusNumberToName } from "genlayer-js/types";
 
 export type Phase = "idle" | "signing" | "submitted" | "validators" | "done" | "failed";
 export type TxState = { phase: Phase; hash?: string; status?: string; error?: string; result?: Record<string, unknown> | null; returned?: unknown };
@@ -13,8 +11,8 @@ export type TxState = { phase: Phase; hash?: string; status?: string; error?: st
 const TERMINAL = ["ACCEPTED", "FINALIZED", "UNDETERMINED", "CANCELED"];
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function outcome(tx: any) {
-  const status = transactionsStatusNumberToName[tx?.status as keyof typeof transactionsStatusNumberToName] ?? String(tx?.statusName ?? tx?.status ?? "");
+function outcome(tx: any, names: Record<string, string>) {
+  const status = names[String(tx?.status)] ?? String(tx?.statusName ?? tx?.status ?? "");
   const receipt = tx?.consensus_data?.leader_receipt?.[0];
   const reverted = receipt?.execution_result === "ERROR" || receipt?.result?.status === "rollback" || tx?.txExecutionResultName === "FINISHED_WITH_ERROR";
   let reason = "";
@@ -34,6 +32,8 @@ export async function sendWrite(
   const set = (s: Partial<TxState>) => { state = { ...state, ...s }; on(state); };
   on(state);
   try {
+    const { getReadClient, getWalletClient, plain } = await import("./genlayer");
+    const { transactionsStatusNumberToName: names } = await import("genlayer-js/types");
     const wallet = getWalletClient(account);
     const read = getReadClient();
     let fees: unknown = undefined;
@@ -50,7 +50,7 @@ export async function sendWrite(
       await new Promise((r) => setTimeout(r, 4000));
       let tx: unknown = null;
       try { tx = await read.getTransaction({ hash: hash as never }); } catch { continue; }
-      const o = outcome(tx);
+      const o = outcome(tx, names as unknown as Record<string, string>);
       if (!TERMINAL.includes(o.status)) { set({ phase: "validators", status: o.status }); }
       else {
         if (o.status !== "ACCEPTED" && o.status !== "FINALIZED")

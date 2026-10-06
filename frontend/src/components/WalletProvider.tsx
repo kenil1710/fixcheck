@@ -24,7 +24,7 @@ import {
   getWalletChainId,
   hasInjectedWallet,
   requestAccount,
-} from "@/lib/genlayer";
+} from "@/lib/wallet";
 
 type WalletState = {
   account: `0x${string}` | null;

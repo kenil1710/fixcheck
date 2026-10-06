@@ -21,5 +21,5 @@ export function Tally({ value, className = "" }: { value: number; className?: st
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
   }, [value]);
-  return <span className={className} aria-label={String(value)}><span aria-hidden="true">{n}</span></span>;
+  return <span className={className}><span aria-hidden="true">{n}</span><span className="sr-only">{value}</span></span>;
 }

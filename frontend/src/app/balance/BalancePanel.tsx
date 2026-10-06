@@ -3,7 +3,6 @@ import { useCallback, useEffect, useState } from "react";
 import { useWallet } from "@/components/WalletProvider";
 import { WalletButton } from "@/components/WalletButton";
 import { TxProgress } from "@/components/TxProgress";
-import { getReadClient, plain } from "@/lib/genlayer";
 import { sendWrite, type TxState } from "@/lib/tx";
 import { DEPLOYMENTS, type Deployment } from "@/lib/deployments";
 import { gen } from "@/lib/format";
@@ -16,7 +15,7 @@ function Row({ dep, account }: { dep: Deployment; account: `0x${string}` }) {
   const [tx, setTx] = useState<TxState>({ phase: "idle" });
   const load = useCallback(async () => {
     setErr("");
-    try { setB(plain<Bal>(await getReadClient().readContract({ address: DEPLOYMENTS[dep].address, functionName: "balance_of", args: [account] }))); }
+    try { const { getReadClient, plain } = await import("@/lib/genlayer"); setB(plain<Bal>(await getReadClient().readContract({ address: DEPLOYMENTS[dep].address, functionName: "balance_of", args: [account] }))); }
     catch { setErr("Studio Dev didn’t answer. Try again in a moment."); }
   }, [dep, account]);
   useEffect(() => { void load(); }, [load]);

@@ -6,7 +6,7 @@ import { Footer } from "@/components/Footer";
 import { WalletProvider } from "@/components/WalletProvider";
 import { themeScript } from "@/components/Theme";
 
-const serif = Newsreader({ subsets: ["latin"], variable: "--font-newsreader", display: "swap", weight: ["400", "500", "600"], style: ["normal", "italic"] });
+const serif = Newsreader({ subsets: ["latin"], variable: "--font-newsreader", display: "swap", weight: ["500", "600"] });
 const sans = Instrument_Sans({ subsets: ["latin"], variable: "--font-instrument", display: "swap" });
 const mono = IBM_Plex_Mono({ subsets: ["latin"], variable: "--font-plex-mono", display: "swap", weight: ["400", "500"] });
 
