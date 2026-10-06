@@ -22,28 +22,28 @@ export function Specimen({ check, code }: { check: Check; code: CheckCode }) {
         <span className="mono t-small truncate">{check.function}()</span>
         <span className="t-label shrink-0">{CHAIN_NAMES[check.chain]} · <span className="mono">{short(check.address)}</span></span>
       </div>
-      <div className="code overflow-x-auto py-2" role="table" aria-label="Deployed function compared with the fix commit">
+      <div className="code overflow-x-auto py-2">
         {win.map((r, i) => {
           const fixLine = r.kind === "add" || r.kind === "change";
           const depOnly = r.kind === "del" || r.kind === "change";
           return (
-            <div key={i} role="row">
+            <div key={i}>
               {depOnly && (
-                <div className="flex whitespace-pre q-bad" role="cell">
+                <div className="flex whitespace-pre q-bad">
                   <span className="w-6 shrink-0" aria-hidden="true" />
-                  <span className="pr-3">{r.left!.text}</span>
-                  <span className="qnote sticky right-0 ml-auto shrink-0 self-stretch pl-6 pr-2 flex items-center leading-none font-sans text-[0.72rem] italic" style={{ color: "var(--bad)" }}>deployed, as audited</span>
+                  <span className="pr-3"><span className="sr-only">Deployed, as audited: </span>{r.left!.text}</span>
+                  <span className="qnote sticky right-0 ml-auto shrink-0 self-stretch pl-6 pr-2 flex items-center leading-none font-sans text-[0.72rem] italic" style={{ color: "var(--bad)" }} aria-hidden="true">deployed, as audited</span>
                 </div>
               )}
               {fixLine && (
-                <div className="flex whitespace-pre text-ink-3" role="cell" style={{ boxShadow: "inset 3px 0 0 var(--rule)" }}>
+                <div className="flex whitespace-pre text-ink-3" style={{ boxShadow: "inset 3px 0 0 var(--rule)" }}>
                   <span className="w-6 shrink-0" aria-hidden="true" />
-                  <span className="pr-3">{r.right!.text}</span>
-                  <span className="qnote sticky right-0 ml-auto shrink-0 self-stretch pl-6 pr-2 flex items-center leading-none font-sans text-[0.72rem] italic">the fix, not deployed</span>
+                  <span className="pr-3"><span className="sr-only">Only in the fix: </span>{r.right!.text}</span>
+                  <span className="qnote sticky right-0 ml-auto shrink-0 self-stretch pl-6 pr-2 flex items-center leading-none font-sans text-[0.72rem] italic" aria-hidden="true">the fix, not deployed</span>
                 </div>
               )}
               {r.kind === "same" && (
-                <div className="flex whitespace-pre" role="cell"><span className="w-8 shrink-0 text-center text-ink-3" aria-label="same in both">&nbsp;</span><span className="pr-4">{r.left.text}</span></div>
+                <div className="flex whitespace-pre"><span className="w-6 shrink-0" aria-hidden="true" /><span className="pr-4">{r.left.text}</span></div>
               )}
             </div>
           );

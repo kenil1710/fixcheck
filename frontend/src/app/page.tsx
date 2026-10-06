@@ -33,7 +33,7 @@ export default async function Home() {
             Audit reports end with a list of findings marked “Fixed”. FixCheck reads the report, the code the auditors saw, the fix, and the verified code on chain — and checks whether the fixed function is what’s actually running.
           </p>
 
-          <div className="mt-10" aria-label="Scorecard, read from the contract">
+          <section className="mt-10" aria-label="Scorecard, read from the contract">
             <dl className="grid grid-cols-2 border-t hair sm:grid-cols-4">
               {[
                 [s.checks, "findings marked Fixed", "text-ink"],
@@ -48,7 +48,7 @@ export default async function Home() {
               ))}
             </dl>
             {s.open > 0 && <p className="t-small mt-3 text-ink-3">{s.open} of them {s.open === 1 ? "is" : "are"} still inside the counter-stake window; verdicts land when it closes.</p>}
-          </div>
+          </section>
 
           <div className="mt-8 flex flex-wrap gap-3">
             <Link href="/protocols" className="btn">Browse protocols</Link>
