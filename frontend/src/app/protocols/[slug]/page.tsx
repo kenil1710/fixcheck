@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { getProtocol } from "@/lib/reads";
-import { CHAIN_EXPLORERS, CHAIN_NAMES, firmName, protocolKeyFromSlug, protocolMeta } from "@/lib/catalog";
+import { CHAIN_EXPLORERS, CHAIN_NAMES, PROTOCOLS, firmName, protocolKeyFromSlug, protocolMeta } from "@/lib/catalog";
 import { commit7 } from "@/lib/format";
 import { Ring } from "@/components/Ring";
 import { FindingsTable } from "@/components/FindingsTable";
@@ -72,4 +72,9 @@ export default async function ProtocolPage({ params }: { params: Promise<{ slug:
       </section>
     </div>
   );
+}
+
+export const dynamicParams = true;
+export async function generateStaticParams() {
+  return Object.values(PROTOCOLS).map((p) => ({ slug: p.slug }));
 }

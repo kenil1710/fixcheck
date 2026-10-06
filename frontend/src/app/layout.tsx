@@ -16,8 +16,8 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE),
   title: { default: "FixCheck — is the audit fix in the deployed code?", template: "%s · FixCheck" },
   description: "Audit reports say “Fixed”. FixCheck checks each finding against the code actually deployed on chain, with real reports and verified source.",
-  openGraph: { type: "website", siteName: "FixCheck", images: ["/og.png"] },
-  twitter: { card: "summary_large_image", images: ["/og.png"] },
+  openGraph: { type: "website", siteName: "FixCheck" },
+  twitter: { card: "summary_large_image" },
   icons: { icon: [{ url: "/favicon.svg", type: "image/svg+xml" }, { url: "/favicon.ico" }], apple: "/apple-touch-icon.png" },
 };
 

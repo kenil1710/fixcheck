@@ -7,3 +7,8 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 export default async function Page({ params }: { params: Promise<{ id: string }> }) {
   return <CheckPage idRaw={(await params).id} dep="demo" />;
 }
+
+export const dynamicParams = true;
+export async function generateStaticParams() {
+  return [];
+}

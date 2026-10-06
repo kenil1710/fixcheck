@@ -18,3 +18,5 @@ tools/shots/node_modules/
 frontend/.env.local
 research_cache/
 test/.smoke.json
+.vercel
+.env*
