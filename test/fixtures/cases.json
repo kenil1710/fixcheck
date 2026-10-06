@@ -1,0 +1,57 @@
+[
+ {
+  "protocol": "PoolTogether V5",
+  "id": "M-5",
+  "fn": "claimPrizes",
+  "chain": "optimism",
+  "address": "0x220C9398b0Ee07472bF8906e44574Cb9FE3B8D90",
+  "report": "https://raw.githubusercontent.com/sherlock-audit/2024-05-pooltogether-judging/88298eacec6f178fd0b5f9f13e4605c58aa58072/README.md",
+  "docs": "https://raw.githubusercontent.com/GenerationSoftware/pt-dev-docs/9f3322e7280f2e91346cabfc2512046c6cfcd2a8/docs/deployments/optimism.md",
+  "audited": "https://raw.githubusercontent.com/sherlock-audit/2024-05-pooltogether/1aa1b8c028b659585e4c7a6b9b652fb075f86db3/pt-v5-claimer/src/Claimer.sol",
+  "fix": "https://raw.githubusercontent.com/GenerationSoftware/pt-v5-claimer/7416bb3850b657d7156b3d35c8897b03d353f800/src/Claimer.sol"
+ },
+ {
+  "protocol": "PoolTogether V5",
+  "id": "M-9",
+  "fn": "liquidatableBalanceOf",
+  "chain": "optimism",
+  "address": "0xa52e38a9147f5eA9E0c5547376c21c9E3F3e5e1f",
+  "report": "https://raw.githubusercontent.com/sherlock-audit/2024-05-pooltogether-judging/88298eacec6f178fd0b5f9f13e4605c58aa58072/README.md",
+  "docs": "https://raw.githubusercontent.com/GenerationSoftware/pt-dev-docs/9f3322e7280f2e91346cabfc2512046c6cfcd2a8/docs/deployments/optimism.md",
+  "audited": "https://raw.githubusercontent.com/sherlock-audit/2024-05-pooltogether/1aa1b8c028b659585e4c7a6b9b652fb075f86db3/pt-v5-vault/src/PrizeVault.sol",
+  "fix": "https://raw.githubusercontent.com/GenerationSoftware/pt-v5-vault/d888632e8ad3ce87421cce96f3a17dd6db0bdbf5/src/PrizeVault.sol"
+ },
+ {
+  "protocol": "Mellow Flexible Vaults",
+  "id": "H-1",
+  "fn": "checkSignatures",
+  "chain": "ethereum",
+  "address": "0x0000000167598d2C78E2313fD5328E16bD9A0b13",
+  "report": "https://raw.githubusercontent.com/sherlock-audit/2025-07-mellow-flexible-vaults-judging/4bcbdcfe643761c67d7dd862ca5909168c3ad859/README.md",
+  "docs": "https://raw.githubusercontent.com/mellow-finance/docs/3905b75a0f5b649b2dc5906f8b9b670f20c57944/core-vaults/core-deployments.mdx",
+  "audited": "https://raw.githubusercontent.com/sherlock-audit/2025-07-mellow-flexible-vaults/eca8836d68d65bcbfc52c6f04cf6b4b1597555bf/flexible-vaults/src/permissions/Consensus.sol",
+  "fix": "https://raw.githubusercontent.com/mellow-finance/flexible-vaults/3c04a39733672f6c43f9907459aee5c4d22a4e27/src/permissions/Consensus.sol"
+ },
+ {
+  "protocol": "Mellow Flexible Vaults",
+  "id": "H-2",
+  "fn": "_handleReport",
+  "chain": "ethereum",
+  "address": "0x000000000c139266BA06170Ed1DeacA6d11903c1",
+  "report": "https://raw.githubusercontent.com/sherlock-audit/2025-07-mellow-flexible-vaults-judging/4bcbdcfe643761c67d7dd862ca5909168c3ad859/README.md",
+  "docs": "https://raw.githubusercontent.com/mellow-finance/docs/3905b75a0f5b649b2dc5906f8b9b670f20c57944/core-vaults/core-deployments.mdx",
+  "audited": "https://raw.githubusercontent.com/sherlock-audit/2025-07-mellow-flexible-vaults/eca8836d68d65bcbfc52c6f04cf6b4b1597555bf/flexible-vaults/src/queues/RedeemQueue.sol",
+  "fix": "https://raw.githubusercontent.com/mellow-finance/flexible-vaults/8ff3ad438f055a6b6427fe6f139fefced9049a58/src/queues/RedeemQueue.sol"
+ },
+ {
+  "protocol": "Cap",
+  "id": "M-3",
+  "fn": "realizeRestakerInterest",
+  "chain": "ethereum",
+  "address": "0x15622c3dbbc5614E6DFa9446603c1779647f01FC",
+  "report": "https://raw.githubusercontent.com/sherlock-audit/2025-07-cap-judging/e1c4f01994e830b520238e0c292303b0d7eed1e1/README.md",
+  "docs": "https://raw.githubusercontent.com/cap-labs-dev/cap-docs/719b6388b8e63ccefc86d17abb5fe3408db8c52d/developers/addresses.md",
+  "audited": "https://raw.githubusercontent.com/sherlock-audit/2025-07-cap/2bd34fa369d36af8ecc377090d3292ea74ccc669/cap-contracts/contracts/lendingPool/libraries/BorrowLogic.sol",
+  "fix": "https://raw.githubusercontent.com/cap-labs-dev/cap-contracts/0e8e7ef8bd27ce77b5bb6ef987563b791671e784/contracts/lendingPool/libraries/BorrowLogic.sol"
+ }
+]

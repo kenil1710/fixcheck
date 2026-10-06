@@ -1,0 +1,497 @@
+[
+ {
+  "protocol": "PoolTogether V5",
+  "report": "https://raw.githubusercontent.com/sherlock-audit/2024-05-pooltogether-judging/88298eacec6f178fd0b5f9f13e4605c58aa58072/README.md",
+  "docs": {
+   "optimism": "https://raw.githubusercontent.com/GenerationSoftware/pt-dev-docs/9f3322e7280f2e91346cabfc2512046c6cfcd2a8/docs/deployments/optimism.md",
+   "base": "https://raw.githubusercontent.com/GenerationSoftware/pt-dev-docs/9f3322e7280f2e91346cabfc2512046c6cfcd2a8/docs/deployments/base.md",
+   "arbitrum": "https://raw.githubusercontent.com/GenerationSoftware/pt-dev-docs/9f3322e7280f2e91346cabfc2512046c6cfcd2a8/docs/deployments/arbitrum.md",
+   "ethereum": "https://raw.githubusercontent.com/GenerationSoftware/pt-dev-docs/9f3322e7280f2e91346cabfc2512046c6cfcd2a8/docs/deployments/ethereum.md"
+  },
+  "findings": [
+   {
+    "id": "H-1",
+    "fn": "isWinner",
+    "audited_url": "https://raw.githubusercontent.com/sherlock-audit/2024-05-pooltogether/1aa1b8c028b659585e4c7a6b9b652fb075f86db3/pt-v5-prize-pool/src/PrizePool.sol",
+    "fix_url": "https://raw.githubusercontent.com/GenerationSoftware/pt-v5-prize-pool/bf073c31330d3b04991c3f153dd389c9d3fc0f51/src/PrizePool.sol",
+    "deployments": [
+     [
+      "optimism",
+      "0xF35fE10ffd0a9672d0095c435fd8767A7fe29B55"
+     ],
+     [
+      "base",
+      "0x45b2010d8a4f08b53c9fa7544c51dfd9733732cb"
+     ],
+     [
+      "arbitrum",
+      "0x52e7910c4c287848c8828e8b17b8371f4ebc5d42"
+     ],
+     [
+      "ethereum",
+      "0x7865d01da4c9ba2f69b7879e6d2483ab6b354d95"
+     ]
+    ]
+   },
+   {
+    "id": "H-1",
+    "fn": "getTierAccrualDurationInDraws",
+    "audited_url": "https://raw.githubusercontent.com/sherlock-audit/2024-05-pooltogether/1aa1b8c028b659585e4c7a6b9b652fb075f86db3/pt-v5-prize-pool/src/PrizePool.sol",
+    "fix_url": "https://raw.githubusercontent.com/GenerationSoftware/pt-v5-prize-pool/bf073c31330d3b04991c3f153dd389c9d3fc0f51/src/PrizePool.sol",
+    "deployments": [
+     [
+      "optimism",
+      "0xF35fE10ffd0a9672d0095c435fd8767A7fe29B55"
+     ],
+     [
+      "base",
+      "0x45b2010d8a4f08b53c9fa7544c51dfd9733732cb"
+     ],
+     [
+      "arbitrum",
+      "0x52e7910c4c287848c8828e8b17b8371f4ebc5d42"
+     ],
+     [
+      "ethereum",
+      "0x7865d01da4c9ba2f69b7879e6d2483ab6b354d95"
+     ]
+    ]
+   },
+   {
+    "id": "M-15",
+    "fn": "shutdownAt",
+    "audited_url": "https://raw.githubusercontent.com/sherlock-audit/2024-05-pooltogether/1aa1b8c028b659585e4c7a6b9b652fb075f86db3/pt-v5-prize-pool/src/PrizePool.sol",
+    "fix_url": "https://raw.githubusercontent.com/GenerationSoftware/pt-v5-prize-pool/1338ae0f6e19fc007e6446f15161d453dc7ce988/src/PrizePool.sol",
+    "deployments": [
+     [
+      "optimism",
+      "0xF35fE10ffd0a9672d0095c435fd8767A7fe29B55"
+     ],
+     [
+      "base",
+      "0x45b2010d8a4f08b53c9fa7544c51dfd9733732cb"
+     ],
+     [
+      "arbitrum",
+      "0x52e7910c4c287848c8828e8b17b8371f4ebc5d42"
+     ],
+     [
+      "ethereum",
+      "0x7865d01da4c9ba2f69b7879e6d2483ab6b354d95"
+     ]
+    ]
+   },
+   {
+    "id": "M-5",
+    "fn": "claimPrizes",
+    "audited_url": "https://raw.githubusercontent.com/sherlock-audit/2024-05-pooltogether/1aa1b8c028b659585e4c7a6b9b652fb075f86db3/pt-v5-claimer/src/Claimer.sol",
+    "fix_url": "https://raw.githubusercontent.com/GenerationSoftware/pt-v5-claimer/7416bb3850b657d7156b3d35c8897b03d353f800/src/Claimer.sol",
+    "deployments": [
+     [
+      "optimism",
+      "0x220C9398b0Ee07472bF8906e44574Cb9FE3B8D90"
+     ],
+     [
+      "base",
+      "0xcdCE635b774DE77cdF791647601dba64a75547ba"
+     ],
+     [
+      "arbitrum",
+      "0xBEA38368f2A657f00f173764f18F00e841317c73"
+     ],
+     [
+      "ethereum",
+      "0x54aa02cbc223Fc834949FB1fd8C855e4dA126c7D"
+     ]
+    ]
+   },
+   {
+    "id": "M-8",
+    "fn": "_computeFeePerClaim",
+    "audited_url": "https://raw.githubusercontent.com/sherlock-audit/2024-05-pooltogether/1aa1b8c028b659585e4c7a6b9b652fb075f86db3/pt-v5-claimer/src/Claimer.sol",
+    "fix_url": "https://raw.githubusercontent.com/GenerationSoftware/pt-v5-claimer/20f52a6f437166facb680ee4289be159a57fb763/src/Claimer.sol",
+    "deployments": [
+     [
+      "optimism",
+      "0x220C9398b0Ee07472bF8906e44574Cb9FE3B8D90"
+     ],
+     [
+      "base",
+      "0xcdCE635b774DE77cdF791647601dba64a75547ba"
+     ],
+     [
+      "arbitrum",
+      "0xBEA38368f2A657f00f173764f18F00e841317c73"
+     ],
+     [
+      "ethereum",
+      "0x54aa02cbc223Fc834949FB1fd8C855e4dA126c7D"
+     ]
+    ]
+   },
+   {
+    "id": "M-9",
+    "fn": "liquidatableBalanceOf",
+    "audited_url": "https://raw.githubusercontent.com/sherlock-audit/2024-05-pooltogether/1aa1b8c028b659585e4c7a6b9b652fb075f86db3/pt-v5-vault/src/PrizeVault.sol",
+    "fix_url": "https://raw.githubusercontent.com/GenerationSoftware/pt-v5-vault/d888632e8ad3ce87421cce96f3a17dd6db0bdbf5/src/PrizeVault.sol",
+    "deployments": [
+     [
+      "optimism",
+      "0xa52e38a9147f5eA9E0c5547376c21c9E3F3e5e1f"
+     ],
+     [
+      "base",
+      "0x6B5a5c55E9dD4bb502Ce25bBfbaA49b69cf7E4dd"
+     ],
+     [
+      "arbitrum",
+      "0x97A9C02CFBBf0332D8172331461aB476dF1E8c95"
+     ],
+     [
+      "ethereum",
+      "0x9eE31E845fF1358Bf6B1F914d3918c6223c75573"
+     ]
+    ]
+   },
+   {
+    "id": "M-16",
+    "fn": "maxDeposit",
+    "audited_url": "https://raw.githubusercontent.com/sherlock-audit/2024-05-pooltogether/1aa1b8c028b659585e4c7a6b9b652fb075f86db3/pt-v5-vault/src/PrizeVault.sol",
+    "fix_url": "https://raw.githubusercontent.com/GenerationSoftware/pt-v5-vault/2acdde554f7309331b5b632a08f08cb6d223a4ee/src/PrizeVault.sol",
+    "deployments": [
+     [
+      "optimism",
+      "0xa52e38a9147f5eA9E0c5547376c21c9E3F3e5e1f"
+     ],
+     [
+      "base",
+      "0x6B5a5c55E9dD4bb502Ce25bBfbaA49b69cf7E4dd"
+     ],
+     [
+      "arbitrum",
+      "0x97A9C02CFBBf0332D8172331461aB476dF1E8c95"
+     ],
+     [
+      "ethereum",
+      "0x9eE31E845fF1358Bf6B1F914d3918c6223c75573"
+     ]
+    ]
+   },
+   {
+    "id": "M-17",
+    "fn": "_convertToShares",
+    "audited_url": "https://raw.githubusercontent.com/sherlock-audit/2024-05-pooltogether/1aa1b8c028b659585e4c7a6b9b652fb075f86db3/pt-v5-vault/src/PrizeVault.sol",
+    "fix_url": "https://raw.githubusercontent.com/GenerationSoftware/pt-v5-vault/a32024ea18dc3217c13d15ac880a074128953b49/src/PrizeVault.sol",
+    "deployments": [
+     [
+      "optimism",
+      "0xa52e38a9147f5eA9E0c5547376c21c9E3F3e5e1f"
+     ],
+     [
+      "base",
+      "0x6B5a5c55E9dD4bb502Ce25bBfbaA49b69cf7E4dd"
+     ],
+     [
+      "arbitrum",
+      "0x97A9C02CFBBf0332D8172331461aB476dF1E8c95"
+     ],
+     [
+      "ethereum",
+      "0x9eE31E845fF1358Bf6B1F914d3918c6223c75573"
+     ]
+    ]
+   },
+   {
+    "id": "M-19",
+    "fn": "claimPrize",
+    "audited_url": "https://raw.githubusercontent.com/sherlock-audit/2024-05-pooltogether/1aa1b8c028b659585e4c7a6b9b652fb075f86db3/pt-v5-vault/src/abstract/Claimable.sol",
+    "fix_url": "https://raw.githubusercontent.com/GenerationSoftware/pt-v5-vault/67516cd5410d301f01eae4039105b304c142ca80/src/abstract/Claimable.sol",
+    "deployments": [
+     [
+      "optimism",
+      "0xa52e38a9147f5eA9E0c5547376c21c9E3F3e5e1f"
+     ],
+     [
+      "base",
+      "0x6B5a5c55E9dD4bb502Ce25bBfbaA49b69cf7E4dd"
+     ],
+     [
+      "arbitrum",
+      "0x97A9C02CFBBf0332D8172331461aB476dF1E8c95"
+     ],
+     [
+      "ethereum",
+      "0x9eE31E845fF1358Bf6B1F914d3918c6223c75573"
+     ]
+    ]
+   },
+   {
+    "id": "M-1",
+    "fn": "isRequestComplete",
+    "audited_url": "https://raw.githubusercontent.com/sherlock-audit/2024-05-pooltogether/1aa1b8c028b659585e4c7a6b9b652fb075f86db3/pt-v5-rng-witnet/src/RngWitnet.sol",
+    "fix_url": "https://raw.githubusercontent.com/GenerationSoftware/pt-v5-rng-witnet/e44b23c654de4b99a09e261be4a2106cf75eb7ca/src/RngWitnet.sol",
+    "deployments": [
+     [
+      "optimism",
+      "0x3d2Ef6C091f7CB69f06Ec3117F36A28BC596aa7B"
+     ],
+     [
+      "base",
+      "0x74ebf391831c0757b5a4335f2f3abbb1499d18f0"
+     ],
+     [
+      "arbitrum",
+      "0xad1b8ec0151f13ba563226092b5f7308d8dc107b"
+     ],
+     [
+      "ethereum",
+      "0xf93329e78feff1145fce03a79d5b356588dea215"
+     ]
+    ]
+   },
+   {
+    "id": "M-14",
+    "fn": "canStartDraw",
+    "audited_url": "https://raw.githubusercontent.com/sherlock-audit/2024-05-pooltogether/1aa1b8c028b659585e4c7a6b9b652fb075f86db3/pt-v5-draw-manager/src/DrawManager.sol",
+    "fix_url": "https://raw.githubusercontent.com/GenerationSoftware/pt-v5-draw-manager/ac4f119b29a7ececcafec3e9242a293652cffaab/src/DrawManager.sol",
+    "deployments": [
+     [
+      "optimism",
+      "0x7eED7444dE862c4F79c5820ff867FA3A82641857"
+     ],
+     [
+      "base",
+      "0x8a2782bedc79982ebfa3b68b315a2ee40daf6ab0"
+     ],
+     [
+      "arbitrum",
+      "0xc00146957ff55fad7d27deb69ff95d79fdcd37e6"
+     ],
+     [
+      "ethereum",
+      "0x98305eb9a29d45ec93ce44ba02b315b631c675a7"
+     ]
+    ]
+   },
+   {
+    "id": "H-3",
+    "fn": "startDrawReward",
+    "audited_url": "https://raw.githubusercontent.com/sherlock-audit/2024-05-pooltogether/1aa1b8c028b659585e4c7a6b9b652fb075f86db3/pt-v5-draw-manager/src/DrawManager.sol",
+    "fix_url": "https://raw.githubusercontent.com/GenerationSoftware/pt-v5-draw-manager/4b0ab4eb5318aeef5f7c6fe21ea5d9bd5408043d/src/DrawManager.sol",
+    "deployments": [
+     [
+      "optimism",
+      "0x7eED7444dE862c4F79c5820ff867FA3A82641857"
+     ],
+     [
+      "base",
+      "0x8a2782bedc79982ebfa3b68b315a2ee40daf6ab0"
+     ],
+     [
+      "arbitrum",
+      "0xc00146957ff55fad7d27deb69ff95d79fdcd37e6"
+     ],
+     [
+      "ethereum",
+      "0x98305eb9a29d45ec93ce44ba02b315b631c675a7"
+     ]
+    ]
+   },
+   {
+    "id": "H-3",
+    "fn": "finishDrawReward",
+    "audited_url": "https://raw.githubusercontent.com/sherlock-audit/2024-05-pooltogether/1aa1b8c028b659585e4c7a6b9b652fb075f86db3/pt-v5-draw-manager/src/DrawManager.sol",
+    "fix_url": "https://raw.githubusercontent.com/GenerationSoftware/pt-v5-draw-manager/30149ff1cf46499638ca2ae347e2e5a9d2485a18/src/DrawManager.sol",
+    "deployments": [
+     [
+      "optimism",
+      "0x7eED7444dE862c4F79c5820ff867FA3A82641857"
+     ],
+     [
+      "base",
+      "0x8a2782bedc79982ebfa3b68b315a2ee40daf6ab0"
+     ],
+     [
+      "arbitrum",
+      "0xc00146957ff55fad7d27deb69ff95d79fdcd37e6"
+     ],
+     [
+      "ethereum",
+      "0x98305eb9a29d45ec93ce44ba02b315b631c675a7"
+     ]
+    ]
+   }
+  ]
+ },
+ {
+  "protocol": "Mellow Flexible Vaults",
+  "report": "https://raw.githubusercontent.com/sherlock-audit/2025-07-mellow-flexible-vaults-judging/4bcbdcfe643761c67d7dd862ca5909168c3ad859/README.md",
+  "docs": {
+   "ethereum": "https://raw.githubusercontent.com/mellow-finance/docs/3905b75a0f5b649b2dc5906f8b9b670f20c57944/core-vaults/core-deployments.mdx"
+  },
+  "findings": [
+   {
+    "id": "H-1",
+    "fn": "checkSignatures",
+    "audited_url": "https://raw.githubusercontent.com/sherlock-audit/2025-07-mellow-flexible-vaults/eca8836d68d65bcbfc52c6f04cf6b4b1597555bf/flexible-vaults/src/permissions/Consensus.sol",
+    "fix_url": "https://raw.githubusercontent.com/mellow-finance/flexible-vaults/3c04a39733672f6c43f9907459aee5c4d22a4e27/src/permissions/Consensus.sol",
+    "deployments": [
+     [
+      "ethereum",
+      "0x0000000167598d2C78E2313fD5328E16bD9A0b13"
+     ]
+    ]
+   },
+   {
+    "id": "H-2",
+    "fn": "_handleReport",
+    "audited_url": "https://raw.githubusercontent.com/sherlock-audit/2025-07-mellow-flexible-vaults/eca8836d68d65bcbfc52c6f04cf6b4b1597555bf/flexible-vaults/src/queues/RedeemQueue.sol",
+    "fix_url": "https://raw.githubusercontent.com/mellow-finance/flexible-vaults/8ff3ad438f055a6b6427fe6f139fefced9049a58/src/queues/RedeemQueue.sol",
+    "deployments": [
+     [
+      "ethereum",
+      "0x000000000c139266BA06170Ed1DeacA6d11903c1"
+     ]
+    ]
+   },
+   {
+    "id": "H-3",
+    "fn": "callHook",
+    "audited_url": "https://raw.githubusercontent.com/sherlock-audit/2025-07-mellow-flexible-vaults/eca8836d68d65bcbfc52c6f04cf6b4b1597555bf/flexible-vaults/src/hooks/BasicRedeemHook.sol",
+    "fix_url": "https://raw.githubusercontent.com/mellow-finance/flexible-vaults/50a2eeda189443842441fb6972dfad7640edd43e/src/hooks/BasicRedeemHook.sol",
+    "deployments": [
+     [
+      "ethereum",
+      "0x0000000637f1b1ccDA4Af2dB6CDDf5e5Ec45fd93"
+     ]
+    ]
+   },
+   {
+    "id": "H-4",
+    "fn": "calculateFee",
+    "audited_url": "https://raw.githubusercontent.com/sherlock-audit/2025-07-mellow-flexible-vaults/eca8836d68d65bcbfc52c6f04cf6b4b1597555bf/flexible-vaults/src/managers/FeeManager.sol",
+    "fix_url": "https://raw.githubusercontent.com/mellow-finance/flexible-vaults/28261eef5155bf70587705681b28b967512c12f7/src/managers/FeeManager.sol",
+    "deployments": [
+     [
+      "ethereum",
+      "0x0000000dE74e5D51651326E0A3e1ACA94bEAF6E1"
+     ]
+    ]
+   },
+   {
+    "id": "H-5",
+    "fn": "calculateFee",
+    "audited_url": "https://raw.githubusercontent.com/sherlock-audit/2025-07-mellow-flexible-vaults/eca8836d68d65bcbfc52c6f04cf6b4b1597555bf/flexible-vaults/src/managers/FeeManager.sol",
+    "fix_url": "https://raw.githubusercontent.com/mellow-finance/flexible-vaults/a41231d9178d153efb4f808d48c68044fb67b686/src/managers/FeeManager.sol",
+    "deployments": [
+     [
+      "ethereum",
+      "0x0000000dE74e5D51651326E0A3e1ACA94bEAF6E1"
+     ]
+    ]
+   },
+   {
+    "id": "M-1",
+    "fn": "updateChecks",
+    "audited_url": "https://raw.githubusercontent.com/sherlock-audit/2025-07-mellow-flexible-vaults/eca8836d68d65bcbfc52c6f04cf6b4b1597555bf/flexible-vaults/src/managers/ShareManager.sol",
+    "fix_url": "https://raw.githubusercontent.com/mellow-finance/flexible-vaults/2e6c78e033e8744985b9e6f699469e03e50454b5/src/managers/ShareManager.sol",
+    "deployments": [
+     [
+      "ethereum",
+      "0x0000000E8eb7173fA1a3ba60eCA325bcB6aaf378"
+     ]
+    ]
+   },
+   {
+    "id": "M-4",
+    "fn": "handleReport",
+    "audited_url": "https://raw.githubusercontent.com/sherlock-audit/2025-07-mellow-flexible-vaults/eca8836d68d65bcbfc52c6f04cf6b4b1597555bf/flexible-vaults/src/modules/ShareModule.sol",
+    "fix_url": "https://raw.githubusercontent.com/mellow-finance/flexible-vaults/01b0a4507a29703a776de79e5e007616d4efe591/src/modules/ShareModule.sol",
+    "deployments": [
+     [
+      "ethereum",
+      "0x0000000615B2771511dAa693aC07BE5622869E01"
+     ]
+    ]
+   },
+   {
+    "id": "M-5",
+    "fn": "cancelDepositRequest",
+    "audited_url": "https://raw.githubusercontent.com/sherlock-audit/2025-07-mellow-flexible-vaults/eca8836d68d65bcbfc52c6f04cf6b4b1597555bf/flexible-vaults/src/queues/DepositQueue.sol",
+    "fix_url": "https://raw.githubusercontent.com/mellow-finance/flexible-vaults/4478af2870610255abeaa7c1f1b0649345f05c47/src/queues/DepositQueue.sol",
+    "deployments": [
+     [
+      "ethereum",
+      "0x00000006dA9f179BFE250Dd1c51cD2d3581930c8"
+     ]
+    ]
+   }
+  ]
+ },
+ {
+  "protocol": "Cap",
+  "report": "https://raw.githubusercontent.com/sherlock-audit/2025-07-cap-judging/e1c4f01994e830b520238e0c292303b0d7eed1e1/README.md",
+  "docs": {
+   "ethereum": "https://raw.githubusercontent.com/cap-labs-dev/cap-docs/719b6388b8e63ccefc86d17abb5fe3408db8c52d/developers/addresses.md"
+  },
+  "findings": [
+   {
+    "id": "M-1",
+    "fn": "liquidate",
+    "audited_url": "https://raw.githubusercontent.com/sherlock-audit/2025-07-cap/2bd34fa369d36af8ecc377090d3292ea74ccc669/cap-contracts/contracts/lendingPool/libraries/LiquidationLogic.sol",
+    "fix_url": "https://raw.githubusercontent.com/cap-labs-dev/cap-contracts/1bc019d2ccfeea4aab31f4b8a7ca948a9dd6e705/contracts/lendingPool/libraries/LiquidationLogic.sol",
+    "deployments": [
+     [
+      "ethereum",
+      "0x15622c3dbbc5614E6DFa9446603c1779647f01FC"
+     ]
+    ]
+   },
+   {
+    "id": "M-2",
+    "fn": "_applySlopes",
+    "audited_url": "https://raw.githubusercontent.com/sherlock-audit/2025-07-cap/2bd34fa369d36af8ecc377090d3292ea74ccc669/cap-contracts/contracts/oracle/libraries/VaultAdapter.sol",
+    "fix_url": "https://raw.githubusercontent.com/cap-labs-dev/cap-contracts/11d980a1bede77517235e56271c964c1bd21cc93/contracts/oracle/libraries/VaultAdapter.sol",
+    "deployments": [
+     [
+      "ethereum",
+      "0xcD7f45566bc0E7303fB92A93969BB4D3f6e662bb"
+     ]
+    ]
+   },
+   {
+    "id": "M-3",
+    "fn": "realizeRestakerInterest",
+    "audited_url": "https://raw.githubusercontent.com/sherlock-audit/2025-07-cap/2bd34fa369d36af8ecc377090d3292ea74ccc669/cap-contracts/contracts/lendingPool/libraries/BorrowLogic.sol",
+    "fix_url": "https://raw.githubusercontent.com/cap-labs-dev/cap-contracts/0e8e7ef8bd27ce77b5bb6ef987563b791671e784/contracts/lendingPool/libraries/BorrowLogic.sol",
+    "deployments": [
+     [
+      "ethereum",
+      "0x15622c3dbbc5614E6DFa9446603c1779647f01FC"
+     ]
+    ]
+   }
+  ]
+ },
+ {
+  "protocol": "OP Stack fault proofs",
+  "report": "https://raw.githubusercontent.com/sherlock-audit/2024-02-optimism-2024-judging/2b7f5d81eeb2755a4de99e6fd5b2fce823177a3c/README.md",
+  "docs": {
+   "ethereum": "https://raw.githubusercontent.com/ethereum-optimism/superchain-registry/95de6f6c8a745bb80412240632f5c93dc8145b4b/superchain/configs/mainnet/op.toml"
+  },
+  "findings": [
+   {
+    "id": "M-3",
+    "fn": "create",
+    "audited_url": "https://raw.githubusercontent.com/sherlock-audit/2024-02-optimism-2024/f216b0d3ad08c1a0ead557ea74691aaefd5fd489/optimism/packages/contracts-bedrock/src/dispute/DisputeGameFactory.sol",
+    "fix_url": "https://raw.githubusercontent.com/ethereum-optimism/optimism/4a157b4b0aad8eef2ea19320d5ed1a1d50a9807e/packages/contracts-bedrock/src/dispute/DisputeGameFactory.sol",
+    "deployments": [
+     [
+      "ethereum",
+      "0xe5965Ab5962eDc7477C8520243A95517CD252fA9"
+     ]
+    ]
+   }
+  ]
+ }
+]
