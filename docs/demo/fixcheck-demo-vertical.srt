@@ -1,0 +1,59 @@
+1
+00:00:00,000 --> 00:00:01,570
+Audit reports say “Fixed”.
+
+2
+00:00:01,570 --> 00:00:02,740
+Users trust it.
+
+3
+00:00:02,740 --> 00:00:06,050
+Nobody checks the code that's actually deployed.
+
+4
+00:00:06,100 --> 00:00:07,790
+This finding was marked fixed.
+
+5
+00:00:07,790 --> 00:00:10,840
+On the left is the function the auditors reviewed;
+
+6
+00:00:10,840 --> 00:00:13,540
+on the right, the one deployed on Arbitrum.
+
+7
+00:00:13,540 --> 00:00:15,820
+They're identical, line for line.
+
+8
+00:00:15,867 --> 00:00:19,417
+Against the fix commit, the fixed line simply isn't there.
+
+9
+00:00:19,417 --> 00:00:22,117
+So code alone says: not fixed.
+
+10
+00:00:22,167 --> 00:00:24,207
+The real result: PoolTogether's prize pool,
+
+11
+00:00:24,207 --> 00:00:30,327
+vault and draw manager on OP Mainnet were deployed before the audit and still run the audited code.
+
+12
+00:00:30,327 --> 00:00:32,947
+The redeployed claimer has its fixes.
+
+13
+00:00:33,000 --> 00:00:34,540
+Code compares the functions.
+
+14
+00:00:34,540 --> 00:00:39,550
+GenLayer validators only judge the middle cases, and must quote the exact lines.
+
+15
+00:00:39,550 --> 00:00:42,650
+fixcheck-ledger dot vercel dot app.

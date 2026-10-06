@@ -21,7 +21,7 @@ const RATE = process.env.RATE ?? "172";
 const OUT = new URL("../../docs/demo/", import.meta.url).pathname;
 const WORK = (process.env.WORK ?? "/tmp/fixcheck-voiced") + "/";
 const PAPER = "#f1efe7";
-rmSync(WORK, { recursive: true, force: true });
+if (!process.env.REUSE) rmSync(WORK, { recursive: true, force: true });
 mkdirSync(WORK, { recursive: true });
 mkdirSync(OUT, { recursive: true });
 
@@ -33,7 +33,7 @@ const dur = (f) => Number(sh("ffprobe", ["-v", "error", "-show_entries", "format
 for (const [i, s] of script.scenes.entries()) {
   sh("say", ["-v", VOICE, "-r", RATE, "-o", `${WORK}v${i}.aiff`, s.text]);
   s.voice = dur(`${WORK}v${i}.aiff`);
-  s.len = +(s.voice + (s.tail ?? 0.6)).toFixed(2);
+  s.len = Math.ceil((s.voice + (s.tail ?? 0.6)) * 30) / 30;
 }
 console.log("narration", script.scenes.map((s) => s.len).join(" + "), "=", script.scenes.reduce((a, s) => a + s.len, 0).toFixed(1), "s");
 
@@ -74,7 +74,7 @@ const ACTIONS = {
 
 const clips = [];
 async function record(name, url, fn, L, { wallet = false, prep = null } = {}) {
-  const ctx = await b.newContext({ viewport: { width: 1440, height: 810 }, colorScheme: "light", recordVideo: { dir: WORK, size: { width: 1920, height: 1080 } } });
+  const ctx = await b.newContext({ viewport: { width: 1440, height: 810 }, colorScheme: "light", recordVideo: { dir: WORK, size: { width: 1440, height: 810 } } });
   if (wallet) await attachWallet(ctx);
   const p = await ctx.newPage();
   const born = Date.now();
@@ -90,7 +90,7 @@ async function record(name, url, fn, L, { wallet = false, prep = null } = {}) {
 // The stake scene is one continuous take: click "File", show signing and the
 // validators reading sources, then cut to the moment the result card appears.
 async function recordStake(Lstake, Lresult) {
-  const ctx = await b.newContext({ viewport: { width: 1440, height: 810 }, colorScheme: "light", recordVideo: { dir: WORK, size: { width: 1920, height: 1080 } } });
+  const ctx = await b.newContext({ viewport: { width: 1440, height: 810 }, colorScheme: "light", recordVideo: { dir: WORK, size: { width: 1440, height: 810 } } });
   await attachWallet(ctx);
   const p = await ctx.newPage();
   const born = Date.now();
@@ -114,6 +114,9 @@ async function recordStake(Lstake, Lresult) {
 }
 
 const S = Object.fromEntries(script.scenes.map((s) => [s.id, s]));
+const REUSE = process.env.REUSE && existsSync(process.env.REUSE);
+if (REUSE) clips.push(...JSON.parse(readFileSync(process.env.REUSE, "utf8")));
+if (!REUSE) {
 await record("landing", "/", ACTIONS.landing, S.landing.len);
 await record("scorecard", "/", ACTIONS.scorecard, S.scorecard.len);
 await record("protocol", "/protocols/pooltogether", ACTIONS.protocol, S.protocol.len);
@@ -125,16 +128,22 @@ await recordStake(S.stake.len, S.result.len);
 await record("how", "/how-it-works", ACTIONS.how, S.how.len);
 await record("real", `/protocols/pooltogether`, async (p, L) => { await smooth(p, 260, 1200); await wait(p, L * 1000 - 1200); }, S.real.len);
 await record("close", "/", ACTIONS.close, S.close.len);
+writeFileSync(`${(process.env.CLIPS_DIR ?? WORK)}clips.json`, JSON.stringify(clips));
+}
 await b.close();
 
 // ---- 3. captions -------------------------------------------------------------
 function chunks(text) {
-  const parts = text.match(/[^.!?;:]+[.!?;:]?(\s|$)/g)?.map((x) => x.trim()).filter(Boolean) ?? [text];
+  const parts = text.match(/[^.!?]+[.!?]?(\s|$)/g)?.map((x) => x.trim()).filter(Boolean) ?? [text];
   const out = [];
   for (const p of parts) {
-    if (p.split(" ").length <= 14) { out.push(p); continue; }
-    const w = p.split(" "); const half = Math.ceil(w.length / 2);
-    out.push(w.slice(0, half).join(" "), w.slice(half).join(" "));
+    if (p.split(" ").length <= 15) { out.push(p); continue; }
+    // split a long sentence at its clause break nearest the middle, else at the middle word
+    const w = p.split(" "); let cut = Math.ceil(w.length / 2);
+    let best = -1;
+    w.forEach((x, i) => { if (/[;,:]$/.test(x) && i >= 3 && i < w.length - 3 && (best < 0 || Math.abs(i + 1 - w.length / 2) < Math.abs(best - w.length / 2))) best = i + 1; });
+    if (best > 0) cut = best;
+    out.push(w.slice(0, cut).join(" "), w.slice(cut).join(" "));
   }
   return out;
 }
@@ -142,8 +151,8 @@ const capB = await chromium.launch();
 async function capPng(text, file, w, h, bottom) {
   const pg = await capB.newPage({ viewport: { width: w, height: h } });
   await pg.setContent(`<html><body style="margin:0;background:transparent;width:${w}px;height:${h}px;position:relative;font-family:-apple-system,'Helvetica Neue',Arial,sans-serif">
-    <div style="position:absolute;left:50%;bottom:${bottom}px;transform:translateX(-50%);max-width:${Math.round(w * 0.82)}px;background:rgba(17,19,22,.86);color:#fff;
-      font-size:${w > 1500 ? 40 : 46}px;line-height:1.3;font-weight:600;padding:14px 28px;border-radius:12px;text-align:center;letter-spacing:.005em">${text.replace(/&/g, "&amp;").replace(/</g, "&lt;")}</div></body></html>`);
+    <div style="position:absolute;left:0;right:0;margin:0 auto;width:fit-content;bottom:${bottom}px;max-width:${Math.round(w * (w > 1500 ? 0.82 : 0.9))}px;background:rgba(17,19,22,.86);color:#fff;
+      font-size:${w > 1500 ? 40 : 38}px;line-height:1.3;font-weight:600;padding:14px 28px;border-radius:12px;text-align:center;letter-spacing:.005em">${text.replace(/&/g, "&amp;").replace(/</g, "&lt;")}</div></body></html>`);
   await pg.screenshot({ path: file, omitBackground: true });
   await pg.close();
 }
@@ -161,7 +170,7 @@ for (const [k, id] of order.entries()) {
   let acc = 0;
   const caps = parts.map((txt, j) => { const a = (acc / total) * s.voice; acc += words[j]; const e = (acc / total) * s.voice; return { txt, a: +a.toFixed(2), e: +(j === parts.length - 1 ? s.len - 0.05 : e).toFixed(2) }; });
   const inputs = ["-ss", String(c.start), "-t", String(s.len), "-i", c.file];
-  let filter = `[0:v]fps=30,scale=1920:1080,setsar=1,format=yuv420p[b0]`;
+  let filter = `[0:v]fps=30,scale=1920:1080:flags=lanczos,setsar=1,format=yuv420p,tpad=stop_mode=clone:stop_duration=3,trim=duration=${s.len}[b0]`;
   for (const [j, cp] of caps.entries()) {
     const png = `${WORK}c${k}_${j}.png`; await capPng(cp.txt, png, 1920, 1080, 64);
     inputs.push("-i", png);
@@ -172,7 +181,7 @@ for (const [k, id] of order.entries()) {
   sh("ffmpeg", ["-y", ...inputs, "-filter_complex", filter, "-map", `[b${caps.length}]`, "-t", String(s.len), "-c:v", "libx264", "-preset", "medium", "-crf", "20", "-pix_fmt", "yuv420p", "-an", out]);
   // clean (caption-free) version for the vertical cut
   const clean = `${WORK}k${String(k).padStart(2, "0")}.mp4`;
-  sh("ffmpeg", ["-y", "-ss", String(c.start), "-t", String(s.len), "-i", c.file, "-vf", "fps=30,scale=1920:1080,setsar=1,format=yuv420p", "-c:v", "libx264", "-crf", "20", "-an", clean]);
+  sh("ffmpeg", ["-y", "-ss", String(c.start), "-t", String(s.len), "-i", c.file, "-vf", `fps=30,scale=1920:1080:flags=lanczos,setsar=1,format=yuv420p,tpad=stop_mode=clone:stop_duration=3,trim=duration=${s.len}`, "-c:v", "libx264", "-crf", "20", "-an", clean]);
   sh("ffmpeg", ["-y", "-i", `${WORK}v${script.scenes.indexOf(s)}.aiff`, "-af", `aresample=48000,apad=whole_dur=${s.len}`, "-t", String(s.len), "-ac", "2", `${WORK}a${String(k).padStart(2, "0")}.wav`]);
   built.push({ id, video: out, clean, audio: `${WORK}a${String(k).padStart(2, "0")}.wav`, len: s.len, caps, start: t });
   t += s.len;
@@ -203,9 +212,9 @@ let vt = 0; const vsrt = []; const vparts = [];
 for (const id of vIds) {
   const x = built.find((y) => y.id === id);
   const inputs = ["-loop", "1", "-t", String(x.len), "-i", title, "-i", x.clean];
-  let filter = `[1:v]scale=1080:-2[sc];[0:v][sc]overlay=0:760[b0]`;
+  let filter = `[1:v]scale=1080:-2,tpad=stop_mode=clone:stop_duration=3[sc];[0:v][sc]overlay=0:760:shortest=0[b0]`;
   for (const [j, cp] of x.caps.entries()) {
-    const png = `${WORK}vc_${id}_${j}.png`; await capPng(cp.txt, png, 1080, 1920, 300);
+    const png = `${WORK}vc_${id}_${j}.png`; await capPng(cp.txt, png, 1080, 1920, 220);
     inputs.push("-i", png);
     filter += `;[b${j}][${j + 2}:v]overlay=0:0:enable='between(t,${cp.a},${cp.e})'[b${j + 1}]`;
     vsrt.push({ a: vt + cp.a, e: vt + cp.e, txt: cp.txt });

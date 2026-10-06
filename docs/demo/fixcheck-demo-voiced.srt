@@ -1,0 +1,123 @@
+1
+00:00:00,000 --> 00:00:01,570
+Audit reports say “Fixed”.
+
+2
+00:00:01,570 --> 00:00:02,740
+Users trust it.
+
+3
+00:00:02,740 --> 00:00:06,050
+Nobody checks the code that's actually deployed.
+
+4
+00:00:06,100 --> 00:00:06,780
+FixCheck does.
+
+5
+00:00:06,780 --> 00:00:10,210
+It took 22 findings that Sherlock reports mark as fixed,
+
+6
+00:00:10,210 --> 00:00:13,630
+and read the code at each protocol's own listed address.
+
+7
+00:00:13,630 --> 00:00:17,280
+12 are confirmed in deployed code; 8 are not.
+
+8
+00:00:17,333 --> 00:00:22,853
+This is PoolTogether: one row per finding, its status, and how it was decided.
+
+9
+00:00:22,900 --> 00:00:24,590
+This finding was marked fixed.
+
+10
+00:00:24,590 --> 00:00:27,640
+On the left is the function the auditors reviewed;
+
+11
+00:00:27,640 --> 00:00:30,340
+on the right, the one deployed on Arbitrum.
+
+12
+00:00:30,340 --> 00:00:32,620
+They're identical, line for line.
+
+13
+00:00:32,667 --> 00:00:36,217
+Against the fix commit, the fixed line simply isn't there.
+
+14
+00:00:36,217 --> 00:00:38,917
+So code alone says: not fixed.
+
+15
+00:00:38,967 --> 00:00:42,617
+When deployed code matches neither version, validators ask a model.
+
+16
+00:00:42,617 --> 00:00:45,547
+It must quote exact deployed lines, highlighted here,
+
+17
+00:00:45,547 --> 00:00:49,017
+and code checks they point at the fix.
+
+18
+00:00:49,067 --> 00:00:53,667
+To check a finding yourself, pick the report, the finding and the deployed address.
+
+19
+00:00:53,667 --> 00:00:58,187
+Before you pay, the app runs the same checks the contract will.
+
+20
+00:00:58,233 --> 00:01:00,533
+Then you stake that it isn't fixed.
+
+21
+00:01:00,533 --> 00:01:06,013
+Every validator fetches the report, both commits and the verified source, and they must agree.
+
+22
+00:01:06,067 --> 00:01:07,257
+The check is filed.
+
+23
+00:01:07,257 --> 00:01:11,087
+Anyone can stake that it is fixed until the window closes.
+
+24
+00:01:11,133 --> 00:01:12,943
+Code decides everything it can.
+
+25
+00:01:12,943 --> 00:01:18,213
+The model never decides what counts as evidence, the deadlines, or the money.
+
+26
+00:01:18,267 --> 00:01:20,307
+The real result: PoolTogether's prize pool,
+
+27
+00:01:20,307 --> 00:01:26,427
+vault and draw manager on OP Mainnet were deployed before the audit and still run the audited code.
+
+28
+00:01:26,427 --> 00:01:29,047
+The redeployed claimer has its fixes.
+
+29
+00:01:29,100 --> 00:01:30,640
+Code compares the functions.
+
+30
+00:01:30,640 --> 00:01:35,650
+GenLayer validators only judge the middle cases, and must quote the exact lines.
+
+31
+00:01:35,650 --> 00:01:38,750
+fixcheck-ledger dot vercel dot app.
