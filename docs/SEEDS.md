@@ -1,6 +1,6 @@
 # Seeds
 
-Read from the chain by `tools/seeds_md.mjs` on 2026-10-06T18:05Z. Every row links to its page; every value comes from contract state.
+Read from the chain by `tools/seeds_md.mjs` on 2026-10-06T18:27Z. Every row links to its page; every value comes from contract state.
 
 ## Canonical — 0x525D730a0fEe81881af646A784337e005cC4E833
 
@@ -49,6 +49,9 @@ Read from the chain by `tools/seeds_md.mjs` on 2026-10-06T18:05Z. Every row link
 | [4](https://fixcheck-ledger.vercel.app/demo/checks/4) | no defender → refund minus fee | M-5 `claimPrizes` | FIXED | CODE_MATCH_FIX | challenger 0.98 GEN, fee 0.02 GEN |
 | [5](https://fixcheck-ledger.vercel.app/demo/checks/5) | expiry → everyone refunded | M-3 `realizeRestakerInterest` | EXPIRED (refunded) | EXPIRED | challenger 1 GEN, fee 0 GEN |
 | [6](https://fixcheck-ledger.vercel.app/demo/checks/6) | function changed since the fix, still contains it → code decides (CODE_CONTAINS_FIX) | M-5 `cancelDepositRequest` | FIXED | CODE_CONTAINS_FIX | challenger 0.98 GEN, fee 0.02 GEN |
-| [7](https://fixcheck-ledger.vercel.app/demo/checks/7) |  | H-2 `_handleReport` | FIXED | MODEL_FIXED | challenger 0.98 GEN, fee 0.02 GEN |
+| [7](https://fixcheck-ledger.vercel.app/demo/checks/7) | filed through the UI (real wallet), model decides | H-2 `_handleReport` | FIXED | MODEL_FIXED | challenger 0.98 GEN, fee 0.02 GEN |
+| [8](https://fixcheck-ledger.vercel.app/demo/checks/8) | filed on camera for the demo video | M-16 `maxDeposit` | NOT_FIXED | CODE_MATCH_VULNERABLE | challenger 1 GEN, fee 0 GEN |
+| [9](https://fixcheck-ledger.vercel.app/demo/checks/9) | filed on camera for the demo video | M-16 `maxDeposit` | NOT_FIXED | CODE_MATCH_VULNERABLE | challenger 1 GEN, fee 0 GEN |
+| [10](https://fixcheck-ledger.vercel.app/demo/checks/10) |  | M-16 `maxDeposit` | open |  | challenger 0 GEN, fee 0 GEN |
 
-Also on the demo: an unpinned report URL refused (stake left withdrawable), `sweep_fees`, every account withdrew, and a second `withdraw` was refused ("nothing to withdraw"). Demo ledger: balance 1 = open 0 + withdrawable 0.98 + fees 0.02 (invariant holds). Raw logs: `docs/seed-demo.json`, `docs/seed-canonical.json`.
+Also on the demo: an unpinned report URL refused (stake left withdrawable), `sweep_fees`, every account withdrew, and a second `withdraw` was refused ("nothing to withdraw"). Demo ledger: balance 4 = open 1 + withdrawable 2.98 + fees 0.02 (invariant holds). Raw logs: `docs/seed-demo.json`, `docs/seed-canonical.json`.

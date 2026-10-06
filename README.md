@@ -2,9 +2,9 @@
 
 **The audit says it was fixed. Is the fix in the deployed code?**
 
-Live: **https://fixcheck-ledger.vercel.app** · GenLayer Studio Dev · contracts in [`contracts/`](contracts/)
+Live: **https://fixcheck-ledger.vercel.app** · GenLayer Studio Dev · contracts in [`contracts/`](contracts/) · demo video: [`docs/demo/fixcheck-demo-voiced.mp4`](docs/demo/fixcheck-demo-voiced.mp4) (98 s, captions; [vertical cut](docs/demo/fixcheck-demo-vertical.mp4))
 
-![FixCheck finding page: audited vs deployed function](docs/screenshots/demo-checks-6-1440-light.png)
+![FixCheck finding page: audited vs deployed function](docs/screenshots/checks-13-1440-light.png)
 
 ## The problem
 

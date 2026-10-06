@@ -17,7 +17,7 @@
 - [x] `contracts/FixRegistry.py` — read-only `fix_status(chain, address, finding)`, no payable methods
 
 ## Threat model and tests
-- [x] `docs/THREAT_MODEL.md` with one offline test class per item (`python3 test/test_fixcheck.py`, 68 tests, real fetched evidence as fixtures)
+- [x] `docs/THREAT_MODEL.md` with one offline test class per item (`python3 test/test_fixcheck.py`, 74 tests, real fetched evidence as fixtures)
 
 ## Deploy and seed
 - [x] CANONICAL (1 h / 24 h), DEMO (90 s / 300 s), FixRegistry deployed from committed HEAD (`test/deploy.mjs`), `ADDRESSES.md` with full addresses, commit, sha256
@@ -29,8 +29,13 @@
 ## Frontend
 - [x] Next.js + genlayer-js, Vercel project with Root Directory = frontend
 - [x] Landing (live tally, specimen, 3 steps, protocol cards), protocol page (ring, sortable/filterable table), finding page (diff plate, pinned finding, quoted lines, verdict, evidence hashes, stakes, timeline), check flow (stepper, live preview, tx states, shareable result), balance + ledger, how it works, all checks, demo
-- [x] Per-finding OG images, brand kit (logo SVG + 512 PNG, favicons, OG), screenshots 1440/390 light/dark, demo video
+- [x] Per-finding OG images, brand kit (logo SVG + 512 PNG, favicons, OG), 48 screenshots 1440/390 light/dark from production
+- [x] Lighthouse on the live site: performance 99 / 96 / 95, accessibility 100 on landing, protocol and finding pages (`docs/LIGHTHOUSE.md`)
+- [x] Voiced demo 98.6 s (1080p H.264 + AAC, captions + SRT) and 42.7 s vertical cut, real data, real filing on camera (`docs/demo/`)
 - [x] Design review loop over every page at 1440/390 in light and dark
+
+## Review of seeded results
+- [x] v1.0 model verdicts reviewed against the fix diffs; two wrong NOT_FIXED found → v1.1 (CODE_CONTAINS_FIX, fix change shown to the model, grounded quotes), redeployed and reseeded; v1.0 kept under `docs/superseded/`
 
 ## Finish
 - [x] README (problem, how it works, model vs code, full addresses, seed table, known limits, how to use in 5 steps)
