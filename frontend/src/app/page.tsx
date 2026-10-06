@@ -41,9 +41,9 @@ export default async function Home() {
                 [s.not_fixed, "not in deployed code", "text-bad"],
                 [unsure, "inconclusive", "text-unsure"],
               ].map(([n, label, cls], i) => (
-                <div key={String(label)} className={`border-b hair py-4 pr-4 ${i % 2 === 1 ? "pl-4 border-l sm:pl-4" : ""} ${i === 2 ? "sm:border-l sm:pl-4" : ""}`}>
-                  <dd className={`t-num text-[2.6rem] leading-none font-medium ${cls}`}><Tally value={Number(n)} /></dd>
-                  <dt className="t-small mt-2 text-ink-2">{label}</dt>
+                <div key={String(label)} className={`flex flex-col border-b hair py-4 pr-4 ${i % 2 === 1 ? "pl-4 border-l sm:pl-4" : ""} ${i === 2 ? "sm:border-l sm:pl-4" : ""}`}>
+                  <dt className="t-small order-2 mt-2 text-ink-2">{label}</dt>
+                  <dd className={`t-num order-1 text-[2.6rem] leading-none font-medium ${cls}`}><Tally value={Number(n)} /></dd>
                 </div>
               ))}
             </dl>

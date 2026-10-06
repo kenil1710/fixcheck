@@ -18,11 +18,15 @@ export default async function Balance() {
         {led.ok ? (
           <>
             <p className="t-small mt-2 max-w-[62ch] text-ink-2">Every wei the canonical contract holds is either staked on an open check, withdrawable by someone, or a fee waiting to be swept to its frozen recipient. Checked after every transaction in the test suite; live here:</p>
-            <div className="plate mt-5 overflow-x-auto p-5">
-              <p className="mono text-[0.95rem] whitespace-nowrap">
-                {gen(led.data.balance_wei, 4)} <span className="text-ink-3">=</span> {gen(led.data.open_stakes_wei, 4)} <span className="text-ink-3">+</span> {gen(led.data.claimable_wei, 4)} <span className="text-ink-3">+</span> {gen(led.data.fees_wei, 4)} GEN
-              </p>
-              <p className="t-small mt-2 text-ink-2">balance = open stakes + withdrawable + fees · <span style={{ color: led.data.invariant_holds ? "var(--fixed)" : "var(--bad)" }}>{led.data.invariant_holds ? "holds" : "does not hold"}</span></p>
+            <div className="plate mt-5 p-5">
+              <div className="flex flex-wrap items-end gap-x-4 gap-y-3">
+                {[["balance", led.data.balance_wei], ["=", ""], ["open stakes", led.data.open_stakes_wei], ["+", ""], ["withdrawable", led.data.claimable_wei], ["+", ""], ["fees", led.data.fees_wei]].map(([k, v], i) => v === "" ? (
+                  <span key={i} className="t-num pb-5 text-[1.6rem] text-ink-3" aria-hidden="true">{k}</span>
+                ) : (
+                  <div key={i}><p className="t-num text-[1.9rem] leading-none">{gen(v, 4)}</p><p className="t-label mt-1.5">{k}</p></div>
+                ))}
+              </div>
+              <p className="t-small mt-4 flex items-center gap-2" style={{ color: led.data.invariant_holds ? "var(--fixed)" : "var(--bad)" }}>{led.data.invariant_holds ? "✓ The books balance." : "✕ The books do not balance."} <span className="text-ink-3">GEN, read live from the canonical contract.</span></p>
             </div>
           </>
         ) : <p className="mt-3 text-ink-2">Studio Dev didn’t answer; the books will show on reload.</p>}
