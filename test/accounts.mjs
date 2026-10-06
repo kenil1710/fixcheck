@@ -16,7 +16,7 @@ import { existsSync, readFileSync, writeFileSync } from "node:fs";
 
 const target = new URL("./.accounts.json", import.meta.url);
 const force = process.argv.includes("--force");
-const ROLES = ["deployer", "challenger", "challenger2", "defender", "defender2", "trigger", "probe"];
+const ROLES = ["deployer", "challenger", "challenger2", "defender", "defender2", "trigger", "probe", "demo_challenger", "demo_defender", "demo_trigger", "ui"];
 const existing = existsSync(target) && !force ? JSON.parse(readFileSync(target, "utf8")) : {};
 const out = {};
 for (const role of ROLES) {
