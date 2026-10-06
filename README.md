@@ -23,6 +23,8 @@ FixCheck checks it, finding by finding, with the real report, the real commits a
 
 The 43 are PoolTogether V5: its OP Mainnet PrizePool, POOL Prize Vault, DrawManager and RngWitnet were deployed on 2024-04-18 — before the May 2024 Sherlock contest — and are immutable; the fixes merged in June–July 2024 reached the Claimer (redeployed 2024-07-16, which matches the fix) but not those contracts. The Ethereum POOL Prize Vault, created 2024-08-19 *after* the fixes were merged, still matches the audited version of four vault functions. This is a code fact, not a claim about exploitability or intent; the evidence (dates, creation transactions, hashes) is in [`docs/RESEARCH.md`](docs/RESEARCH.md) §5.
 
+**What seeding taught us.** On the first deployment (v1.0), the model — shown only the finding and the deployed function — answered NOT_FIXED for two Mellow functions that *do* contain the fix, and answered the same way both times it was asked. Reviewing each model verdict against the fix commit’s diff found those two; we kept v1.0's results as evidence (`docs/superseded/`), and shipped v1.1: code decides when the deployed function visibly contains the fix, the model sees what the fix changed, and a model verdict whose quotes don't point at the change is INCONCLUSIVE. Details: [`docs/RESEARCH.md`](docs/RESEARCH.md) §6.
+
 ## How it works
 
 1. **File.** A challenger stakes GEN on *not fixed* and names: a **pinned** report (GitHub raw at a commit SHA, or a web.archive.org snapshot), the finding id, the function, the audited source file at its commit, optionally the fix commit's file, the chain, the deployed address, and a **pinned** docs page of the protocol that lists that address.
@@ -31,8 +33,9 @@ The 43 are PoolTogether V5: its OP Mainnet PrizePool, POOL Prize Vault, DrawMana
 4. **Decide** (anyone, after the deadline):
    * deployed == fix version → **FIXED** (`CODE_MATCH_FIX`)
    * deployed == audited version → **NOT_FIXED** (`CODE_MATCH_VULNERABLE`)
+   * deployed holds every line the fix added and none it removed → **FIXED** (`CODE_CONTAINS_FIX`)
    * function missing / renamed / overloaded / unparseable → **INCONCLUSIVE**
-   * otherwise the model, shown only the finding text and the deployed function, answers and must quote deployed lines; code checks every quoted line exists in the function, the model is asked twice, and a flip is INCONCLUSIVE.
+   * otherwise the model, shown only the finding text, what the fix commit changed in this function, and the deployed function, answers and quotes deployed lines. Code checks every quoted line exists in the function **and points at the change** (FIXED must quote a line the fix added or moved; NOT_FIXED must quote a line the fix removed that is still deployed). The model is asked twice; a flip or ungrounded answer is INCONCLUSIVE.
 5. **Pay out.** NOT_FIXED: the challenger takes every defender stake. FIXED: defenders split the challenger's stake (no defender: challenger refunded minus a frozen 2% fee). INCONCLUSIVE: everyone refunded. Payouts are credited and withdrawn (pull). If nobody decides before the decide deadline, anyone can `expire` and everyone is refunded.
 
 ### What the model never decides
@@ -42,8 +45,8 @@ The 43 are PoolTogether V5: its OP Mainnet PrizePool, POOL Prize Vault, DrawMana
 | URL pinning, fetching, hashing every body | only when the deployed function matches neither version |
 | finding in report, marked fixed, names the function | sees only the finding text and the deployed function |
 | docs list the address; contract verified; proxy hop | answers FIXED / NOT_FIXED / INCONCLUSIVE + quotes lines |
-| function extraction and canonical comparison | its words are never stored — only enums, basis and quote indices + hashes |
-| every quoted line exists; both answers agree | |
+| function extraction, canonical comparison, "contains the fix" | its words are never stored — only enums, basis and quote indices + hashes |
+| every quoted line exists and points at the change; both answers agree | sees the fix commit's change for this function |
 | duplicates, deadlines, every stake and payout | |
 
 Ledger invariant, checked after every call in the tests and shown live on `/balance`:

@@ -1,5 +1,8 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { getChecks } from "@/lib/reads";
+
+export const revalidate = 60;
 
 export const metadata: Metadata = { title: "How it works", description: "What FixCheck checks, what code decides and what the model never decides." };
 
@@ -11,19 +14,24 @@ const CODE = [
   "Whether the contract is verified, and following a proxy to its implementation",
   "Pulling the function out of the audited, fixed and deployed code, comments removed",
   "Identical to the fix → fixed. Identical to the audited code → not fixed",
+  "Holds every line the fix added and none it removed → fixed",
   "Missing, renamed or overloaded function → inconclusive, everyone refunded",
-  "That every line the model quotes is really in the deployed function",
+  "That every line the model quotes is really in the deployed function — and points at what the fix changed",
   "That two answers from the model agree — otherwise inconclusive",
   "Deadlines, duplicates, every stake and every payout",
 ];
 const MODEL = [
   "Only when the deployed function matches neither the audited nor the fixed version",
-  "It sees the finding’s text and the deployed function — nothing else",
+  "It sees the finding’s text, what the fix commit changed in this function, and the deployed function — nothing else",
   "It answers fixed, not fixed or inconclusive, and must quote deployed lines",
   "Its words are never stored: only the answer, the reason code and which lines it quoted",
 ];
 
-export default function How() {
+export default async function How() {
+  const res = await getChecks();
+  const decided = res.ok ? res.data.items.filter((c) => c.state === "DECIDED") : [];
+  const byModel = decided.filter((c) => c.basis.startsWith("MODEL_")).length;
+  const byCode = decided.length - byModel;
   return (
     <div className="pt-12">
       <h1 className="t-h1 max-w-[20ch]">How FixCheck decides</h1>
@@ -39,7 +47,7 @@ export default function How() {
           <div className="sheet p-6">
             <h3 className="t-h3">The model weighs in, narrowly</h3>
             <ul className="mt-4 grid gap-2.5">{MODEL.map((x) => <li key={x} className="grid grid-cols-[1.1rem_1fr] gap-2"><span aria-hidden="true" className="text-ink-3">–</span><span>{x}</span></li>)}</ul>
-            <p className="t-small mt-5 border-t hair pt-4 text-ink-2">Of the 22 real findings seeded, code alone decided 15. The model decided the rest, each asked twice.</p>
+            {decided.length > 0 && <p className="t-small mt-5 border-t hair pt-4 text-ink-2">Of the {decided.length} real findings decided on the canonical contract, code alone decided {byCode}; the model was asked about {byModel}, each twice.</p>}
           </div>
         </div>
       </section>
