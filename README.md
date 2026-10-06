@@ -61,11 +61,11 @@ Ledger invariant, checked after every call in the tests and shown live on `/bala
 
 | Contract | Address |
 |---|---|
-| FixCheck — canonical (1 h counter, 24 h decide) | `0x6D4390521e584b71f29A7E97E0411c6141795cF3` |
-| FixCheck — demo (90 s counter, 300 s decide) | `0xd086D592522bcdC4B4eB15AFF23BB5AD9E203f56` |
-| FixRegistry — read-only consumer | `0xbdA30Ea646a6a82425db21559162923b2d833339` |
+| FixCheck — canonical (1 h counter, 24 h decide) | `0x525D730a0fEe81881af646A784337e005cC4E833` |
+| FixCheck — demo (90 s counter, 300 s decide) | `0x7bC20b8eAf5A80Ca717a5249029a75351234B24F` |
+| FixRegistry — read-only consumer | `0xC96B4a0aAbf6902fBF1F2D2F0C6591d41D152aCf` |
 
-Deployed from commit `1dc7e589448d519e4ac916f3b466a0195f15d9a8` with the bytes of `git show HEAD:<file>`; `node tools/verify_source.mjs` reads the code back from the chain and confirms all three are byte-identical to HEAD. sha256 and deploy transactions: [`ADDRESSES.md`](ADDRESSES.md). Explorer: https://explorer-studio-dev.genlayer.com/
+Deployed from commit `655d61e90e50a151dd84942b710d1652e7dd43fd` with the bytes of `git show HEAD:<file>`; `node tools/verify_source.mjs` reads the code back from the chain and confirms all three are byte-identical to HEAD. sha256 and deploy transactions: [`ADDRESSES.md`](ADDRESSES.md). Explorer: https://explorer-studio-dev.genlayer.com/
 
 Other apps read verdicts with `FixRegistry.fix_status(chain, address, "<pinned report url>#<finding id>")` (or `is_fixed` / `is_known_unfixed`) — free cross-contract views, no payable methods.
 

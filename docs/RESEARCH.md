@@ -186,23 +186,51 @@ deployed implementations (Sept 2025 – Jan 2026) contain the fixes or later
 rewrites of the same functions, and the OP Stack's `DisputeGameFactory.create`
 has been rewritten since the audit (implementation deployed May 2026).
 
-## 6. The model path, measured
+## 6. The model path, measured — and what seeding v1.0 taught us
 
-For "changed" functions the contract asks the model twice. Probe
-(`test/probe_prompt.mjs`) with the exact prompt the contract builds for Mellow
-H-2 (`RedeemQueue._handleReport`), from GenVM on studio-dev:
+For "changed" functions the contract may ask the model (twice). Probes
+(`test/probe_prompt.mjs`) run the exact prompt the contract builds, from GenVM
+on studio-dev.
 
-* both answers `FIXED`; both quoted real deployed lines
-  (`latestEligibleIndex = uint256(timestamps.upperLookupRecent(timestamp));` and
-  the new `timestamp < timestamps.at(0)._key` guard);
-* both also quoted short context lines (`return;`, `}`). The first contract
-  draft voided any answer containing a line under 8 characters, which turned
-  this correct answer into INCONCLUSIVE on chain. The rule is now: **every**
-  quoted line must exist verbatim (one invented line still voids the answer);
-  short context lines are allowed but not stored; at least one substantive line
-  is required.
+**First probe (Mellow H-2, `_handleReport`).** Both answers `FIXED`, both quoting
+real deployed lines — but also short context lines (`return;`, `}`). The first
+draft voided any answer with a line under 8 characters, which turned this
+correct answer into INCONCLUSIVE on chain. Rule since: *every* quoted line must
+exist verbatim; short context lines are allowed but not stored; at least one
+substantive line is required.
 
-On-chain double-run agreement for every seeded model case is in `docs/SEEDS.md`.
+**v1.0 on chain: two wrong NOT_FIXED.** v1.0 (`0x6D4390…5cF3`, superseded; its
+22 decisions are kept in `docs/superseded/seed-canonical-v1.0.json`) showed the
+model only the finding and the deployed function. All 7 model cases agreed with
+themselves on both runs, and 5 were right — but two were not:
+
+| Check | Model said | Deployed code | Why the model was wrong |
+|---|---|---|---|
+| Mellow H-3 `callHook` | NOT_FIXED | `uint256 liquid = asset.balanceOf(address(vault));` — exactly the fix commit's line | `asset.balanceOf` is `TransferLibrary.balanceOf` via `using TransferLibrary for address` (outside the function); read as the unfixed ERC-20 call |
+| Mellow M-1 `updateChecks` | NOT_FIXED | `if (!info.canTransfer \|\| !toInfo.canTransfer) {` — the fix's condition, refactored with a local | the auditor *recommended* `&&`, the protocol shipped a stricter `\|\|`; the model judged against the recommendation |
+
+Double-running did not catch them: both runs made the same mistake. So
+agreement between runs is not evidence of correctness, and v1.1 changes what
+the model is allowed to decide:
+
+1. **Code first, again:** if the deployed function contains every substantive
+   line the fix commit added and none it removed, code decides FIXED
+   (`CODE_CONTAINS_FIX`) — the model is not asked. This decides `callHook` and
+   `cancelDepositRequest`.
+2. **The model sees the fix:** the prompt includes the lines the fix commit
+   removed and added in this function (an ordered diff, so a moved line shows).
+3. **Evidence must point at the change:** a model FIXED must quote a line that
+   is new or moved by the fix; a model NOT_FIXED must quote a line the fix
+   removed that is still deployed. Otherwise `MODEL_UNGROUNDED` — everyone
+   refunded. `updateChecks` (model still says NOT_FIXED, quoting the *fixed*
+   line) becomes INCONCLUSIVE: an honest "we can't say" instead of a false
+   accusation.
+
+GenVM probes of the v1.1 prompt, two runs each: H-2 FIXED/FIXED, H-4
+FIXED/FIXED, Cap M-1 FIXED/FIXED (quotes the moved lines), OP M-3 FIXED/FIXED
+(quotes the new `msg.sender` argument), `updateChecks` NOT_FIXED/NOT_FIXED
+quoting the fixed line → ungrounded → INCONCLUSIVE. v1.1 is what is deployed
+and seeded now (`docs/SEEDS.md`).
 
 ## 7. Limits of this research
 
