@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { view } from "@/lib/reads";
-import { archivePin, basename, extract, findingSection, githubPin, isPinned, STATUS_PHRASES } from "@/lib/solfn";
+import { archivePin, basename, containsFix, extract, findingSection, githubPin, isPinned, STATUS_PHRASES } from "@/lib/solfn";
 
 /**
  * Live preview of what the contract will check, before anyone pays.
@@ -96,7 +96,8 @@ export async function POST(req: Request) {
     if (!dep.ok) outcome = `INCONCLUSIVE: ${fn}() ${dep.why === "FUNCTION_OVERLOADED" ? "has several implementations" : "isn’t in the deployed source"} — everyone would be refunded.`;
     else if (f?.ok && dep.canon === f.canon) outcome = "FIXED: the deployed function is identical to the fix commit.";
     else if (a?.ok && dep.canon === a.canon) outcome = "NOT_FIXED: the deployed function is identical to the audited version.";
-    else outcome = "MODEL: the deployed function matches neither version. The model will be asked twice and must quote real deployed lines; if it flips, everyone is refunded.";
+    else if (a?.ok && f?.ok && containsFix(dep.code, a.code, f.code)) outcome = "FIXED: the deployed function contains every line the fix added and none it removed (code decides, no model).";
+    else outcome = "MODEL: the deployed function matches neither version. The model sees the finding, the fix’s change and the deployed function, is asked twice, and must quote deployed lines that point at the change; otherwise everyone is refunded.";
   }
   const depl = b?.deployment === "demo" ? "demo" : "canonical";
   const st = await view<{ status: string; open_check_id: number; check_id: number }>(depl, "fix_status", [chain, addr, report, fid]);

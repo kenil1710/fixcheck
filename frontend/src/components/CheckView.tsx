@@ -68,7 +68,7 @@ export function CheckView({ c, code, defenders, dep }: { c: Check; code: CheckCo
     ? c.dep_status !== "OK" ? "Code will decide: inconclusive, everyone refunded — the function " + (DEP_STATUS[c.dep_status] ?? c.dep_status) + "."
       : c.fix_canon_sha256 && c.dep_canon_sha256 === c.fix_canon_sha256 ? "Code will decide: fixed — the deployed function is identical to the fix commit."
       : c.dep_canon_sha256 === c.aud_canon_sha256 ? "Code will decide: not fixed — the deployed function is identical to the audited version."
-      : "The deployed function matches neither version, so the model will be asked (twice) and must quote real deployed lines."
+      : "The deployed function matches neither version exactly. Unless it visibly contains the fix, the model will be asked twice and must quote deployed lines that point at the change."
     : "";
 
   const timeline: { at: number; text: string; future?: boolean }[] = [

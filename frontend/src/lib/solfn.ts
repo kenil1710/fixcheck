@@ -212,3 +212,28 @@ export const isPinned = (u: string) => Boolean(githubPin(u) || archivePin(u));
 
 /** Lines of the stored (comment-free) function, as the contract indexes them. */
 export const codeLines = (code: string) => stripComments(code).split("\n");
+
+/** Port of fix_change / contains_fix (contracts/FixCheck.py), for the preview. */
+const canonLines = (code: string) => codeLines(code).map(canon).filter(Boolean);
+const substantive = (l: string) => l.trim().length >= 8 && /[\p{L}\p{N}_$]/u.test(l);
+export function fixChange(aud: string, fix: string): { removed: string[]; added: string[] } {
+  const a = canonLines(aud), f = canonLines(fix), n = a.length, m = f.length;
+  const dp = Array.from({ length: n + 1 }, () => new Array<number>(m + 1).fill(0));
+  for (let i = n - 1; i >= 0; i--) for (let j = m - 1; j >= 0; j--) dp[i][j] = a[i] === f[j] ? dp[i + 1][j + 1] + 1 : Math.max(dp[i + 1][j], dp[i][j + 1]);
+  const removed: string[] = [], added: string[] = [];
+  let i = 0, j = 0;
+  while (i < n || j < m) {
+    if (i < n && j < m && a[i] === f[j]) { i++; j++; }
+    else if (j < m && (i >= n || dp[i][j + 1] >= dp[i + 1][j])) added.push(f[j++]);
+    else removed.push(a[i++]);
+  }
+  return { removed, added };
+}
+export function containsFix(dep: string, aud: string, fix: string): boolean {
+  if (!fix) return false;
+  const ch = fixChange(aud, fix);
+  const added = ch.added.filter(substantive), removed = ch.removed.filter(substantive);
+  if (!added.length) return false;
+  const d = canonLines(dep);
+  return added.every((x) => d.includes(x)) && !removed.some((x) => d.includes(x));
+}
