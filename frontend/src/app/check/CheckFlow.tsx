@@ -201,7 +201,7 @@ export function CheckFlow() {
           </div>
         </div>
 
-        <aside className="grid content-start gap-4">
+        <aside className="order-first grid content-start gap-4 lg:order-none">
           <div className="sheet p-5">
             <h2 className="t-label">Start from a real finding</h2>
             <ul className="mt-2 grid gap-1">

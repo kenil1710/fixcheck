@@ -31,7 +31,7 @@ export default function How() {
 
       <section aria-labelledby="split" className="mt-14">
         <h2 id="split" className="t-h2">What the model never decides</h2>
-        <div className="mt-6 grid gap-6 md:grid-cols-2">
+        <div className="mt-6 grid items-start gap-6 md:grid-cols-2">
           <div className="sheet p-6">
             <h3 className="t-h3">Code decides</h3>
             <ul className="mt-4 grid gap-2.5">{CODE.map((x) => <li key={x} className="grid grid-cols-[1.1rem_1fr] gap-2"><span aria-hidden="true" style={{ color: "var(--fixed)" }}>✓</span><span>{x}</span></li>)}</ul>
