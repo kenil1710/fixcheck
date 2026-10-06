@@ -229,8 +229,17 @@ the model is allowed to decide:
 GenVM probes of the v1.1 prompt, two runs each: H-2 FIXED/FIXED, H-4
 FIXED/FIXED, Cap M-1 FIXED/FIXED (quotes the moved lines), OP M-3 FIXED/FIXED
 (quotes the new `msg.sender` argument), `updateChecks` NOT_FIXED/NOT_FIXED
-quoting the fixed line → ungrounded → INCONCLUSIVE. v1.1 is what is deployed
-and seeded now (`docs/SEEDS.md`).
+quoting the fixed line → ungrounded.
+
+**v1.1 on chain** (`docs/SEEDS.md`): of the 7 changed functions, code decided 2
+(`CODE_CONTAINS_FIX`: `callHook`, `cancelDepositRequest`), the model decided 3
+FIXED with grounded quotes on both runs (H-2, Cap M-1, OP M-3), and 2 ended
+INCONCLUSIVE because one of the two answers did not point at the change
+(H-4 `calculateFee`: UNGROUNDED|FIXED; `updateChecks`: FIXED|UNGROUNDED) —
+everyone refunded. No model answer produced a NOT_FIXED; all 8 NOT_FIXED
+verdicts are code facts (deployed function identical to the audited one), and
+all 15 findings research classified as identical to the fix or to the audited
+code got exactly that verdict by code match.
 
 ## 7. Limits of this research
 

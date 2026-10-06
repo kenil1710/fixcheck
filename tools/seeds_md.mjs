@@ -27,10 +27,15 @@ for (const x of canon) {
 }
 const modelRows = canon.filter((x) => x.model_votes);
 const agree = modelRows.filter((x) => { const [a, b] = x.model_votes.split("|"); return a === b; }).length;
-md += `\n**Model double-run agreement:** ${agree} of ${modelRows.length} model-decided checks got the same answer twice (${modelRows.map((x) => `#${x.check_id} ${x.model_votes}`).join(", ") || "none yet"}). Code alone decided ${canon.filter((x) => x.state === "DECIDED" && !x.model_votes).length}.\n\n`;
-md += `**Offline vs on chain:** every code-decided verdict matches the offline research classification (IDENTICAL_TO_FIX → FIXED, IDENTICAL_TO_VULNERABLE → NOT_FIXED).\n\n`;
+md += `\n**Model double-run agreement:** ${agree} of ${modelRows.length} checks that reached the model got the same accepted answer twice (${modelRows.map((x) => `#${x.check_id} ${x.model_votes}`).join(", ") || "none yet"}). Code alone decided ${canon.filter((x) => x.state === "DECIDED" && !x.model_votes).length}.\n\n`;
+const off = (x) => seeds.find((y) => y.finding_id === x.finding_id && y.function === x.function && y.chain === x.chain)?.offline;
+const match = canon.filter((x) => (off(x) === "IDENTICAL_TO_FIX" && x.basis === "CODE_MATCH_FIX") || (off(x) === "IDENTICAL_TO_VULNERABLE" && x.basis === "CODE_MATCH_VULNERABLE")).length;
+const exact = canon.filter((x) => off(x) !== "CHANGED").length;
+const changed = canon.filter((x) => off(x) === "CHANGED");
+md += `**Offline vs on chain:** ${match} of ${exact} findings that research classified as identical to the fix or to the audited code got exactly that verdict by code match on chain. The ${changed.length} "changed" findings: ${changed.map((x) => `#${x.check_id} ${x.basis}`).join(", ")}.\n\n`;
+md += `**Every NOT_FIXED is a code fact** (deployed function identical to the audited one). The model never produced a NOT_FIXED on v1.1; where one of its two answers did not point at the fix, the check is INCONCLUSIVE and everyone was refunded. v1.0 results (with the two wrong model NOT_FIXED verdicts that led to v1.1) are in \`docs/superseded/seed-canonical-v1.0.json\` and docs/RESEARCH.md §6.\n\n`;
 md += `## Demo — ${dep.FixCheckDemo.address}\n\n90 s counter window, 300 s decide window; same source. Every path:\n\n| # | Path | Finding | Verdict | Basis | Payout |\n|---|---|---|---|---|---|\n`;
-const paths = { 1: "challenge wins (defender loses)", 2: "challenge loses (defender wins)", 3: "inconclusive refund (function not in that contract)", 4: "no defender → refund minus fee", 5: "expiry → everyone refunded", 6: "model decides (function changed)" };
+const paths = { 1: "challenge wins (defender loses)", 2: "challenge loses (defender wins)", 3: "inconclusive refund (function not in that contract)", 4: "no defender → refund minus fee", 5: "expiry → everyone refunded", 6: "function changed since the fix, still contains it → code decides (CODE_CONTAINS_FIX)" };
 for (const x of demo) md += `| [${x.check_id}](${SITE}/demo/checks/${x.check_id}) | ${paths[x.check_id] ?? ""} | ${x.finding_id} \`${x.function}\` | ${verdict(x)} | ${x.basis} | challenger ${gen(x.challenger_paid_wei)} GEN, fee ${gen(x.fee_paid_wei)} GEN |\n`;
 md += `\nAlso on the demo: an unpinned report URL refused (stake left withdrawable), \`sweep_fees\`, every account withdrew, and a second \`withdraw\` was refused ("nothing to withdraw"). Demo ledger: balance ${gen(dled.balance_wei)} = open ${gen(dled.open_stakes_wei)} + withdrawable ${gen(dled.claimable_wei)} + fees ${gen(dled.fees_wei)} (invariant ${dled.invariant_holds ? "holds" : "BROKEN"}). Raw logs: \`docs/seed-demo.json\`, \`docs/seed-canonical.json\`.\n`;
 writeFileSync(root + "docs/SEEDS.md", md);

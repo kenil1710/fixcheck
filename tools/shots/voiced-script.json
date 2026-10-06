@@ -1,0 +1,64 @@
+{
+ "notFixedId": 5,
+ "modelPath": "/checks/13",
+ "example": "Mellow H-2 · _handleReport (changed since audit)",
+ "stakeExample": "PoolTogether M-16 · maxDeposit on Base",
+ "vertical": [
+  "landing",
+  "finding",
+  "vsfix",
+  "real",
+  "close"
+ ],
+ "scenes": [
+  {
+   "id": "landing",
+   "text": "Audit reports say “Fixed”. Users trust it. Nobody checks the code that's actually deployed."
+  },
+  {
+   "id": "scorecard",
+   "text": "FixCheck does. It took 22 findings that Sherlock reports mark as fixed, and read the code at each protocol's own listed address. {FIXED} are confirmed in deployed code; {NOT_FIXED} are not."
+  },
+  {
+   "id": "protocol",
+   "text": "This is PoolTogether: one row per finding, its status, and how it was decided."
+  },
+  {
+   "id": "finding",
+   "text": "This finding was marked fixed. On the left is the function the auditors reviewed; on the right, the one deployed on Arbitrum. They're identical, line for line."
+  },
+  {
+   "id": "vsfix",
+   "text": "Against the fix commit, the fixed line simply isn't there. So code alone says: not fixed."
+  },
+  {
+   "id": "model",
+   "text": "When deployed code matches neither version, validators ask a model. It must quote exact deployed lines, highlighted here, and code checks they point at the fix."
+  },
+  {
+   "id": "preview",
+   "text": "To check a finding yourself, pick the report, the finding and the deployed address. Before you pay, the app runs the same checks the contract will."
+  },
+  {
+   "id": "stake",
+   "text": "Then you stake that it isn't fixed. Every validator fetches the report, both commits and the verified source, and they must agree."
+  },
+  {
+   "id": "result",
+   "text": "The check is filed. Anyone can stake that it is fixed until the window closes."
+  },
+  {
+   "id": "how",
+   "text": "Code decides everything it can. The model never decides what counts as evidence, the deadlines, or the money."
+  },
+  {
+   "id": "real",
+   "text": "The real result: PoolTogether's prize pool, vault and draw manager on OP Mainnet were deployed before the audit and still run the audited code. The redeployed claimer has its fixes."
+  },
+  {
+   "id": "close",
+   "text": "Code compares the functions. GenLayer validators only judge the middle cases, and must quote the exact lines. fixcheck-ledger dot vercel dot app.",
+   "tail": 1.2
+  }
+ ]
+}
