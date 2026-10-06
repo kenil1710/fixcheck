@@ -32,14 +32,14 @@ export function Specimen({ check, code }: { check: Check; code: CheckCode }) {
                 <div className="flex whitespace-pre q-bad" role="cell">
                   <span className="w-6 shrink-0" aria-hidden="true" />
                   <span className="pr-3">{r.left!.text}</span>
-                  <span className="sticky right-0 ml-auto shrink-0 self-center bg-[var(--sheet)] px-2 font-sans text-[0.72rem] italic" style={{ color: "var(--bad)" }}>deployed, as audited</span>
+                  <span className="qnote sticky right-0 ml-auto shrink-0 self-stretch pl-6 pr-2 flex items-center leading-none font-sans text-[0.72rem] italic" style={{ color: "var(--bad)" }}>deployed, as audited</span>
                 </div>
               )}
               {fixLine && (
                 <div className="flex whitespace-pre text-ink-3" role="cell" style={{ boxShadow: "inset 3px 0 0 var(--rule)" }}>
                   <span className="w-6 shrink-0" aria-hidden="true" />
                   <span className="pr-3">{r.right!.text}</span>
-                  <span className="sticky right-0 ml-auto shrink-0 self-center bg-[var(--sheet)] px-2 font-sans text-[0.72rem] italic">the fix, not deployed</span>
+                  <span className="qnote sticky right-0 ml-auto shrink-0 self-stretch pl-6 pr-2 flex items-center leading-none font-sans text-[0.72rem] italic">the fix, not deployed</span>
                 </div>
               )}
               {r.kind === "same" && (

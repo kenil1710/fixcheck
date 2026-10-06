@@ -135,7 +135,7 @@ export function CheckView({ c, code, defenders, dep }: { c: Check; code: CheckCo
           </section>
         </div>
 
-        <aside className="grid content-start gap-6">
+        <aside className="order-first grid content-start gap-6 lg:order-none">
           <section aria-labelledby="verdict" className="sheet p-5">
             <h2 id="verdict" className="t-label">Verdict</h2>
             <div className="mt-2"><Status kind={kind} /></div>

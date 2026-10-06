@@ -54,7 +54,7 @@ export function DiffViewer(p: Props) {
         <span className="ln shrink-0">{s ? s.n + 1 : ""}</span>
         <span className="pr-4">{s ? s.text || " " : " "}</span>
         {isQ && s && !quoted.has(s.n - 1) && (
-          <span className="sticky right-0 ml-auto shrink-0 self-center pl-3 pr-2 font-sans text-[0.72rem] italic" style={{ color: `var(--${p.tone === "open" ? "ink-2" : p.tone})` }}>quoted by validators</span>
+          <span className="qnote sticky right-0 ml-auto shrink-0 self-stretch pl-6 pr-2 font-sans text-[0.72rem] italic flex items-center leading-none" style={{ color: `var(--${p.tone === "open" ? "ink-2" : p.tone})` }}>quoted by validators</span>
         )}
       </div>
     );

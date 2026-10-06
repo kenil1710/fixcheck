@@ -108,7 +108,7 @@ export function CheckFlow() {
           <li key={s} className="flex items-center gap-1">
             <button type="button" disabled={i > step && !okStep.slice(0, i).every(Boolean)} onClick={() => setStep(i)} aria-current={i === step ? "step" : undefined}
               className={`flex items-center gap-2 rounded-md px-2.5 py-1.5 t-small ${i === step ? "bg-ink text-sheet" : i < step ? "text-ink" : "text-ink-3"} disabled:cursor-not-allowed`}>
-              <span className="t-num">{i + 1}</span>{s}
+              <span className="tabular-nums opacity-70">{i + 1}</span>{s}
             </button>
             {i < STEPS.length - 1 && <span className="text-ink-3" aria-hidden="true">/</span>}
           </li>

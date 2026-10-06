@@ -214,6 +214,7 @@ a { color: inherit; text-decoration-thickness: 1px; text-underline-offset: 3px; 
 @keyframes sweep { from { background-size: 0% 100%; } to { background-size: 100% 100%; } }
 .sweep { background-image: linear-gradient(90deg, var(--sweep-c, transparent), var(--sweep-c, transparent)); background-repeat: no-repeat; animation: sweep 700ms ease-out both; }
 
+.qnote { background: linear-gradient(90deg, transparent, var(--sheet) 1.1rem); }
 .slip {
   background: var(--slip);
   border: 1px solid var(--rule);
