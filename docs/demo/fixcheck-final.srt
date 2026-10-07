@@ -1,0 +1,315 @@
+1
+00:00:00,000 --> 00:00:01,460
+Audit reports say Fixed.
+
+2
+00:00:01,460 --> 00:00:05,100
+Almost nobody checks the code that actually runs on chain.
+
+3
+00:00:05,100 --> 00:00:08,680
+FixCheck checks it, one finding at a time.
+
+4
+00:00:08,733 --> 00:00:10,803
+This is a real Sherlock finding.
+
+5
+00:00:10,803 --> 00:00:12,183
+Sherlock runs audit contests.
+
+6
+00:00:12,183 --> 00:00:14,253
+When the team ships a fix,
+
+7
+00:00:14,253 --> 00:00:18,383
+Sherlock marks the finding fixed and links the pull request.
+
+8
+00:00:18,433 --> 00:00:20,603
+But the fix lands in a repository.
+
+9
+00:00:20,603 --> 00:00:23,073
+The contract on chain is a separate deployment.
+
+10
+00:00:23,073 --> 00:00:27,153
+It can be older than the fix, or simply never replaced.
+
+11
+00:00:27,200 --> 00:00:29,210
+Here is how a check works.
+
+12
+00:00:29,210 --> 00:00:30,540
+Someone files a check,
+
+13
+00:00:30,540 --> 00:00:33,220
+and stakes that the fix is not deployed.
+
+14
+00:00:33,220 --> 00:00:35,220
+Every validator reads the same evidence:
+
+15
+00:00:35,220 --> 00:00:37,230
+the finding's section of the report,
+
+16
+00:00:37,230 --> 00:00:38,570
+the merged fix commit,
+
+17
+00:00:38,570 --> 00:00:41,240
+and the verified source at the deployed address.
+
+18
+00:00:41,240 --> 00:00:44,250
+Code compares the functions, and decides whenever it can.
+
+19
+00:00:44,250 --> 00:00:46,930
+A model only sees what code cannot settle.
+
+20
+00:00:46,930 --> 00:00:51,270
+It must quote a line the fix added, and two runs must agree.
+
+21
+00:00:51,270 --> 00:00:52,940
+Otherwise the result is inconclusive,
+
+22
+00:00:52,940 --> 00:00:54,950
+and everyone is refunded.
+
+23
+00:00:55,000 --> 00:00:55,420
+Fixed.
+
+24
+00:00:55,420 --> 00:00:57,490
+PoolTogether's Claimer on OP Mainnet
+
+25
+00:00:57,490 --> 00:00:59,570
+was redeployed in July 2024.
+
+26
+00:00:59,570 --> 00:01:02,890
+Its function is identical to the fix commit,
+
+27
+00:01:02,890 --> 00:01:05,620
+so code alone says fixed.
+
+28
+00:01:05,667 --> 00:01:06,427
+Not fixed.
+
+29
+00:01:06,427 --> 00:01:09,067
+Check six is PoolTogether's vault on Ethereum.
+
+30
+00:01:09,067 --> 00:01:11,717
+It was deployed on August 19, 2024,
+
+31
+00:01:11,717 --> 00:01:14,737
+after the fix was merged on June 28.
+
+32
+00:01:14,737 --> 00:01:17,387
+Its function is still the audited version.
+
+33
+00:01:17,387 --> 00:01:20,717
+This is the only not fixed result.
+
+34
+00:01:20,767 --> 00:01:21,817
+Predates the audit.
+
+35
+00:01:21,817 --> 00:01:25,307
+This vault on OP Mainnet was deployed in April 2024,
+
+36
+00:01:25,307 --> 00:01:26,347
+before the audit.
+
+37
+00:01:26,347 --> 00:01:29,837
+It is immutable, so it could never contain the fix.
+
+38
+00:01:29,837 --> 00:01:32,627
+FixCheck does not blame the team for that.
+
+39
+00:01:32,627 --> 00:01:34,347
+It says so.
+
+40
+00:01:34,400 --> 00:01:35,360
+Predates the fix.
+
+41
+00:01:35,360 --> 00:01:37,600
+Check five is the vault on Arbitrum.
+
+42
+00:01:37,600 --> 00:01:39,510
+It was deployed on May 29.
+
+43
+00:01:39,510 --> 00:01:41,750
+The fix was merged on June 28.
+
+44
+00:01:41,750 --> 00:01:45,270
+It could not contain a fix that did not exist yet,
+
+45
+00:01:45,270 --> 00:01:47,550
+so every stake is refunded.
+
+46
+00:01:47,600 --> 00:01:47,980
+Inconclusive.
+
+47
+00:01:47,980 --> 00:01:51,000
+The explorer verified this contract's source only partially,
+
+48
+00:01:51,000 --> 00:01:54,770
+so the code shown may not be exactly what runs.
+
+49
+00:01:54,770 --> 00:01:57,410
+Guessing would be unfair to one side.
+
+50
+00:01:57,410 --> 00:02:01,480
+Inconclusive is the honest answer, and everyone is refunded.
+
+51
+00:02:01,533 --> 00:02:04,143
+Now a live check, on the demo contract,
+
+52
+00:02:04,143 --> 00:02:06,103
+where the window is 90 seconds.
+
+53
+00:02:06,103 --> 00:02:07,413
+Pick a real finding.
+
+54
+00:02:07,413 --> 00:02:08,383
+Before you pay,
+
+55
+00:02:08,383 --> 00:02:11,983
+the app runs the same checks the contract will.
+
+56
+00:02:12,033 --> 00:02:15,523
+File the check, with a stake that it is not fixed.
+
+57
+00:02:15,523 --> 00:02:19,053
+Every validator fetches the sources, and they must agree.
+
+58
+00:02:19,100 --> 00:02:20,370
+The check is open.
+
+59
+00:02:20,370 --> 00:02:24,520
+Until the window closes, anyone can stake that it is fixed.
+
+60
+00:02:24,567 --> 00:02:28,987
+90 seconds later, anyone can ask the validators to decide.
+
+61
+00:02:29,033 --> 00:02:31,233
+This vault was deployed before the audit.
+
+62
+00:02:31,233 --> 00:02:33,433
+So the verdict is predates the audit,
+
+63
+00:02:33,433 --> 00:02:35,683
+and every stake comes back.
+
+64
+00:02:35,733 --> 00:02:37,963
+Refunds and winnings wait in your balance.
+
+65
+00:02:37,963 --> 00:02:40,213
+Withdraw them whenever you like.
+
+66
+00:02:40,267 --> 00:02:43,357
+Across 22 checks of 21 real findings,
+
+67
+00:02:43,357 --> 00:02:45,567
+from four protocols: 7 fixed,
+
+68
+00:02:45,567 --> 00:02:48,667
+1 not fixed, 6 predate the audit,
+
+69
+00:02:48,667 --> 00:02:52,417
+1 predates its fix, and 7 inconclusive.
+
+70
+00:02:52,467 --> 00:02:54,707
+Every verdict is contract state on GenLayer.
+
+71
+00:02:54,707 --> 00:02:57,917
+You can read it yourself on the explorer.
+
+72
+00:02:57,967 --> 00:03:01,107
+The code deployed at these addresses matches the repository,
+
+73
+00:03:01,107 --> 00:03:02,817
+byte for byte.
+
+74
+00:03:02,867 --> 00:03:05,757
+Two independent attack rounds found 21 issues.
+
+75
+00:03:05,757 --> 00:03:10,117
+All of them are fixed, and 183 tests pass.
+
+76
+00:03:10,167 --> 00:03:12,417
+What is not fixed yet is written down,
+
+77
+00:03:12,417 --> 00:03:15,317
+in the Known limitations section of the README.
+
+78
+00:03:15,367 --> 00:03:19,687
+Next time a report says Fixed, you can check.
+
+79
+00:03:19,687 --> 00:03:20,847
+fixcheck-ledger.vercel.app
