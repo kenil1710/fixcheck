@@ -37,6 +37,7 @@
 ## Review of seeded results
 - [x] Earlier model verdicts reviewed against the fix diffs; two wrong NOT_FIXED found and the rules narrowed; earlier deployments kept under `docs/superseded/`
 - [x] Attack pass (`docs/ATTACK_REPORT.md`): all nine findings fixed, 12 attack tests + 35 regression tests pass, redeployed from the final contract commit and reseeded
+- [x] Second attack pass (`docs/ATTACK_REPORT_R2.md`): all twelve findings fixed, 14 round-2 attack tests + 48 regression tests pass (183 offline tests in all), redeployed from commit `7efb699`, 22 checks re-seeded; PoolTogether's Arbitrum vault is now PREDATES_FIX
 
 ## Finish
 - [x] README (problem, how it works, model vs code, full addresses, seed table, known limits, how to use in 5 steps)
