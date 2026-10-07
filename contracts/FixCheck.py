@@ -13,8 +13,9 @@ import typing
 # checks, finding by finding, whether the function the finding names is fixed
 # in the code that is actually deployed on chain.
 #
-# FILING (file_check, payable). A challenger names: a PINNED report (GitHub raw
-# at a commit SHA, or a web.archive.org snapshot), the finding id, the function,
+# FILING (file_check, payable). A challenger names: a PINNED Sherlock report (a
+# sherlock-audit judging repo at a commit SHA, or a web.archive.org capture of
+# one or of Sherlock's report host), the finding id, the function,
 # the audited source file at its commit, the fix commit's file (required), the
 # chain, the deployed address and a PINNED protocol docs page that must list
 # that address. Every validator fetches everything itself; the filing is
@@ -24,16 +25,22 @@ import typing
 #     phrase, and the section names the function;
 #   - the audited file is the finding's own audited commit (a code link to
 #     owner/repo/blob/<sha>/ in the section, else elsewhere in the same pinned
-#     report) and the fix file is the head of a PR - or a commit - that the
-#     finding's section links (fix 1);
+#     report) and the fix file is the head of a PR - or a commit - that
+#     Sherlock's own status block in the finding links, in the protocol's own
+#     GitHub account, on its default branch (directly or through the PR's
+#     merge commit); the fix's commit and merge dates are read;
+#   - an archived capture is exactly the requested one, taken no later than
+#     the filing, and no URL path carries %-escapes;
 #   - the docs page lists the address; the deployed contract is verified;
-#   - a proxy is resolved by its EIP-1967 slot over RPC, cross-checked with the
-#     explorer, and only the implementation's sources are judged (fix 4);
-#   - the running implementation is unique: no override, library copy or
-#     same-name copy elsewhere in the bundle, and only full/exact source
-#     matches count (fix 3);
-#   - the audited commit's date and the deployment's creation time are read
-#     and stored (fix 7).
+#   - a proxy is resolved by its EIP-1967 slot, read over RPC at a block the
+#     leader names, cross-checked with the explorer; only the implementation's
+#     sources are judged;
+#   - the function belongs to the contract the explorer says was compiled (or
+#     one of its ancestors, resolved through import aliases); nothing in that
+#     chain overrides it or any function it calls; only full/exact source
+#     matches count;
+#   - the audited commit's date and the creation time of the deployment (and
+#     of its implementation) are read and stored.
 # The challenger's stake says NOT_FIXED.
 #
 # COUNTER-STAKE (counter_stake, payable). Until the counter deadline anyone but
@@ -45,20 +52,26 @@ import typing
 #     ... and the (non-proxy) contract
 #     was created before the audited
 #     commit                           -> PREDATES_AUDIT (DEPLOYED_BEFORE_AUDIT)
+#     ... or the code that runs was
+#     created before the fix existed   -> PREDATES_FIX   (DEPLOYED_BEFORE_FIX)
 #   every fix hunk present, contiguous,
-#   in order, at the same nesting, and
+#   in order, inside the fix's own
+#   blocks, no early exit before it,
 #   no removed line left               -> FIXED          (CODE_CONTAINS_FIX)
 #   function missing / overloaded /
-#   overridden / partial source /
+#   overridden / not in the compiled
+#   contract / partial source /
 #   unresolved proxy / unparseable     -> INCONCLUSIVE
 #   otherwise -> the model, shown ONLY the finding, what the fix commit
 #   changed in this function and the deployed function (comments removed,
 #   string literals blanked), answers FIXED / NOT_FIXED / INCONCLUSIVE and
 #   quotes deployed lines. Code accepts FIXED only if a quote is a line the
-#   fix added and no line the fix removed is still deployed; NOT_FIXED only
-#   if a quote is a removed (vulnerable) line still deployed (fix 6). The
-#   model is asked TWICE; anything but two identical grounded answers is
-#   INCONCLUSIVE. Validators repeat all of it and must agree.
+#   fix added that the audited version does not have, and no line the fix
+#   removed is still deployed; NOT_FIXED only if a quote is a removed
+#   (vulnerable) line still deployed - and code created before the fix
+#   existed is PREDATES_FIX instead. The model is asked TWICE; anything but
+#   two identical grounded answers is INCONCLUSIVE. Validators repeat all of
+#   it and must agree.
 #
 # WHERE THE LINE IS
 #   code    URL pinning and normalisation, fetch + hash, binding the evidence
@@ -75,6 +88,7 @@ import typing
 #                   challenger is refunded minus the frozen fee
 #   INCONCLUSIVE    everyone refunded
 #   PREDATES_AUDIT  everyone refunded (the code could not have held the fix)
+#   PREDATES_FIX    everyone refunded (the fix did not exist yet)
 #   expire()        after the decide deadline, anyone: everyone refunded
 #
 # RULES (each one a past rejection, written down)
@@ -101,19 +115,21 @@ import typing
 #      before the transfer is posted.
 #
 # DESIGN NOTES: docs/RESEARCH.md (what the model got wrong on an earlier
-# deployment and why it is now this narrow) and docs/ATTACK_REPORT.md (the
-# nine findings these rules close: fix 1 .. fix 9 in the comments below).
+# deployment and why it is now this narrow), docs/ATTACK_REPORT.md (the nine
+# findings closed by "fix 1" .. "fix 9" in the comments below) and
+# docs/ATTACK_REPORT_R2.md (the twelve closed by "round-2 fix 1" .. "12").
 #
 # The runner rejects the str replace method; slice around find() instead.
 
-VERSION = "1.2.0"
+VERSION = "1.3.0"
 BPS = 10000
 
 V_FIXED = "FIXED"
 V_NOT_FIXED = "NOT_FIXED"
 V_INCONCLUSIVE = "INCONCLUSIVE"
 V_PREDATES = "PREDATES_AUDIT"
-VERDICTS = (V_FIXED, V_NOT_FIXED, V_INCONCLUSIVE, V_PREDATES)
+V_PREDATES_FIX = "PREDATES_FIX"
+VERDICTS = (V_FIXED, V_NOT_FIXED, V_INCONCLUSIVE, V_PREDATES, V_PREDATES_FIX)
 
 S_OPEN = "OPEN"
 S_DECIDED = "DECIDED"
@@ -123,11 +139,15 @@ B_CODE_MATCH_FIX = "CODE_MATCH_FIX"
 B_CODE_MATCH_VULNERABLE = "CODE_MATCH_VULNERABLE"
 B_CODE_CONTAINS_FIX = "CODE_CONTAINS_FIX"
 B_DEPLOYED_BEFORE_AUDIT = "DEPLOYED_BEFORE_AUDIT"
+B_DEPLOYED_BEFORE_FIX = "DEPLOYED_BEFORE_FIX"
 B_FUNCTION_MISSING = "FUNCTION_MISSING"
 B_FUNCTION_OVERRIDDEN = "FUNCTION_OVERRIDDEN"
 B_PARTIAL_MATCH = "PARTIAL_MATCH"
 B_PROXY_UNRESOLVED = "PROXY_UNRESOLVED"
 B_IMPLEMENTATION_NOT_VERIFIED = "IMPLEMENTATION_NOT_VERIFIED"
+B_FUNCTION_NOT_IN_COMPILED_CONTRACT = "FUNCTION_NOT_IN_COMPILED_CONTRACT"
+B_PARENT_UNRESOLVED = "PARENT_UNRESOLVED"
+B_HELPER_OVERRIDDEN = "HELPER_OVERRIDDEN"
 B_FUNCTION_OVERLOADED = "FUNCTION_OVERLOADED"
 B_UNPARSEABLE = "UNPARSEABLE"
 B_FUNCTION_TOO_LARGE = "FUNCTION_TOO_LARGE"
@@ -146,16 +166,35 @@ B_EXPIRED = "EXPIRED"
 # (docs/RESEARCH.md section 2), so those chains read Sourcify's v2 API. One
 # frozen source per chain: two validators can never read two different
 # explorers. The RPC is used for the EIP-1967 slot (fix 4) and, on the
-# Sourcify chains, for the creation block's timestamp (fix 7).
+# Sourcify chains, for the creation block's timestamp (fix 7). Each RPC
+# serves recent state at a past block number (docs/research/probe_web2.json).
 CHAINS = {
     "ethereum": ("blockscout", "https://eth.blockscout.com", 1, "https://ethereum-rpc.publicnode.com"),
-    "optimism": ("blockscout", "https://explorer.optimism.io", 10, "https://optimism-rpc.publicnode.com"),
+    "optimism": ("blockscout", "https://explorer.optimism.io", 10, "https://mainnet.optimism.io"),
     "base": ("sourcify", "https://sourcify.dev", 8453, "https://mainnet.base.org"),
     "arbitrum": ("sourcify", "https://sourcify.dev", 42161, "https://arb1.arbitrum.io/rpc"),
-    "polygon": ("sourcify", "https://sourcify.dev", 137, "https://polygon-rpc.com"),
+    "polygon": ("sourcify", "https://sourcify.dev", 137, "https://polygon.drpc.org"),
+}
+
+# Round-2 fix 11: the leader reads the EIP-1967 slot at (head - margin) and
+# names that block; a validator reads the same block, and accepts it only if
+# it is at or below its own head and at most max_lag blocks old (about 20
+# minutes; each RPC serves state that far back).
+SLOT_BLOCKS = {
+    "ethereum": (2, 100),
+    "optimism": (15, 600),
+    "base": (15, 600),
+    "arbitrum": (60, 2400),
+    "polygon": (15, 600),
 }
 
 GITHUB_RAW = "https://raw.githubusercontent.com/"
+# Round-2 fix 2: reports are accepted only from Sherlock - its judging repos
+# on GitHub (pinned at a SHA) and its report host, or web.archive.org
+# captures of exactly those URLs.
+REPORT_OWNER = "sherlock-audit"
+REPORT_REPO_SUFFIX = "-judging"
+REPORT_HOSTS = ("audits.sherlock.xyz",)
 GITHUB_WEB = "https://github.com/"
 PATCH_BASE = "https://patch-diff.githubusercontent.com/raw/"
 ARCHIVE = "https://web.archive.org/web/"
@@ -166,8 +205,8 @@ ALLOWED_PREFIXES = (
     GITHUB_RAW, PATCH_BASE, ARCHIVE,
     "https://eth.blockscout.com/api/v2/", "https://explorer.optimism.io/api/v2/",
     "https://sourcify.dev/server/v2/contract/",
-    "https://ethereum-rpc.publicnode.com", "https://optimism-rpc.publicnode.com",
-    "https://mainnet.base.org", "https://arb1.arbitrum.io/rpc", "https://polygon-rpc.com",
+    "https://ethereum-rpc.publicnode.com", "https://mainnet.optimism.io",
+    "https://mainnet.base.org", "https://arb1.arbitrum.io/rpc", "https://polygon.drpc.org",
 )
 
 MAX_PULLS = 4                       # fix PR links followed per finding
@@ -228,11 +267,72 @@ def _sha_bytes(raw: bytes) -> str:
     return hashlib.sha256(raw).hexdigest()
 
 
+UNRESERVED = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~"
+
+
+def _unescape(t: str) -> str:
+    """%XX escapes of unreserved characters decoded (README%2Emd ->
+    README.md: GitHub serves the same bytes for both). Other escapes stay."""
+    out = []
+    i = 0
+    while i < len(t):
+        c = t[i]
+        if c == "%" and i + 2 < len(t) and _is_hex(t[i + 1:i + 3].lower(), 2):
+            ch = chr(int(t[i + 1:i + 3], 16))
+            if ch in UNRESERVED:
+                out.append(ch)
+                i += 3
+                continue
+        out.append(c)
+        i += 1
+    return "".join(out)
+
+
 def norm_url(url: typing.Any) -> str:
-    """fix 8: one spelling per document. Query string and fragment dropped,
-    trailing slashes dropped, scheme and host lowercased, and for GitHub raw
-    the owner and repo lowercased (GitHub serves the same bytes for any
-    case). Paths keep their case. "" if the URL is not an https URL."""
+    """fix 8 + round-2 fix 10: one spelling per document. Fragment dropped,
+    trailing slashes dropped, scheme and host lowercased, %-escapes of
+    unreserved characters decoded, and for GitHub raw the owner and repo
+    lowercased (GitHub serves the same bytes for any case). The query string
+    is dropped, EXCEPT inside a web.archive.org capture, where it is part of
+    the archived document's identity. Captures are spelled in their raw
+    `<timestamp>id_` form. Paths keep their case. "" if not an https URL."""
+    t = str(url).strip()
+    k = t.find("#")
+    if k >= 0:
+        t = t[:k]
+    if not t.lower().startswith("https://"):
+        return ""
+    rest = t[8:]
+    j = rest.find("/")
+    host = (rest if j < 0 else rest[:j]).lower()
+    path = "" if j < 0 else rest[j:]
+    query = ""
+    k = path.find("?")
+    if k >= 0:
+        query = path[k:]
+        path = path[:k]
+    path = _unescape(path)
+    while path.endswith("/"):
+        path = path[:-1]
+    t = "https://" + host + path
+    if t.startswith(ARCHIVE):
+        r = t[len(ARCHIVE):]
+        k = r.find("/")
+        if k > 0 and not r[:k].endswith("id_"):
+            r = r[:k] + "id_" + r[k:]
+        t = ARCHIVE + r + (query if query != "?" else "")
+    elif t.startswith(GITHUB_RAW):
+        parts = t[len(GITHUB_RAW):].split("/")
+        if len(parts) >= 2:
+            parts[0] = parts[0].lower()
+            parts[1] = parts[1].lower()
+        t = GITHUB_RAW + "/".join(parts)
+    return t
+
+
+def percent_in_path(url: typing.Any) -> bool:
+    """Round-2 fix 10: a %-escape anywhere in the URL's path (before any
+    query) - refused at filing, so one document has one stored spelling."""
     t = str(url).strip()
     k = t.find("#")
     if k >= 0:
@@ -240,22 +340,7 @@ def norm_url(url: typing.Any) -> str:
     k = t.find("?")
     if k >= 0:
         t = t[:k]
-    while t.endswith("/"):
-        t = t[:-1]
-    if not t.lower().startswith("https://"):
-        return ""
-    rest = t[8:]
-    j = rest.find("/")
-    host = (rest if j < 0 else rest[:j]).lower()
-    path = "" if j < 0 else rest[j:]
-    t = "https://" + host + path
-    if t.startswith(GITHUB_RAW):
-        parts = t[len(GITHUB_RAW):].split("/")
-        if len(parts) >= 2:
-            parts[0] = parts[0].lower()
-            parts[1] = parts[1].lower()
-        t = GITHUB_RAW + "/".join(parts)
-    return t
+    return t.find("%") >= 0
 
 
 def _clean_url(url: typing.Any) -> str:
@@ -292,10 +377,26 @@ def github_pin(url: typing.Any) -> dict:
     return {"owner": owner.lower(), "repo": repo.lower(), "sha": sha, "path": path}
 
 
-def archive_pin(url: typing.Any) -> dict:
-    """https://web.archive.org/web/<14-digit timestamp>[id_]/<http(s) url>
-    -> {"ts", "target", "host"}; {} otherwise. A snapshot at an exact
-    timestamp never changes; "latest" or a partial timestamp is refused."""
+def _stamp_epoch(stamp: str) -> int:
+    """A 14-digit Wayback timestamp as unix seconds; 0 if not a real time."""
+    if len(stamp) != 14 or not stamp.isdigit():
+        return 0
+    mo = int(stamp[4:6])
+    d = int(stamp[6:8])
+    if mo < 1 or mo > 12 or d < 1 or d > 31 or int(stamp[8:10]) > 23 or int(stamp[10:12]) > 59 \
+            or int(stamp[12:14]) > 59:
+        return 0
+    return _epoch_from_iso(stamp[0:4] + "-" + stamp[4:6] + "-" + stamp[6:8] + "T" + stamp[8:10] + ":"
+                           + stamp[10:12] + ":" + stamp[12:14] + "Z")
+
+
+def archive_pin(url: typing.Any, now: int = -1) -> dict:
+    """https://web.archive.org/web/<14-digit timestamp>id_/<http(s) url>
+    -> {"ts", "target", "host"}; {} otherwise. With `now` (the filing time),
+    the timestamp must also be a real time no later than now (round-2 fix 8):
+    the Wayback Machine answers a timestamp that is not a capture with the
+    CLOSEST capture, so a future timestamp means "latest". Exactness of the
+    capture itself is checked on the response (Memento-Datetime)."""
     t = _clean_url(url)
     if not t.startswith(ARCHIVE):
         return {}
@@ -309,15 +410,42 @@ def archive_pin(url: typing.Any) -> dict:
         stamp = stamp[:-3]
     if len(stamp) != 14 or not stamp.isdigit():
         return {}
+    if now >= 0:
+        at = _stamp_epoch(stamp)
+        if at <= 0 or at > now:
+            return {}
     if not (target.startswith("https://") or target.startswith("http://")):
         return {}
     host = target[target.find("//") + 2:]
     j = host.find("/")
     if j >= 0:
         host = host[:j]
+    j = host.find("?")
+    if j >= 0:
+        host = host[:j]
     if host == "":
         return {}
     return {"ts": stamp, "target": target, "host": host.lower()}
+
+
+def report_source_ok(url: typing.Any) -> bool:
+    """Round-2 fix 2: a Sherlock judging repo pinned at a SHA, or a
+    web.archive.org capture of exactly a Sherlock judging-repo URL or a page
+    on Sherlock's report host. Every other author or host is refused."""
+    g = github_pin(url)
+    if g:
+        return g["owner"] == REPORT_OWNER and g["repo"].endswith(REPORT_REPO_SUFFIX)
+    a = archive_pin(url)
+    if not a:
+        return False
+    if a["host"] in REPORT_HOSTS:
+        return a["target"].startswith("https://" + a["host"] + "/")
+    for pre in ("https://raw.githubusercontent.com/", "https://github.com/"):
+        if a["target"].lower().startswith(pre):
+            parts = a["target"][len(pre):].split("/")
+            return len(parts) >= 2 and parts[0].lower() == REPORT_OWNER \
+                and parts[1].lower().endswith(REPORT_REPO_SUFFIX)
+    return False
 
 
 def pinned_kind(url: typing.Any) -> str:
@@ -471,18 +599,25 @@ def _word(c: str) -> bool:
     return c.isalnum() or c == "_" or c == "$"
 
 
+# Two operator characters that would fuse into another token if the space
+# between them were dropped (`a + ++b` is not `a++ + b`).
+FUSE = ("++", "--", "**", "&&", "||", "<<", ">>", "<=", ">=", "==", "!=", "+=", "-=", "*=",
+        "/=", "%=", "&=", "|=", "^=", "=>", "->", ":=", "=:", "//", "/*", "*/")
+
+
 def canon(code: str) -> str:
     """Whitespace-insensitive canonical form: every whitespace run is dropped,
-    except one space between two word characters (so `uint x` != `uintx`).
-    Comments must already be stripped. Unicode lookalikes are NOT folded: a
-    different character is a different program."""
+    except one space between two word characters (so `uint x` != `uintx`) and
+    one space between two operator characters that would otherwise fuse into
+    a different token (FUSE). Comments must already be stripped. Unicode
+    lookalikes are NOT folded: a different character is a different program."""
     out = []
     pending = False
     for c in code:
         if c in " \t\r\n\f\v":
             pending = True
             continue
-        if pending and out and _word(out[-1]) and _word(c):
+        if pending and out and ((_word(out[-1]) and _word(c)) or (out[-1] + c) in FUSE):
             out.append(" ")
         pending = False
         out.append(c)
@@ -675,8 +810,6 @@ def _declarations(src: str) -> list:
                 while w < len(t) and (_word(t[w]) or t[w] == "."):
                     w += 1
                 t = t[:w]
-                if t.find(".") >= 0:
-                    t = t[t.rfind(".") + 1:]
                 if t != "":
                     clean.append(t)
         hi = _match(src, b, "{", "}")
@@ -692,62 +825,325 @@ def _declarations(src: str) -> list:
     return out
 
 
-def _derives(name: str, target: str, graph: dict, seen: list) -> bool:
-    if name == target:
-        return True
-    if name in seen:
-        return False
-    seen.append(name)
-    for p in graph.get(name, []):
-        if _derives(p, target, graph, seen):
-            return True
-    return False
+def _imports(src: str) -> list:
+    """The import directives of a comment-free source, as
+    [{"path", "alias", "symbols"}]: `import "p";` -> symbols None, alias "";
+    `import "p" as Z;` / `import * as Z from "p";` -> alias Z;
+    `import {A, B as C} from "p";` -> symbols [[A, A], [B, C]]."""
+    out = []
+    i = 0
+    n = len(src)
+    while True:
+        k = src.find("import", i)
+        if k < 0:
+            return out
+        i = k + 6
+        if (k > 0 and _word(src[k - 1])) or (i < n and _word(src[i])):
+            continue
+        e = src.find(";", i)
+        if e < 0:
+            return out
+        stmt = src[i:e]
+        q1 = -1
+        for j in range(len(stmt)):
+            if stmt[j] == '"' or stmt[j] == "'":
+                q1 = j
+                break
+        q2 = stmt.find(stmt[q1], q1 + 1) if q1 >= 0 else -1
+        if q2 < 0:
+            i = e
+            continue
+        head = stmt[:q1].strip()
+        tail = stmt[q2 + 1:].split()
+        alias = ""
+        symbols = None
+        b = head.find("{")
+        if b >= 0:
+            c = head.find("}", b)
+            symbols = []
+            for part in head[b + 1:(c if c > b else len(head))].split(","):
+                w = part.split()
+                if len(w) == 1:
+                    symbols.append([w[0], w[0]])
+                elif len(w) == 3 and w[1] == "as":
+                    symbols.append([w[0], w[2]])
+        elif head.startswith("*"):
+            w = head.split()
+            if len(w) >= 3 and w[1] == "as":
+                alias = w[2]
+        elif len(tail) >= 2 and tail[0] == "as":
+            alias = tail[1]
+        out.append({"path": stmt[q1 + 1:q2], "alias": alias, "symbols": symbols, "file": ""})
+        i = e
 
 
-def extract(files: dict, file_name: str, fn: str) -> dict:
+def _norm_path(path: str) -> str:
+    parts = []
+    for seg in path.split("/"):
+        if seg == "" or seg == ".":
+            continue
+        if seg == "..":
+            if parts:
+                parts.pop()
+            continue
+        parts.append(seg)
+    return "/".join(parts)
+
+
+def _resolve_path(frm: str, imp: str, keys: list) -> str:
+    """The bundle file an import path names: relative paths exactly, others
+    exactly or by the shortest unique path suffix (remappings rename the
+    prefix). "" if no file, or more than one, fits."""
+    if imp.startswith("./") or imp.startswith("../"):
+        k = frm.rfind("/")
+        cand = _norm_path((frm[:k + 1] if k >= 0 else "") + imp)
+        return cand if cand in keys else ""
+    if imp in keys:
+        return imp
+    segs = imp.split("/")
+    for drop in range(0, len(segs) - 1):
+        suf = "/".join(segs[drop:])
+        hits = [x for x in keys if x == suf or x.endswith("/" + suf)]
+        if len(hits) == 1:
+            return hits[0]
+        if len(hits) > 1:
+            return ""
+    return ""
+
+
+def _units(files: dict) -> dict:
+    """file -> {"src", "decls", "imports"} for every file of a bundle, imports
+    resolved to bundle files."""
+    keys = sorted(files.keys())
+    units = {}
+    for p in keys:
+        src = strip_comments(str(files[p]))
+        units[p] = {"src": src, "decls": _declarations(src), "imports": _imports(src)}
+    for p in keys:
+        for im in units[p]["imports"]:
+            im["file"] = _resolve_path(p, im["path"], keys)
+    return units
+
+
+def _by_name(units: dict) -> dict:
+    out = {}
+    for p in sorted(units.keys()):
+        for d in units[p]["decls"]:
+            if d["name"] not in out:
+                out[d["name"]] = []
+            out[d["name"]].append(p + ":" + d["name"])
+    return out
+
+
+def _export(units: dict, byname: dict, q: str, x: str, seen: list) -> str:
+    """The declaration ("file:Name") that name x denotes when imported from
+    file q. An unresolved file falls back to the ONE declaration named x in
+    the bundle; "" if none or several."""
+    if q == "":
+        hits = byname.get(x, [])
+        return hits[0] if len(hits) == 1 else ""
+    key = q + ":" + x
+    if key in seen:
+        return ""
+    seen.append(key)
+    for d in units[q]["decls"]:
+        if d["name"] == x:
+            return key
+    for im in units[q]["imports"]:
+        if im["alias"] != "":
+            continue
+        if im["symbols"] is None:
+            r = _export(units, byname, im["file"], x, seen)
+            if r != "":
+                return r
+            continue
+        for sym in im["symbols"]:
+            if sym[1] == x:
+                return _export(units, byname, im["file"], sym[0], seen)
+    return ""
+
+
+def _resolve(units: dict, byname: dict, p: str, ident: str) -> str:
+    """fix 5: the declaration a name used in file p denotes, through import
+    aliases ({X as Y}, `as Z` namespaces); "" if it cannot be resolved."""
+    k = ident.find(".")
+    if k >= 0:
+        for im in units[p]["imports"]:
+            if im["alias"] == ident[:k]:
+                return _export(units, byname, im["file"], ident[k + 1:], [])
+        return ""
+    for d in units[p]["decls"]:
+        if d["name"] == ident:
+            return p + ":" + ident
+    for im in units[p]["imports"]:
+        if im["symbols"] is not None:
+            for sym in im["symbols"]:
+                if sym[1] == ident:
+                    return _export(units, byname, im["file"], sym[0], [])
+    for im in units[p]["imports"]:
+        if im["symbols"] is None and im["alias"] == "" and im["file"] != "":
+            r = _export(units, byname, im["file"], ident, [])
+            if r != "":
+                return r
+    hits = byname.get(ident, [])
+    return hits[0] if len(hits) == 1 else ""
+
+
+def _graph(units: dict) -> dict:
+    """"file:Name" -> its parents, each resolved ("" = unresolved)."""
+    byname = _by_name(units)
+    g = {}
+    for p in sorted(units.keys()):
+        for d in units[p]["decls"]:
+            g[p + ":" + d["name"]] = [_resolve(units, byname, p, x) for x in d["parents"]]
+    return g
+
+
+def _ancestry(graph: dict, node: str) -> list:
+    """[node and every ancestor, any parent unresolved]."""
+    out = []
+    bad = False
+    todo = [node]
+    while todo:
+        x = todo.pop()
+        if x == "":
+            bad = True
+            continue
+        if x in out:
+            continue
+        out.append(x)
+        for y in graph.get(x, []):
+            todo.append(y)
+    return [out, bad]
+
+
+def _impls(units: dict, name: str) -> list:
+    """Every implemented `function name` in the bundle as [holder ("file:Name",
+    "" for a free function), canonical body, holder kind, file]."""
+    out = []
+    for p in sorted(units.keys()):
+        u = units[p]
+        if u["src"].find(name) < 0:
+            continue
+        found = find_functions(u["src"], name)
+        if found is None:
+            out.append(["", "", "", p])
+            continue
+        cur = 0
+        for body in found:
+            at = u["src"].find(body, cur)
+            cur = at + len(body)
+            holder = None
+            for d in u["decls"]:
+                if d["lo"] <= at < d["hi"] and (holder is None or d["lo"] > holder["lo"]):
+                    holder = d
+            if holder is None:
+                out.append(["", canon(body), "", p])
+            else:
+                out.append([p + ":" + holder["name"], canon(body), holder["kind"], p])
+    return out
+
+
+def calls_in(code: str) -> list:
+    """Names called directly (`name(`, not `x.name(`) in comment-free code."""
+    out = []
+    n = len(code)
+    i = 0
+    while i < n:
+        if _word(code[i]) and not code[i].isdigit() and (i == 0 or not _word(code[i - 1])):
+            j = i
+            while j < n and _word(code[j]):
+                j += 1
+            k = j
+            while k < n and code[k] in " \t\r\n":
+                k += 1
+            b = i - 1
+            while b >= 0 and code[b] in " \t\r\n":
+                b -= 1
+            if k < n and code[k] == "(" and (b < 0 or code[b] != ".") and code[i:j] not in out:
+                out.append(code[i:j])
+            i = j
+            continue
+        i += 1
+    return out
+
+
+def extract(files: dict, file_name: str, fn: str, target: str = "", calls: typing.Any = None) -> dict:
     """extract_plain() plus the implementation the contract actually runs.
-    If any OTHER file implements `fn` inside a contract that derives from the
-    one holding ours (an override), inside a library (a library copy), or in
-    a contract with the same name as ours (a copy or decoy), the running code
-    is not provable -> FUNCTION_OVERRIDDEN. Same-name functions in unrelated
-    contracts (a contract ours calls, an entry point that calls our library)
-    do not run in its place and are ignored."""
+
+    With `target` ("file:Name", the contract the explorer says was compiled):
+    our function's holder must be that contract or one of its resolved
+    ancestors (fix 4, else FUNCTION_NOT_IN_COMPILED_CONTRACT); every ancestor
+    must resolve, through import aliases (fix 5, else PARENT_UNRESOLVED); no
+    other contract in the compiled chain may implement `fn` unless ours
+    overrides it (FUNCTION_OVERRIDDEN); and every function our function - or
+    the fix (`calls`) - calls directly must run the implementation ours sees,
+    not one overridden below it (fix 6, HELPER_OVERRIDDEN).
+
+    Without a target (a single audited or fix file, or offline research):
+    another file implementing `fn` in a contract that derives from ours, in a
+    library, in a same-name contract, or in a contract whose parents cannot
+    all be resolved is FUNCTION_OVERRIDDEN; a helper implemented in a
+    contract deriving from ours (or, in another file, with unresolved parents)
+    is HELPER_OVERRIDDEN."""
     got = extract_plain(files, file_name, fn)
     if not got["ok"]:
         return got
     want = basename(file_name)
+    units = _units(files)
+    graph = _graph(units)
+    impl = _impls(units, fn)
     ours = ""
-    graph = {}
-    others = []
-    for p in sorted(files.keys()):
-        stripped = strip_comments(str(files[p]))
-        decls = _declarations(stripped)
-        for d in decls:
-            if d["name"] not in graph:
-                graph[d["name"]] = d["parents"]
-        impls = find_functions(stripped, fn)
-        if impls is None:
-            continue
-        for body in impls:
-            at = stripped.find(body)
-            holder = None
-            for d in decls:
-                if d["lo"] <= at < d["hi"] and (holder is None or d["lo"] > holder["lo"]):
-                    holder = d
-            if basename(p) == want and canon(body) == got["canon"]:
-                if holder is not None and ours == "":
-                    ours = holder["name"]
-                continue
-            if basename(p) == want:
-                continue    # same file: extract() already judged overloads
-            others.append(holder)
-    for h in others:
-        if h is None:
+    for h in impl:
+        if basename(h[3]) == want and h[1] == got["canon"] and h[0] != "":
+            ours = h[0]
+            break
+    names = []
+    for nm in calls_in(got["code"]) + (calls if isinstance(calls, list) else []):
+        if nm != fn and nm not in names:
+            names.append(nm)
+    mine = _ancestry(graph, ours)[0] if ours != "" else []
+    if target != "":
+        if target not in graph or ours == "":
+            return {"ok": False, "why": "FUNCTION_NOT_IN_COMPILED_CONTRACT"}
+        anc = _ancestry(graph, target)
+        if anc[1]:
+            return {"ok": False, "why": "PARENT_UNRESOLVED"}
+        scope = anc[0]
+        if ours not in scope:
+            return {"ok": False, "why": "FUNCTION_NOT_IN_COMPILED_CONTRACT"}
+        for h in impl:
+            if h[0] in scope and h[0] != ours and h[0] not in mine:
+                return {"ok": False, "why": "FUNCTION_OVERRIDDEN"}
+        for nm in names:
+            hs = []
+            for h in _impls(units, nm):
+                if h[0] in scope and h[0] not in hs:
+                    hs.append(h[0])
+            top = ""
+            for h in hs:
+                above = _ancestry(graph, h)[0]
+                if len([o for o in hs if o not in above]) == 0:
+                    top = h
+            if len(hs) > 0 and (top == "" or top not in mine):
+                return {"ok": False, "why": "HELPER_OVERRIDDEN"}
+        return got
+    for h in impl:
+        if h[0] == ours or basename(h[3]) == want:
+            continue    # ours, or the same file: extract_plain judged overloads
+        if h[0] == "" or h[2] == "library" or (ours != "" and h[0][h[0].rfind(":"):] == ours[ours.rfind(":"):]):
             return {"ok": False, "why": "FUNCTION_OVERRIDDEN"}
-        if h["kind"] == "library" or h["name"] == ours:
+        above = _ancestry(graph, h[0])
+        if above[1] or (ours != "" and ours in above[0]):
             return {"ok": False, "why": "FUNCTION_OVERRIDDEN"}
-        if ours != "" and _derives(h["name"], ours, graph, []):
-            return {"ok": False, "why": "FUNCTION_OVERRIDDEN"}
+    if ours != "":
+        for nm in names:
+            for h in _impls(units, nm):
+                if h[0] == "" or h[0] == ours:
+                    continue
+                above = _ancestry(graph, h[0])
+                if ours in above[0] or (above[1] and basename(h[3]) != want):
+                    return {"ok": False, "why": "HELPER_OVERRIDDEN"}
     return got
 
 
@@ -863,19 +1259,40 @@ def _canon_lines(code: str) -> list:
     return out
 
 
-def _depths(lines: list) -> list:
-    """Brace depth at the start of each canonical (string-blanked) line,
-    relative to the function's own opening line."""
+def _frames(lines: list) -> list:
+    """For each canonical (string-blanked) line, the blocks enclosing its
+    start inside the function, outermost first: the text of each line that
+    opened one (the function's own body brace excluded). Two lines with equal
+    frames sit at the same absolute depth inside the same branches/loops."""
     out = []
-    d = 0
+    stack = []
     for ln in lines:
-        out.append(d)
+        out.append("\n".join(stack[1:]))
         for ch in ln:
             if ch == "{":
-                d += 1
-            elif ch == "}":
-                d -= 1
+                stack.append(ln)
+            elif ch == "}" and stack:
+                stack.pop()
     return out
+
+
+EXITS = ("return", "revert", "throw", "selfdestruct")
+
+
+def _exits(line: str) -> bool:
+    """The canonical line can leave the function (return / revert / throw /
+    selfdestruct as a whole word)."""
+    for w in EXITS:
+        i = 0
+        while True:
+            k = line.find(w, i)
+            if k < 0:
+                break
+            e = k + len(w)
+            if (k == 0 or not _word(line[k - 1])) and (e >= len(line) or not _word(line[e])):
+                return True
+            i = k + 1
+    return False
 
 
 def _lcs_ops(a: list, f: list) -> list:
@@ -911,8 +1328,10 @@ def _lcs_ops(a: list, f: list) -> list:
 
 def fix_change(aud_code: str, fix_code: str) -> dict:
     """What the fix commit did to this function (canonical, string-blanked):
-    {"removed": [...], "added": [...]} in source order; a moved line shows up
-    as removed + added."""
+    {"removed": [...], "added": [...], "new": [...]} in source order. A moved
+    line shows up as removed + added; "new" is the added lines that occur
+    nowhere in the audited (vulnerable) function - the only lines a FIXED
+    answer can be grounded on (fix 7)."""
     a = _canon_lines(aud_code)
     f = _canon_lines(fix_code)
     removed = []
@@ -922,7 +1341,7 @@ def fix_change(aud_code: str, fix_code: str) -> dict:
             removed.append(a[i])
         elif op == "+":
             added.append(f[j])
-    return {"removed": removed, "added": added}
+    return {"removed": removed, "added": added, "new": [x for x in added if x not in a]}
 
 
 def _vulnerable_lines(change: dict) -> list:
@@ -937,10 +1356,11 @@ def _vulnerable_lines(change: dict) -> list:
 
 def fix_hunks(aud_code: str, fix_code: str) -> list:
     """Each run of lines the fix added, with the fix's own context line on
-    each side: [{"lines": [...], "depths": [...]}] in fix order."""
+    each side: [{"idx": [...], "lines": [...], "frames": [...]}] in fix
+    order (idx = line numbers in the fix's canonical lines)."""
     a = _canon_lines(aud_code)
     f = _canon_lines(fix_code)
-    dep_f = _depths(f)
+    fr = _frames(f)
     added_j = []
     for op, i, j in _lcs_ops(a, f):
         if op == "+":
@@ -956,37 +1376,45 @@ def fix_hunks(aud_code: str, fix_code: str) -> list:
         lo = start - 1 if start > 0 else start
         hi = end + 1 if end + 1 < len(f) else end
         idx = list(range(lo, hi + 1))
-        hunks.append({"lines": [f[x] for x in idx], "depths": [dep_f[x] - dep_f[lo] for x in idx]})
+        hunks.append({"idx": idx, "lines": [f[x] for x in idx], "frames": [fr[x] for x in idx]})
         k += 1
     return hunks
 
 
 def contains_fix(dep_code: str, aud_code: str, fix_code: str) -> bool:
-    """CODE_CONTAINS_FIX (fix 2): every hunk the fix added appears in the
-    deployed function as ONE contiguous block with the fix's own context line
-    on each side, in the fix's order, at the same relative nesting depth; no
-    substantive line the fix removed (and did not re-add) is still deployed.
-    A check moved after the dangerous call, or wrapped in a dead branch,
-    breaks contiguity or depth and goes to the model instead."""
+    """CODE_CONTAINS_FIX (fix 2, round-2 fixes 3 and 7). Every hunk the fix
+    added appears in the deployed function as ONE contiguous block with the
+    fix's own context line on each side, in the fix's order, inside exactly
+    the blocks (branches, loops, absolute depth) that enclose it in the fix;
+    no return / revert / throw / selfdestruct comes before a hunk that the fix
+    does not also have before it; no substantive line the fix removed (and did
+    not re-add) is still deployed; and a line the fix only moved appears as
+    many times as in the fix. A check moved after the call, copied into a dead
+    branch, or skipped by an early exit is not contained: the model decides,
+    and must be grounded, or the check is INCONCLUSIVE."""
     if fix_code == "":
         return False
     ch = fix_change(aud_code, fix_code)
     if len([x for x in ch["added"] if _substantive(x)]) == 0:
         return False
     dep = _canon_lines(dep_code)
-    dep_d = _depths(dep)
+    fr_d = _frames(dep)
+    f = _canon_lines(fix_code)
     for x in _vulnerable_lines(ch):
         if x in dep:
             return False
+    for x in ch["added"]:
+        if x in ch["removed"] and dep.count(x) != f.count(x):
+            return False
     pos = 0
     for h in fix_hunks(aud_code, fix_code):
-        n = len(h["lines"])
+        n = len(h["idx"])
         found = -1
         s = pos
         while s + n <= len(dep):
             ok = True
             for t in range(n):
-                if dep[s + t] != h["lines"][t] or dep_d[s + t] - dep_d[s] != h["depths"][t]:
+                if dep[s + t] != h["lines"][t] or fr_d[s + t] != h["frames"][t]:
                     ok = False
                     break
             if ok:
@@ -995,6 +1423,12 @@ def contains_fix(dep_code: str, aud_code: str, fix_code: str) -> bool:
             s += 1
         if found < 0:
             return False
+        theirs = [x for x in f[:h["idx"][0]] if _exits(x)]
+        for x in dep[:found]:
+            if _exits(x):
+                if x not in theirs:
+                    return False
+                theirs.remove(x)
         pos = found + n - 1
     return True
 
@@ -1008,14 +1442,19 @@ DEP_STATUS_BASIS = {
     "PROXY_UNRESOLVED": "PROXY_UNRESOLVED",
     "PROXY_MISMATCH": "PROXY_UNRESOLVED",
     "IMPLEMENTATION_NOT_VERIFIED": "IMPLEMENTATION_NOT_VERIFIED",
+    "FUNCTION_NOT_IN_COMPILED_CONTRACT": "FUNCTION_NOT_IN_COMPILED_CONTRACT",
+    "PARENT_UNRESOLVED": "PARENT_UNRESOLVED",
+    "HELPER_OVERRIDDEN": "HELPER_OVERRIDDEN",
 }
 
 
 def code_decision(dep_status: str, dep_canon: str, aud_canon: str, fix_canon: str,
-                  predates: bool = False) -> dict:
+                  predates: bool = False, predates_fix: bool = False) -> dict:
     """{"verdict", "basis"} when code alone decides; {} when the model must.
     predates: the deployment is not a proxy and was created before the
-    audited commit (fix 7)."""
+    audited commit. predates_fix: the code that runs (the implementation, for
+    a proxy) was created before the fix existed (round-2 fix 1). Only code
+    created after the fix existed can be NOT_FIXED."""
     if dep_status != "OK":
         return {"verdict": V_INCONCLUSIVE, "basis": DEP_STATUS_BASIS.get(dep_status, B_FUNCTION_MISSING)}
     if fix_canon != "" and dep_canon == fix_canon:
@@ -1023,6 +1462,8 @@ def code_decision(dep_status: str, dep_canon: str, aud_canon: str, fix_canon: st
     if dep_canon == aud_canon:
         if predates:
             return {"verdict": V_PREDATES, "basis": B_DEPLOYED_BEFORE_AUDIT}
+        if predates_fix:
+            return {"verdict": V_PREDATES_FIX, "basis": B_DEPLOYED_BEFORE_FIX}
         return {"verdict": V_NOT_FIXED, "basis": B_CODE_MATCH_VULNERABLE}
     return {}
 
@@ -1089,10 +1530,14 @@ def valid_indices(idx: typing.Any, code: str) -> bool:
 
 
 def grounded(vote: str, idx: list, code: str, change: dict) -> bool:
-    """fix 6. FIXED: at least one quoted line is a line the fix ADDED, and no
-    line the fix REMOVED (and did not re-add) is still deployed. NOT_FIXED: at
-    least one quoted line is such a removed (vulnerable) line - it is in the
-    deployed function, since every quote matched it."""
+    """fix 6 + round-2 fix 7. FIXED: at least one quoted line is a line the
+    fix ADDED that occurs nowhere in the audited function ("new" - a line the
+    fix only moved is also in the vulnerable version and proves nothing), and
+    no line the fix REMOVED (and did not re-add) is still deployed. A fix made
+    only of moved lines can never be grounded; code checks their order
+    (contains_fix). NOT_FIXED: at least one quoted line is such a removed
+    (vulnerable) line - it is in the deployed function, since every quote
+    matched it."""
     if not isinstance(change, dict) or (not change.get("added") and not change.get("removed")):
         return False
     lines = code_lines(code)
@@ -1103,9 +1548,9 @@ def grounded(vote: str, idx: list, code: str, change: dict) -> bool:
         for x in vuln:
             if x in dep:
                 return False
-        added = change.get("added", [])
+        new = change.get("new", [])
         for q in quoted:
-            if q in added:
+            if q in new:
                 return True
         return False
     for q in quoted:
@@ -1231,10 +1676,57 @@ def bind_audited(section: str, report: str, pin: dict) -> str:
     return ""
 
 
+def _author(line: str) -> str:
+    """A Sherlock discussion's author line, `**name**`, -> name; else ""."""
+    t = line.strip()
+    if len(t) < 5 or not t.startswith("**") or not t.endswith("**"):
+        return ""
+    name = t[2:-2]
+    for ch in name:
+        if not (_word(ch) or ch == "-"):
+            return ""
+    return name
+
+
+def _sherlock_account(name: str) -> bool:
+    return name == "sherlock-admin" or (name.startswith("sherlock-admin") and name[14:].isdigit())
+
+
+def status_block(section: str) -> str:
+    """Round-2 fix 9: the text of the finding's discussion blocks written by
+    Sherlock's own accounts (sherlock-admin, sherlock-adminN) that carry a
+    fixed-status phrase. Comments by anyone else - finders, other watsons,
+    the protocol team - are never read for the fix."""
+    lines = section.split("\n")
+    start = len(lines)
+    for i in range(len(lines)):
+        if lines[i].strip() == "## Discussion":
+            start = i + 1
+            break
+    out = []
+    cur = []
+    who = ""
+    for ln in lines[start:] + ["**end-of-section**"]:
+        a = _author(ln)
+        if a != "":
+            if _sherlock_account(who):
+                text = "\n".join(cur)
+                for phrase in STATUS_PHRASES:
+                    if text.find(phrase) >= 0:
+                        out.append(text)
+                        break
+            who = a
+            cur = []
+            continue
+        cur.append(ln)
+    return "\n".join(out)
+
+
 def fix_links(section: str, pin: dict) -> dict:
-    """The fix references in the finding's section for the fix file's repo:
-    {"commits": [hex prefixes], "pulls": [numbers]}."""
-    low = section.lower()
+    """The fix references for the fix file's repo in the finding's Sherlock
+    status block (status_block): {"commits": [hex prefixes], "pulls":
+    [numbers]}."""
+    low = status_block(section).lower()
     base = "github.com/" + pin["owner"] + "/" + pin["repo"] + "/"
     commits = []
     pulls = []
@@ -1264,6 +1756,43 @@ def fix_links(section: str, pin: dict) -> dict:
                 pulls.append(d)
         i = k + 1
     return {"commits": commits, "pulls": pulls}
+
+
+def pr_facts(page: str, n: str) -> dict:
+    """From a GitHub pull-request page: {"state", "merged_at", "merge_sha"}
+    for PR #n, or {} if the page does not carry them."""
+    k = page.find('"mergedTime":')
+    if k < 0:
+        return {}
+    w = page[k:k + 400]
+    if w.find('"number":' + n + ',') < 0:
+        return {}
+    v = w[13:]
+    merged = 0
+    if v.startswith('"'):
+        merged = _epoch_from_iso(v[1:21])
+        if merged <= 0:
+            return {}
+    elif not v.startswith("null"):
+        return {}
+    a = w.find('"state":"')
+    if a < 0:
+        return {}
+    b = w.find('"', a + 9)
+    state = w[a + 9:b] if b > a else ""
+    if state not in ("MERGED", "CLOSED", "OPEN"):
+        return {}
+    m = page.find('"mergeCommitSha":"')
+    sha = page[m + 18:m + 58] if m >= 0 else ""
+    if not _is_hex(sha, 40):
+        sha = ""
+    return {"state": state, "merged_at": merged if state == "MERGED" else 0, "merge_sha": sha}
+
+
+def on_default_branch(page: str, owner: str, repo: str) -> bool:
+    """GitHub's branch_commits fragment for a commit lists the repository's
+    DEFAULT branch as a link to the repository root."""
+    return page.lower().find('<li class="branch"><a href="/' + owner + "/" + repo + '">') >= 0
 
 
 def patch_head(patch: str) -> str:
@@ -1307,26 +1836,69 @@ def _raw(res: typing.Any) -> bytes:
     return str(b).encode("utf-8")
 
 
+MONTHS = ("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
+
+
+def _text(v: typing.Any) -> str:
+    if isinstance(v, bytes):
+        return v.decode("utf-8", errors="replace")
+    return str(v)
+
+
+def memento(res: typing.Any) -> str:
+    """The capture a web.archive.org answer actually is (its Memento-Datetime
+    header, "Wed, 29 Nov 2023 22:41:54 GMT") as a 14-digit timestamp; "" if
+    absent. GenVM follows redirects, so this - not the status - tells whether
+    the requested capture was served (round-2 fix 8)."""
+    h = getattr(res, "headers", None)
+    if not isinstance(h, dict):
+        return ""
+    v = ""
+    for k in h:
+        if _text(k).strip().lower() == "memento-datetime":
+            v = _text(h[k]).strip()
+    p = v.split()
+    if len(p) != 6 or p[2] not in MONTHS:
+        return ""
+    t = p[4].split(":")
+    if len(t) != 3:
+        return ""
+    out = p[3] + ("0" + str(MONTHS.index(p[2]) + 1))[-2:] + ("0" + p[1])[-2:] + t[0] + t[1] + t[2]
+    return out if len(out) == 14 and out.isdigit() else ""
+
+
 def allowed_url(url: str) -> bool:
-    """B9: every URL any validator fetches is on this list (plus GitHub's
-    per-commit .atom feed, for the audited commit's date)."""
+    """B9: every URL any validator fetches is on this list, plus three GitHub
+    pages: a commit's .atom feed (its date), a pull request (merged? when?)
+    and a commit's branch_commits fragment (on the default branch?)."""
     for p in ALLOWED_PREFIXES:
         if url.startswith(p):
             return True
-    return url.startswith(GITHUB_WEB) and url.endswith(".atom") and url.find("/commits/") > 0
+    if not url.startswith(GITHUB_WEB):
+        return False
+    parts = url[len(GITHUB_WEB):].split("/")
+    if len(parts) != 4 or parts[0] == "" or parts[1] == "":
+        return False
+    if parts[2] == "commits" and parts[3].endswith(".atom"):
+        return _is_hex(parts[3][:-5], 40)
+    if parts[2] == "pull":
+        return parts[3].isdigit() and len(parts[3]) <= 7
+    if parts[2] == "branch_commits":
+        return _is_hex(parts[3], 40)
+    return False
 
 
 def fetch(url: str) -> dict:
     """{"ok", "http", "sha256", "text"}. Transport failure -> ok False."""
     if not allowed_url(url):
-        return {"ok": False, "http": -2, "sha256": "", "text": ""}
+        return {"ok": False, "http": -2, "sha256": "", "text": "", "memento": ""}
     try:
         res = gl.nondet.web.get(url)
     except Exception:
-        return {"ok": False, "http": -1, "sha256": "", "text": ""}
+        return {"ok": False, "http": -1, "sha256": "", "text": "", "memento": ""}
     body = _raw(res)
     return {"ok": True, "http": _status(res), "sha256": _sha_bytes(body),
-            "text": body.decode("utf-8", errors="replace")}
+            "text": body.decode("utf-8", errors="replace"), "memento": memento(res)}
 
 
 def rpc(chain: str, method: str, params: list) -> typing.Any:
@@ -1355,19 +1927,20 @@ def source_url(chain: str, address: str) -> str:
     kind, base, cid, _r = CHAINS[chain]
     if kind == "blockscout":
         return base + "/api/v2/smart-contracts/" + address
-    return base + "/server/v2/contract/" + str(cid) + "/" + address + "?fields=sources,proxyResolution"
+    return base + "/server/v2/contract/" + str(cid) + "/" + address + "?fields=sources,proxyResolution,compilation"
 
 
 def parse_source(chain: str, got: dict) -> dict:
-    """A verified-source answer -> {"verified", "full", "files", "impl"} or
-    {"error": reason}. 404 is an answer (not verified); any other non-200 or
+    """A verified-source answer -> {"verified", "full", "files", "impl",
+    "target"} or {"error": reason}. "target" is the compiled contract as
+    "file:Name" (round-2 fix 4), "" if the answer does not say. 404 is an answer (not verified); any other non-200 or
     a body that is not the expected JSON is UNREADABLE. "full" is a full /
     exact match only (fix 3): Blockscout is_fully_verified, Sourcify
     exact_match."""
     if not got["ok"]:
         return {"error": "SOURCE_UNREADABLE"}
     if got["http"] == 404:
-        return {"verified": False, "full": False, "files": {}, "impl": ""}
+        return {"verified": False, "full": False, "files": {}, "impl": "", "target": ""}
     if got["http"] != 200:
         return {"error": "SOURCE_UNREADABLE"}
     try:
@@ -1379,13 +1952,18 @@ def parse_source(chain: str, got: dict) -> dict:
     kind = CHAINS[chain][0]
     files = {}
     impl = ""
+    target = ""
     if kind == "blockscout":
         verified = doc.get("is_verified") is True
         full = verified and doc.get("is_fully_verified") is True and doc.get("is_partially_verified") is not True
         src = doc.get("source_code")
         if isinstance(src, str) and src != "":
             name = doc.get("file_path")
-            files[str(name) if isinstance(name, str) and name != "" else "main.sol"] = src
+            main = str(name) if isinstance(name, str) and name != "" else "main.sol"
+            files[main] = src
+            cn = doc.get("name")
+            if isinstance(cn, str) and cn != "":
+                target = main + ":" + cn
         extra = doc.get("additional_sources")
         if isinstance(extra, list):
             for a in extra:
@@ -1404,6 +1982,9 @@ def parse_source(chain: str, got: dict) -> dict:
                 v = srcs[k]
                 if isinstance(v, dict) and isinstance(v.get("content"), str):
                     files[str(k)] = v["content"]
+        comp = doc.get("compilation")
+        if isinstance(comp, dict) and isinstance(comp.get("fullyQualifiedName"), str):
+            target = comp["fullyQualifiedName"]
         pr = doc.get("proxyResolution")
         if isinstance(pr, dict):
             impls = pr.get("implementations")
@@ -1411,13 +1992,21 @@ def parse_source(chain: str, got: dict) -> dict:
                 impl = _addr(impls[0].get("address") or "")
     if not verified:
         files = {}
-    return {"verified": verified, "full": full, "files": files, "impl": impl}
+    return {"verified": verified, "full": full, "files": files, "impl": impl, "target": target}
 
 
-def eip1967_impl(chain: str, address: str) -> typing.Any:
-    """The EIP-1967 implementation slot read over RPC: an address, "" for an
-    empty slot, None if the RPC did not answer."""
-    v = rpc(chain, "eth_getStorageAt", [address, EIP1967_IMPL_SLOT, "latest"])
+def head_block(chain: str) -> int:
+    """The RPC's latest block number; -1 if it did not answer."""
+    v = rpc(chain, "eth_blockNumber", [])
+    if not isinstance(v, str) or not v.startswith("0x") or len(v) < 3 or len(v) > 18 or not _is_hex(v[2:].lower(), len(v) - 2):
+        return -1
+    return int(v[2:], 16)
+
+
+def eip1967_impl(chain: str, address: str, block: int) -> typing.Any:
+    """The EIP-1967 implementation slot read over RPC at `block` (round-2 fix
+    11): an address, "" for an empty slot, None if the RPC did not answer."""
+    v = rpc(chain, "eth_getStorageAt", [address, EIP1967_IMPL_SLOT, hex(block)])
     if not isinstance(v, str) or not v.startswith("0x"):
         return None
     h = v[2:].lower()
@@ -1484,10 +2073,14 @@ def _cap_fn(got: dict) -> dict:
     return got
 
 
-def deployed_function(chain: str, address: str, base: str, fn: str) -> dict:
-    """fix 3 + fix 4. Read the EIP-1967 slot over RPC; if it names an
-    implementation, judge ONLY the implementation's verified sources (never a
-    copy in the proxy's bundle) after cross-checking it with the explorer.
+def deployed_function(chain: str, address: str, base: str, fn: str, slot_block: int, calls: list) -> dict:
+    """fix 3 + fix 4, round-2 fixes 4, 6 and 11. Read the EIP-1967 slot over
+    RPC at a named block (the leader picks head - margin; a validator reads
+    the leader's block if it is in range); if it names an implementation,
+    judge ONLY the implementation's verified sources (never a copy in the
+    proxy's bundle) after cross-checking it with the explorer. The function
+    must belong to the compiled contract's own inheritance chain, and every
+    function it (or the fix) calls must run the implementation it sees.
     Returns {"refused"} (filing refused) or the deployed-side fields."""
     got = fetch(source_url(chain, address))
     src = parse_source(chain, got)
@@ -1495,11 +2088,21 @@ def deployed_function(chain: str, address: str, base: str, fn: str) -> dict:
         return {"refused": src["error"]}
     if not src["verified"]:
         return {"refused": "CONTRACT_NOT_VERIFIED"}
-    slot = eip1967_impl(chain, address)
+    head = head_block(chain)
+    if head < 0:
+        return {"refused": "RPC_UNREADABLE"}
+    margin, max_lag = SLOT_BLOCKS[chain]
+    if slot_block < 0:
+        block = head - margin
+    elif slot_block > head or head - slot_block > max_lag:
+        return {"refused": "SLOT_BLOCK_OUT_OF_RANGE"}
+    else:
+        block = slot_block
+    slot = eip1967_impl(chain, address, block)
     if slot is None:
         return {"refused": "RPC_UNREADABLE"}
-    out = {"impl": "", "source_sha256": got["sha256"], "impl_source_sha256": "",
-           "dep_status": "OK", "dep": {"ok": False, "code": "", "canon": ""}}
+    out = {"impl": "", "source_sha256": got["sha256"], "impl_source_sha256": "", "slot_block": block,
+           "compiled": src["target"], "dep_status": "OK", "dep": {"ok": False, "code": "", "canon": ""}}
     files = src["files"]
     full = src["full"]
     if slot != "" or src["impl"] != "":
@@ -1516,6 +2119,7 @@ def deployed_function(chain: str, address: str, base: str, fn: str) -> dict:
             return {"refused": src2["error"]}
         out["impl"] = slot
         out["impl_source_sha256"] = got2["sha256"]
+        out["compiled"] = src2.get("target", "")
         if not src2["verified"]:
             out["dep_status"] = "IMPLEMENTATION_NOT_VERIFIED"
             return out
@@ -1524,17 +2128,63 @@ def deployed_function(chain: str, address: str, base: str, fn: str) -> dict:
     if not full:
         out["dep_status"] = "PARTIAL_MATCH"
         return out
-    dep = _cap_fn(extract(files, base, fn))
+    if out["compiled"] == "":
+        out["dep_status"] = "FUNCTION_NOT_IN_COMPILED_CONTRACT"
+        return out
+    dep = _cap_fn(extract(files, base, fn, out["compiled"], calls))
     out["dep_status"] = "OK" if dep["ok"] else dep["why"]
     out["dep"] = dep
     return out
 
 
-def gather(p: dict) -> dict:
+def fix_provenance(fpin: dict, fix_ref: str) -> dict:
+    """Round-2 fixes 1 and 9: is the fix on the protocol repo's default
+    branch, and since when did it exist? {"reach": "HEAD" | "MERGE",
+    "committed_at", "merged_at", "fix_at"} or {"refused"}. A pull request
+    counts if its head commit is on the default branch, or it was merged and
+    its merge commit is. fix_at = the later of the head commit's date and the
+    merge date - the most generous date for the protocol team."""
+    o = fpin["owner"]
+    r = fpin["repo"]
+    feed = fetch(GITHUB_WEB + o + "/" + r + "/commits/" + fpin["sha"] + ".atom")
+    if not feed["ok"] or feed["http"] != 200:
+        return {"refused": "FIX_DATE_UNREADABLE"}
+    committed = atom_first_updated(feed["text"])
+    if committed <= 0:
+        return {"refused": "FIX_DATE_UNREADABLE"}
+    bc = fetch(GITHUB_WEB + o + "/" + r + "/branch_commits/" + fpin["sha"])
+    if not bc["ok"] or bc["http"] != 200:
+        return {"refused": "FIX_BRANCHES_UNREADABLE"}
+    head_on = on_default_branch(bc["text"], o, r)
+    merged = 0
+    reach = "HEAD" if head_on else ""
+    if fix_ref.startswith("pull/"):
+        n = fix_ref[5:]
+        pg = fetch(GITHUB_WEB + o + "/" + r + "/pull/" + n)
+        if not pg["ok"] or pg["http"] != 200:
+            return {"refused": "FIX_PR_UNREADABLE"}
+        facts = pr_facts(pg["text"], n)
+        if not facts:
+            return {"refused": "FIX_PR_UNREADABLE"}
+        merged = facts["merged_at"]
+        if not head_on and facts["state"] == "MERGED" and facts["merge_sha"] != "":
+            mc = fetch(GITHUB_WEB + o + "/" + r + "/branch_commits/" + facts["merge_sha"])
+            if not mc["ok"] or mc["http"] != 200:
+                return {"refused": "FIX_BRANCHES_UNREADABLE"}
+            if on_default_branch(mc["text"], o, r):
+                reach = "MERGE"
+    if reach == "":
+        return {"refused": "FIX_NOT_ON_DEFAULT_BRANCH"}
+    return {"reach": reach, "committed_at": committed, "merged_at": merged,
+            "fix_at": merged if merged > committed else committed}
+
+
+def gather(p: dict, slot_block: int = -1) -> dict:
     """Everything a validator reads for a filing. Returns the canonical
     evidence record, or {"refused": REASON}. Every field is compared with
     strict equality between leader and validators; immutable bodies are also
-    compared by sha256."""
+    compared by sha256. slot_block: -1 for the leader, the leader's named
+    block for a validator (round-2 fix 11)."""
     fn = p["fn"]
     apin = github_pin(p["audited_url"])
     fpin = github_pin(p["fix_url"])
@@ -1543,11 +2193,16 @@ def gather(p: dict) -> dict:
     rep = fetch(p["report_url"])
     if not rep["ok"] or rep["http"] != 200:
         return {"refused": "REPORT_UNREADABLE"}
+    a = archive_pin(p["report_url"])
+    if a and rep["memento"] != a["ts"]:
+        return {"refused": "ARCHIVE_CAPTURE_NOT_EXACT"}
     sec = finding_section(rep["text"], p["fid"])
     if not sec["ok"]:
         return {"refused": sec["why"]}
     if sec["text"].find(fn) < 0:
         return {"refused": "FUNCTION_NOT_NAMED_IN_FINDING"}
+    if status_block(sec["text"]) == "":
+        return {"refused": "FIXED_STATUS_NOT_FROM_SHERLOCK"}
     # --- fix 1: the audited commit and the fix are the finding's own
     binding = bind_audited(sec["text"], rep["text"], apin)
     if binding == "":
@@ -1570,6 +2225,10 @@ def gather(p: dict) -> dict:
                 break
     if fix_ref == "":
         return {"refused": "FIX_NOT_LINKED_IN_FINDING"}
+    # --- round-2 fixes 1 + 9: merged into the default branch, and when
+    prov = fix_provenance(fpin, fix_ref)
+    if "refused" in prov:
+        return prov
     # --- fix 7: the audited commit's date
     feed = fetch(GITHUB_WEB + apin["owner"] + "/" + apin["repo"] + "/commits/" + apin["sha"] + ".atom")
     if not feed["ok"] or feed["http"] != 200:
@@ -1581,6 +2240,9 @@ def gather(p: dict) -> dict:
     docs = fetch(p["docs_url"])
     if not docs["ok"] or docs["http"] != 200:
         return {"refused": "DOCS_UNREADABLE"}
+    a = archive_pin(p["docs_url"])
+    if a and docs["memento"] != a["ts"]:
+        return {"refused": "ARCHIVE_CAPTURE_NOT_EXACT"}
     if docs["text"].lower().find(p["address"]) < 0:
         return {"refused": "ADDRESS_NOT_IN_DOCS"}
     # --- the audited and fixed versions
@@ -1599,13 +2261,24 @@ def gather(p: dict) -> dict:
     if fix["canon"] == aud["canon"]:
         return {"refused": "FIX_DOES_NOT_CHANGE_FUNCTION"}
     # --- the deployed, verified, running code (fix 3 / fix 4)
-    d = deployed_function(p["chain"], p["address"], base, fn)
+    calls = []
+    for x in fix_change(aud["code"], fix["code"])["added"]:
+        for nm in calls_in(x):
+            if nm not in calls:
+                calls.append(nm)
+    d = deployed_function(p["chain"], p["address"], base, fn, slot_block, calls)
     if "refused" in d:
         return d
-    # --- fix 7: when the deployment was created
+    # --- fix 7: when the deployment (and the code it runs) was created
     born = creation_time(p["chain"], p["address"])
     if not born:
         return {"refused": "CREATION_DATE_UNREADABLE"}
+    impl_at = 0
+    if d["impl"] != "":
+        ib = creation_time(p["chain"], d["impl"])
+        if not ib:
+            return {"refused": "CREATION_DATE_UNREADABLE"}
+        impl_at = ib["at"]
     dep = d["dep"]
     title = sec["title"]
     if len(title) > TITLE_CAP:
@@ -1618,9 +2291,16 @@ def gather(p: dict) -> dict:
         "audit_binding": binding,
         "fix_ref": fix_ref,
         "patch_sha256": patch_sha,
+        "fix_reach": prov["reach"],
+        "fix_committed_at": prov["committed_at"],
+        "fix_merged_at": prov["merged_at"],
+        "fix_at": prov["fix_at"],
         "audited_at": audited_at,
         "created_at": born["at"],
         "creation_tx": born["tx"],
+        "impl_created_at": impl_at,
+        "slot_block": d["slot_block"],
+        "compiled": d["compiled"],
         "report_sha256": rep["sha256"],
         "docs_sha256": docs["sha256"],
         "audited_sha256": aud_page["sha256"],
@@ -1636,6 +2316,12 @@ def gather(p: dict) -> dict:
         "fix_canon_sha256": _sha(fix["canon"]),
         "dep_canon_sha256": _sha(dep["canon"]) if dep.get("ok") else "",
     }
+
+
+def code_born(impl: str, created_at: int, impl_created_at: int) -> int:
+    """When the code that runs was created: the implementation's creation for
+    a proxy, else the deployment's own."""
+    return impl_created_at if impl != "" else created_at
 
 
 # =============================================================================
@@ -1670,6 +2356,13 @@ class Check:
     audited_at: u64
     created_at: u64
     creation_tx: str
+    fix_reach: str
+    fix_committed_at: u64
+    fix_merged_at: u64
+    fix_at: u64
+    impl_created_at: u64
+    slot_block: u64
+    compiled: str
     report_sha256: str
     docs_sha256: str
     audited_sha256: str
@@ -1707,6 +2400,7 @@ class Score:
     inconclusive: u32
     expired: u32
     predates: u32
+    predates_fix: u32
 
 
 class FixCheck(gl.contract.Contract):
@@ -1755,7 +2449,7 @@ class FixCheck(gl.contract.Contract):
             raise gl.vm.UserError("fee_recipient must be an address")
         self.fee_recipient = Address(rec)
         self.totals = Score(checks=u32(0), open=u32(0), fixed=u32(0), not_fixed=u32(0),
-                            inconclusive=u32(0), expired=u32(0), predates=u32(0))
+                            inconclusive=u32(0), expired=u32(0), predates=u32(0), predates_fix=u32(0))
 
     # --- the books ------------------------------------------------------------
 
@@ -1822,7 +2516,7 @@ class FixCheck(gl.contract.Contract):
         s = self.scores.get(key)
         if s is None:
             self.scores[key] = Score(checks=u32(0), open=u32(0), fixed=u32(0), not_fixed=u32(0),
-                                     inconclusive=u32(0), expired=u32(0), predates=u32(0))
+                                     inconclusive=u32(0), expired=u32(0), predates=u32(0), predates_fix=u32(0))
             s = self.scores[key]
         return s
 
@@ -1836,13 +2530,25 @@ class FixCheck(gl.contract.Contract):
         never raise: the stake stays on the sender's withdrawable balance."""
         value = self._bank()
         who = self._who()
+        now = self._now()
+        if now <= 0:
+            return self._refuse("NO_CLOCK")
         # --- deterministic checks, before anything is fetched
+        for u in (report_url, docs_url, audited_url, fix_url):
+            if percent_in_path(u):
+                return self._refuse("URL_PERCENT_ENCODED")
         rep = _clean_url(report_url)
         if pinned_kind(rep) == "":
             return self._refuse("REPORT_URL_NOT_PINNED")
+        if archive_pin(rep) and not archive_pin(rep, now):
+            return self._refuse("ARCHIVE_TIMESTAMP_AFTER_FILING")
+        if not report_source_ok(rep):
+            return self._refuse("REPORT_SOURCE_NOT_ALLOWED")
         docs = _clean_url(docs_url)
         if pinned_kind(docs) == "":
             return self._refuse("DOCS_URL_NOT_PINNED")
+        if archive_pin(docs) and not archive_pin(docs, now):
+            return self._refuse("ARCHIVE_TIMESTAMP_AFTER_FILING")
         aud_url = _clean_url(audited_url)
         ag = github_pin(aud_url)
         if not ag or not ag["path"].endswith(".sol"):
@@ -1857,6 +2563,11 @@ class FixCheck(gl.contract.Contract):
             return self._refuse("FIX_FILE_DIFFERS_FROM_AUDITED_FILE")
         if fg["sha"] == ag["sha"] and fg["owner"] == ag["owner"] and fg["repo"] == ag["repo"]:
             return self._refuse("FIX_COMMIT_IS_AUDITED_COMMIT")
+        # round-2 fix 9: the fix lives in the protocol's own GitHub account -
+        # the owner of its pinned docs (the audited repo is Sherlock's copy)
+        dg = github_pin(docs)
+        if not dg or dg["owner"] != fg["owner"]:
+            return self._refuse("FIX_REPO_NOT_PROTOCOLS")
         fid = _finding_id(finding_id)
         if fid == "":
             return self._refuse("BAD_FINDING_ID")
@@ -1874,9 +2585,6 @@ class FixCheck(gl.contract.Contract):
         key = check_key(rep, fid, ch, addr)
         if int(self.open_by_key.get(key) or 0) != 0:
             return self._refuse("ALREADY_OPEN_AS_CHECK_" + str(int(self.open_by_key.get(key))))
-        now = self._now()
-        if now <= 0:
-            return self._refuse("NO_CLOCK")
         params = {"report_url": rep, "fid": fid, "fn": fn, "audited_url": aud_url,
                   "fix_url": fx_url, "chain": ch, "address": addr, "docs_url": docs}
 
@@ -1889,7 +2597,7 @@ class FixCheck(gl.contract.Contract):
             theirs = res.calldata
             if not isinstance(theirs, dict):
                 return False
-            mine = gather(params)
+            mine = gather(params, _as_int(theirs.get("slot_block"), -1))
             return json.dumps(theirs, sort_keys=True) == json.dumps(mine, sort_keys=True)
 
         ev = gl.vm.run_nondet(leader, validator)
@@ -1911,7 +2619,10 @@ class FixCheck(gl.contract.Contract):
             section_sha256=str(ev["section_sha256"]), audit_binding=str(ev["audit_binding"]),
             fix_ref=str(ev["fix_ref"]), patch_sha256=str(ev["patch_sha256"]),
             audited_at=u64(int(ev["audited_at"])), created_at=u64(int(ev["created_at"])),
-            creation_tx=str(ev["creation_tx"]),
+            creation_tx=str(ev["creation_tx"]), fix_reach=str(ev["fix_reach"]),
+            fix_committed_at=u64(int(ev["fix_committed_at"])), fix_merged_at=u64(int(ev["fix_merged_at"])),
+            fix_at=u64(int(ev["fix_at"])), impl_created_at=u64(int(ev["impl_created_at"])),
+            slot_block=u64(int(ev["slot_block"])), compiled=str(ev["compiled"]),
             report_sha256=str(ev["report_sha256"]), docs_sha256=str(ev["docs_sha256"]),
             audited_sha256=str(ev["audited_sha256"]), fix_sha256=str(ev["fix_sha256"]),
             source_sha256=str(ev["source_sha256"]),
@@ -1942,13 +2653,14 @@ class FixCheck(gl.contract.Contract):
         self.totals.checks = u32(int(self.totals.checks) + 1)
         self.totals.open = u32(int(self.totals.open) + 1)
         predates = str(ev["impl"]) == "" and 0 < int(ev["created_at"]) < int(ev["audited_at"])
+        predates_fix = 0 < code_born(str(ev["impl"]), int(ev["created_at"]), int(ev["impl_created_at"])) \
+            < int(ev["fix_at"])
         if ev["dep_status"] != "OK":
             preview = code_decision(str(ev["dep_status"]), "", "", "")
         elif ev["dep_canon_sha256"] == ev["fix_canon_sha256"]:
             preview = {"verdict": V_FIXED, "basis": B_CODE_MATCH_FIX}
         elif ev["dep_canon_sha256"] == ev["aud_canon_sha256"]:
-            preview = {"verdict": V_PREDATES if predates else V_NOT_FIXED,
-                       "basis": B_DEPLOYED_BEFORE_AUDIT if predates else B_CODE_MATCH_VULNERABLE}
+            preview = code_decision("OK", "a", "a", "b", predates, predates_fix)
         elif contains_fix(str(ev["dep_code"]), str(ev["aud_code"]), str(ev["fix_code"])):
             preview = {"verdict": V_FIXED, "basis": B_CODE_CONTAINS_FIX}
         else:
@@ -2051,6 +2763,9 @@ class FixCheck(gl.contract.Contract):
         elif verdict == V_PREDATES:
             sc.predates = u32(int(sc.predates) + 1)
             self.totals.predates = u32(int(self.totals.predates) + 1)
+        elif verdict == V_PREDATES_FIX:
+            sc.predates_fix = u32(int(sc.predates_fix) + 1)
+            self.totals.predates_fix = u32(int(self.totals.predates_fix) + 1)
         else:
             sc.inconclusive = u32(int(sc.inconclusive) + 1)
             self.totals.inconclusive = u32(int(self.totals.inconclusive) + 1)
@@ -2079,7 +2794,8 @@ class FixCheck(gl.contract.Contract):
                 or (fix_code != "" and _sha(fix_canon) != c.fix_canon_sha256):
             raise gl.vm.UserError("stored evidence does not match its filing hashes")
         predates = c.implementation == "" and 0 < int(c.created_at) < int(c.audited_at)
-        out = code_decision(c.dep_status, dep_canon, aud_canon, fix_canon, predates)
+        predates_fix = 0 < code_born(c.implementation, int(c.created_at), int(c.impl_created_at)) < int(c.fix_at)
+        out = code_decision(c.dep_status, dep_canon, aud_canon, fix_canon, predates, predates_fix)
         if not out and contains_fix(dep_code, aud_code, fix_code):
             out = {"verdict": V_FIXED, "basis": B_CODE_CONTAINS_FIX}
         votes = ""
@@ -2124,6 +2840,9 @@ class FixCheck(gl.contract.Contract):
             if verdict != V_INCONCLUSIVE and len(quotes) == 0:
                 verdict, basis = V_INCONCLUSIVE, B_MODEL_QUOTE_INVALID
             votes = str(got.get("votes", ""))[:40]
+            if verdict == V_NOT_FIXED and (predates or predates_fix):
+                # round-2 fix 1: code created before the fix existed is never NOT_FIXED
+                verdict, basis = V_PREDATES_FIX, B_DEPLOYED_BEFORE_FIX
             out = {"verdict": verdict, "basis": basis}
         # --- writes
         lines = code_lines(dep_code)
@@ -2182,10 +2901,11 @@ class FixCheck(gl.contract.Contract):
     def _score_view(self, s: typing.Any) -> dict:
         if s is None:
             return {"checks": 0, "open": 0, "fixed": 0, "not_fixed": 0, "inconclusive": 0, "expired": 0,
-                    "predates_audit": 0}
+                    "predates_audit": 0, "predates_fix": 0}
         return {"checks": int(s.checks), "open": int(s.open), "fixed": int(s.fixed),
                 "not_fixed": int(s.not_fixed), "inconclusive": int(s.inconclusive),
-                "expired": int(s.expired), "predates_audit": int(s.predates)}
+                "expired": int(s.expired), "predates_audit": int(s.predates),
+                "predates_fix": int(s.predates_fix)}
 
     def _check_view(self, c: Check) -> dict:
         return {
@@ -2201,6 +2921,9 @@ class FixCheck(gl.contract.Contract):
             "section_sha256": c.section_sha256, "audit_binding": c.audit_binding,
             "fix_ref": c.fix_ref, "patch_sha256": c.patch_sha256,
             "audited_at": int(c.audited_at), "created_at": int(c.created_at), "creation_tx": c.creation_tx,
+            "fix_reach": c.fix_reach, "fix_committed_at": int(c.fix_committed_at),
+            "fix_merged_at": int(c.fix_merged_at), "fix_at": int(c.fix_at),
+            "impl_created_at": int(c.impl_created_at), "slot_block": int(c.slot_block), "compiled": c.compiled,
             "report_sha256": c.report_sha256, "docs_sha256": c.docs_sha256,
             "audited_sha256": c.audited_sha256, "fix_sha256": c.fix_sha256,
             "source_sha256": c.source_sha256, "aud_canon_sha256": c.aud_canon_sha256,

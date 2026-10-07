@@ -1,0 +1,82 @@
+{
+  "address": "0x0B7C2966DB95638081838940349F17b4FB2Bf0dE",
+  "tx": "0x8edc51f20add01c574c0ad25f73d65838011dd03dc294eb04efc95c3ba7df0f2",
+  "result": {
+    "https://mainnet.optimism.io": {
+      "16": "200 {\"jsonrpc\":\"2.0\",\"result\":\"0x0000000000000000000000000000000000000000000000000000000000000000\",\"id\":1}\n",
+      "128": "200 {\"jsonrpc\":\"2.0\",\"result\":\"0x0000000000000000000000000000000000000000000000000000000000000000\",\"id\":1}\n",
+      "600": "200 {\"jsonrpc\":\"2.0\",\"result\":\"0x0000000000000000000000000000000000000000000000000000000000000000\",\"id\":1}\n",
+      "3000": "200 {\"jsonrpc\":\"2.0\",\"result\":\"0x0000000000000000000000000000000000000000000000000000000000000000\",\"id\":1}\n",
+      "20000": "200 {\"jsonrpc\":\"2.0\",\"result\":\"0x0000000000000000000000000000000000000000000000000000000000000000\",\"id\":1}\n",
+      "head": 157887190
+    },
+    "https://polygon.drpc.org": {
+      "16": "200 {\"id\":1,\"jsonrpc\":\"2.0\",\"result\":\"0x0000000000000000000000000000000000000000000000000000000000000000\"}",
+      "128": "200 {\"id\":1,\"jsonrpc\":\"2.0\",\"result\":\"0x0000000000000000000000000000000000000000000000000000000000000000\"}",
+      "600": "200 {\"id\":1,\"jsonrpc\":\"2.0\",\"result\":\"0x0000000000000000000000000000000000000000000000000000000000000000\"}",
+      "3000": "200 {\"id\":1,\"jsonrpc\":\"2.0\",\"result\":\"0x0000000000000000000000000000000000000000000000000000000000000000\"}",
+      "20000": "200 {\"id\":1,\"jsonrpc\":\"2.0\",\"result\":\"0x0000000000000000000000000000000000000000000000000000000000000000\"}",
+      "head": 95111979
+    },
+    "https://web.archive.org/web/20240101000000/https://docs.sherlock.xyz/": {
+      "<updated>": "",
+      "attrs": [
+        "body",
+        "headers",
+        "status"
+      ],
+      "class=\"branch\"": "",
+      "defaultBranch": "",
+      "head": "<!DOCTYPE html>\n<html lang=\"en\">\n    <head><script type=\"text/javascript\" src=\"h",
+      "headers": {
+        "content-security-policy": "b\"default-src 'self' 'unsafe-eval' 'unsafe-inline' data: blob: archive.org web.archive.org web-static.archive.org waybac",
+        "content-type": "b'text/html; charset=utf-8'",
+        "date": "b'Wed, 07 Oct 2026 11:39:18 GMT'",
+        "link": "b'<https://docs.sherlock.xyz/>; rel=\"original\", <https://web.archive.org/web/timemap/link/https://docs.sherlock.xyz/>; r",
+        "memento-datetime": "b'Wed, 29 Nov 2023 22:41:54 GMT'",
+        "permissions-policy": "b'interest-cohort=()'",
+        "referrer-policy": "b'no-referrer-when-downgrade'",
+        "server": "b'nginx'",
+        "server-timing": "b'HIT'",
+        "set-cookie": "b'wb-p-SERVER=wwwb-app206; path=/'",
+        "x-app-server": "b'wwwb-app206-dc6'",
+        "x-archive-guessed-charset": "b'utf-8'",
+        "x-archive-guessed-content-type": "b'text/html'",
+        "x-archive-orig-age": "b'9480'",
+        "x-archive-orig-alt-svc": "b'h3=\":443\"; ma=86400'",
+        "x-archive-orig-cache-control": "b'public, max-age=86400, s-maxage=86400, stale-while-revalidate=3600, stale-if-error=43200'",
+        "x-archive-orig-cf-cache-status": "b'DYNAMIC'",
+        "x-archive-orig-cf-ray": "b'82de5c5b0867169a-SJC'",
+        "x-archive-orig-connection": "b'keep-alive'",
+        "x-archive-orig-content-encoding": "b'gzip'",
+        "x-archive-orig-content-security-policy": "b\"frame-ancestors https:; default-src 'self' app.gitbook.com api.gitbook.com integrations.gitbook.com files.gitbook.com ",
+        "x-archive-orig-date": "b'Wed, 29 Nov 2023 22:41:54 GMT'",
+        "x-archive-orig-function-execution-id": "b'mmdzkv557n5i'",
+        "x-archive-orig-nel": "b'{\"success_fraction\":0,\"report_to\":\"cf-nel\",\"max_age\":604800}'",
+        "x-archive-orig-referrer-policy": "b'no-referrer-when-downgrade'",
+        "x-archive-orig-report-to": "b'{\"endpoints\":[{\"url\":\"https:\\\\/\\\\/a.nel.cloudflare.com\\\\/report\\\\/v3?s=7OPyaScqwTk9c9XAve8v%2F3jhlrEufbFEtgRQe38GTv%2F",
+        "x-archive-orig-server": "b'cloudflare'",
+        "x-archive-orig-strict-transport-security": "b'max-age=31536000'",
+        "x-archive-orig-transfer-encoding": "b'chunked'",
+        "x-archive-orig-vary": "b'Accept-Encoding'",
+        "x-archive-orig-x-cloud-trace-context": "b'd974f6d13cfc3395f7a5674a34df0b80'",
+        "x-archive-orig-x-content-type-options": "b'nosniff'",
+        "x-archive-orig-x-powered-by": "b'GitBook'",
+        "x-archive-src": "b'spn2-20231129225641/spn2-20231129213649-wwwb-spn08.us.archive.org-8000.warc.gz'",
+        "x-as": "b'14618'",
+        "x-location": "b'All'",
+        "x-na": "b'0'",
+        "x-nid": "b'AWS'",
+        "x-page-cache": "b'HIT'",
+        "x-rl": "b'0'",
+        "x-sd": "b'0'",
+        "x-tr": "b'273'",
+        "x-ts": "b'200'"
+      },
+      "http": 200,
+      "len": 380526,
+      "mergeCommitSha": "",
+      "mergedTime": ""
+    }
+  }
+}

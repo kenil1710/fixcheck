@@ -12,7 +12,8 @@ M = stub.load_full(Path(__file__).resolve().parent.parent / "contracts" / "FixCh
 ROOT = Path(__file__).resolve().parent.parent
 seeds = json.loads((ROOT / "docs/research/seeds.json").read_text())
 WANT = [("PoolTogether V5", "M-5", "optimism"), ("PoolTogether V5", "M-9", "optimism"), ("Mellow Flexible Vaults", "H-1", "ethereum"),
-        ("Mellow Flexible Vaults", "H-2", "ethereum"), ("Cap", "M-3", "ethereum"), ("PoolTogether V5", "M-16", "arbitrum")]
+        ("Mellow Flexible Vaults", "H-2", "ethereum"), ("Cap", "M-3", "ethereum"), ("PoolTogether V5", "M-16", "arbitrum"),
+        ("PoolTogether V5", "M-17", "ethereum")]
 pages, rpcs, cases = {}, [], []
 def live_rpc(url, method, params):
     req = urllib.request.Request(url, data=json.dumps({"jsonrpc": "2.0", "id": 1, "method": method, "params": params}).encode(), headers={"Content-Type": "application/json", "User-Agent": "fixcheck-fixtures"})
@@ -29,22 +30,35 @@ for proto, fid, chain in WANT:
     ap, fp = M.github_pin(s["audited_url"]), M.github_pin(s["fix_url"])
     put(M.GITHUB_WEB + ap["owner"] + "/" + ap["repo"] + "/commits/" + ap["sha"] + ".atom")
     sec = M.finding_section(pages[M.norm_url(s["report_url"])], fid)["text"]
+    fix_ref = ""
     for n in M.fix_links(sec, fp)["pulls"][:M.MAX_PULLS]:
-        put(M.PATCH_BASE + fp["owner"] + "/" + fp["repo"] + "/pull/" + n + ".patch")
+        if M.patch_head(put(M.PATCH_BASE + fp["owner"] + "/" + fp["repo"] + "/pull/" + n + ".patch")) == fp["sha"]:
+            fix_ref = n
+            break
+    gw = M.GITHUB_WEB + fp["owner"] + "/" + fp["repo"]
+    put(gw + "/commits/" + fp["sha"] + ".atom")
+    bc = put(gw + "/branch_commits/" + fp["sha"])
+    if fix_ref:
+        facts = M.pr_facts(put(gw + "/pull/" + fix_ref), fix_ref)
+        if not M.on_default_branch(bc, fp["owner"], fp["repo"]) and facts.get("merge_sha"):
+            put(gw + "/branch_commits/" + facts["merge_sha"])
     rurl = M.CHAINS[chain][3]
     slot = live_rpc(rurl, "eth_getStorageAt", [addr, M.EIP1967_IMPL_SLOT, "latest"])
     rpcs.append([rurl, "eth_getStorageAt", [addr, M.EIP1967_IMPL_SLOT, "latest"], slot])
     put(M.source_url(chain, addr))
+    born = [addr]
     if int(slot, 16):
         put(M.source_url(chain, "0x" + slot[-40:]))
+        born.append("0x" + slot[-40:])
     kind, base, cid, _ = M.CHAINS[chain]
-    if kind == "blockscout":
-        a = json.loads(put(base + "/api/v2/addresses/" + addr))
-        put(base + "/api/v2/transactions/" + a["creation_transaction_hash"].lower())
-    else:
-        d = json.loads(put(base + "/server/v2/contract/" + str(cid) + "/" + addr + "?fields=deployment"))["deployment"]
-        blk = hex(int(d["blockNumber"]))
-        rpcs.append([rurl, "eth_getBlockByNumber", [blk, False], live_rpc(rurl, "eth_getBlockByNumber", [blk, False])])
+    for who in born:
+        if kind == "blockscout":
+            a = json.loads(put(base + "/api/v2/addresses/" + who))
+            put(base + "/api/v2/transactions/" + a["creation_transaction_hash"].lower())
+        else:
+            d = json.loads(put(base + "/server/v2/contract/" + str(cid) + "/" + who + "?fields=deployment"))["deployment"]
+            blk = hex(int(d["blockNumber"]))
+            rpcs.append([rurl, "eth_getBlockByNumber", [blk, False], live_rpc(rurl, "eth_getBlockByNumber", [blk, False])])
     cases.append(dict(protocol=proto, id=fid, fn=s["function"], chain=chain, address=s["address"], report=s["report_url"],
                       docs=s["docs_url"], audited=s["audited_url"], fix=s["fix_url"]))
 (ROOT / "test/fixtures/pages.json").write_text(json.dumps(pages))

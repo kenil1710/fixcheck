@@ -12,7 +12,8 @@ import typing
 # finding) - free, by cross-contract view - where `finding` is
 # "<pinned report url>#<finding id>". This contract judges nothing and stores
 # no verdict. The report URL is normalised by FixCheck (case of owner/repo,
-# trailing slashes, query string), so every spelling finds the same check.
+# trailing slashes, query string, %-escapes), so every spelling finds the
+# same check.
 #
 # CUSTODY: FALSE. No payable method, no transfer, no owner, no setter. The
 # FixCheck address is fixed at deployment.
@@ -51,8 +52,8 @@ class FixRegistry(gl.contract.Contract):
 
     @gl.public.view
     def fix_status(self, chain: str, address: str, finding: str) -> typing.Any:
-        """{"status": FIXED | NOT_FIXED | PREDATES_AUDIT | INCONCLUSIVE | OPEN |
-        UNCHECKED | UNKNOWN,
+        """{"status": FIXED | NOT_FIXED | PREDATES_AUDIT | PREDATES_FIX |
+        INCONCLUSIVE | OPEN | UNCHECKED | UNKNOWN,
         "check_id", "basis", "decided_at", "reachable"}"""
         return self._status(chain, address, finding)
 
@@ -66,7 +67,8 @@ class FixRegistry(gl.contract.Contract):
     @gl.public.view
     def is_known_unfixed(self, chain: str, address: str, finding: str) -> bool:
         """True only for a decided NOT_FIXED: the deployed code is the audited
-        version although the deployment does not predate the audit.
-        PREDATES_AUDIT (deployed before the audit, not upgradeable) is False."""
+        version although it was created after the fix existed. PREDATES_AUDIT
+        (deployed before the audit, not upgradeable) and PREDATES_FIX (created
+        before the fix existed) are False."""
         got = self._status(chain, address, finding)
         return bool(got.get("reachable")) and got.get("status") == "NOT_FIXED"

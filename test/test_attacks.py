@@ -184,6 +184,10 @@ class A04_ProxyBundleShadowsImplementation(unittest.TestCase):
         # chain answers the proxy's slot with the implementation the explorer names
         B.WEB.rpc[(MOD.CHAINS[case["chain"]][3], "eth_getStorageAt",
                    json.dumps([case["address"].lower(), MOD.EIP1967_IMPL_SLOT, "latest"]))] = "0x" + "0" * 24 + impl[2:]
+        # The code that runs is dated by the implementation's own creation
+        # (round-2 fix 1): the fake chain answers it with the proxy's record
+        bs = MOD.CHAINS[case["chain"]][1] + "/api/v2/addresses/"
+        WEB.pages[bs + impl] = WEB.pages[bs + case["address"].lower()]
         out = w.file(case)
         self.assertEqual(out["status"], "OK", out)
         w.at(T0 + 3600)

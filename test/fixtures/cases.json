@@ -64,5 +64,16 @@
   "docs": "https://raw.githubusercontent.com/GenerationSoftware/pt-dev-docs/9f3322e7280f2e91346cabfc2512046c6cfcd2a8/docs/deployments/arbitrum.md",
   "audited": "https://raw.githubusercontent.com/sherlock-audit/2024-05-pooltogether/1aa1b8c028b659585e4c7a6b9b652fb075f86db3/pt-v5-vault/src/PrizeVault.sol",
   "fix": "https://raw.githubusercontent.com/GenerationSoftware/pt-v5-vault/60be8fc2d5bbf1606e920ca49bb8100337a1ee2d/src/PrizeVault.sol"
+ },
+ {
+  "protocol": "PoolTogether V5",
+  "id": "M-17",
+  "fn": "_convertToShares",
+  "chain": "ethereum",
+  "address": "0x9eE31E845fF1358Bf6B1F914d3918c6223c75573",
+  "report": "https://raw.githubusercontent.com/sherlock-audit/2024-05-pooltogether-judging/88298eacec6f178fd0b5f9f13e4605c58aa58072/README.md",
+  "docs": "https://raw.githubusercontent.com/GenerationSoftware/pt-dev-docs/9f3322e7280f2e91346cabfc2512046c6cfcd2a8/docs/deployments/ethereum.md",
+  "audited": "https://raw.githubusercontent.com/sherlock-audit/2024-05-pooltogether/1aa1b8c028b659585e4c7a6b9b652fb075f86db3/pt-v5-vault/src/PrizeVault.sol",
+  "fix": "https://raw.githubusercontent.com/GenerationSoftware/pt-v5-vault/a812f8957e4563b0bcaa01ed8c2ac767b2f3e996/src/PrizeVault.sol"
  }
 ]

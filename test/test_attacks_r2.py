@@ -347,7 +347,8 @@ class R2_08_ArchivePinCanFloat(unittest.TestCase):
     evidence it claims to be."""
 
     def test_future_timestamp_is_not_a_pin(self):
-        self.assertEqual(MOD.archive_pin("https://web.archive.org/web/20991231235959/https://example.com/report.md"), {},
+        # archive_pin takes the filing time (the contract's only clock); T0 is the suite's
+        self.assertEqual(MOD.archive_pin("https://web.archive.org/web/20991231235959/https://example.com/report.md", T0), {},
                          "a timestamp in 2099 resolves to whatever capture is newest")
 
 

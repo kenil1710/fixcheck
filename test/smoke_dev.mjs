@@ -1,4 +1,4 @@
-/** DEV smoke for v1.2 (working tree, not a canonical deploy): files seeds by index and prints each result. */
+/** DEV smoke (working tree, not a canonical deploy): files seeds by index and prints each result. */
 import { readFileSync } from "node:fs";
 import { createClient, createAccount } from "genlayer-js";
 import { CHAINS, accounts, fundOnStudio, deploy, connect, argOf } from "./harness.mjs";
@@ -8,11 +8,11 @@ const account = createAccount(acc.deployer.key);
 await fundOnStudio(chain, acc.challenger.address, 1000n * 10n ** 18n);
 let address = argOf("address");
 if (!address) {
-  const res = await deploy({ chain, wallet: createClient({ chain, account }), read: createClient({ chain }), code: readFileSync(new URL("../contracts/FixCheck.py", import.meta.url), "utf8"), args: ["SMOKE12", 60, 600, 200, acc.deployer.address], label: "smoke12" });
+  const res = await deploy({ chain, wallet: createClient({ chain, account }), read: createClient({ chain }), code: readFileSync(new URL("../contracts/FixCheck.py", import.meta.url), "utf8"), args: ["SMOKE", 60, 600, 200, acc.deployer.address], label: "smoke" });
   if (!res.ok) { console.error("deploy failed", res.out?.revertReason, res.out?.stderr?.slice(-2000)); process.exit(1); }
   address = res.address;
 }
-console.log("smoke12 at", address);
+console.log("smoke at", address);
 const seeds = JSON.parse(readFileSync(new URL("../docs/research/seeds.json", import.meta.url), "utf8"));
 const ch = connect({ address, role: "challenger" });
 for (const n of (argOf("seeds", "2,5,12")).split(",").map(Number)) {

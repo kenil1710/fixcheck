@@ -295,9 +295,14 @@ MESSAGE = types.SimpleNamespace(sender_address=_Addr("0x" + "a" * 40), value=0,
 
 
 class _Response:
-    def __init__(self, status, body):
+    """GenVM's response: status, headers (bytes values, as GenVM hands them
+    over) and body. GenVM follows redirects; a test models that by serving
+    the final page and its headers under the requested URL."""
+
+    def __init__(self, status, body, headers=None):
         self.status_code = status
         self.body = body.encode("utf-8") if isinstance(body, str) else body
+        self.headers = {k: (v.encode("utf-8") if isinstance(v, str) else v) for k, v in (headers or {}).items()}
 
 
 class _Web:
@@ -312,6 +317,8 @@ class _Web:
         self.counts = {}
         self.rpc = {}           # (url, method, json params) -> result (JSON-RPC)
         self.rpc_down = set()   # rpc urls that fail
+        self.headers = {}       # url -> response headers
+        self.head = {}          # rpc url -> latest block number (default HEAD)
 
     def get(self, url):
         self.log.append(url)
@@ -325,6 +332,7 @@ class _Web:
         return self.pages.get(url, (404, "not found"))
 
 
+HEAD = 0x10000000
 WEB = _Web()
 ETH = WEB
 
@@ -342,14 +350,20 @@ def _web_request(url, method="GET", body=None, headers=None, **_k):
     key = (url, req["method"], json.dumps(req["params"]))
     if key in WEB.rpc:
         return _Response(200, json.dumps({"jsonrpc": "2.0", "id": 1, "result": WEB.rpc[key]}))
+    if req["method"] == "eth_blockNumber":
+        return _Response(200, json.dumps({"jsonrpc": "2.0", "id": 1, "result": hex(WEB.head.get(url, HEAD))}))
     if req["method"] == "eth_getStorageAt":
+        # fixtures hold one answer per slot; any recent block reads the same
+        latest = (url, req["method"], json.dumps(req["params"][:2] + ["latest"]))
+        if latest in WEB.rpc:
+            return _Response(200, json.dumps({"jsonrpc": "2.0", "id": 1, "result": WEB.rpc[latest]}))
         return _Response(200, json.dumps({"jsonrpc": "2.0", "id": 1, "result": "0x" + "0" * 64}))
     return _Response(200, json.dumps({"jsonrpc": "2.0", "id": 1, "error": {"code": -32000, "message": "not in fixtures"}}))
 
 
 def _web_get(url, **_k):
     status, text = WEB.get(url)
-    return _Response(status, text)
+    return _Response(status, text, WEB.headers.get(url))
 
 
 def _web_render(url, **_k):

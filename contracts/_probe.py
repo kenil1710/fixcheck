@@ -96,6 +96,43 @@ class Probe(gl.contract.Contract):
 
         self.last = gl.vm.run_nondet(run, lambda r: isinstance(r, gl.vm.Return))
 
+    @gl.public.write
+    def probe_web2(self, urls: str, rpcs: str) -> None:
+        def run() -> str:
+            out = {}
+            for url in urls.split(","):
+                row = {}
+                try:
+                    r = gl.nondet.web.get(url)
+                    b = _raw(r)
+                    row["http"] = _status(r)
+                    row["len"] = len(b)
+                    row["attrs"] = [a for a in dir(r) if not a.startswith("__")][:30]
+                    h = getattr(r, "headers", None)
+                    row["headers"] = {str(k).lower(): str(h[k])[:120] for k in h} if isinstance(h, dict) else str(h)[:400]
+                    t = b.decode("utf-8", errors="ignore")
+                    for needle in ["mergedTime", "mergeCommitSha", "defaultBranch", "class=\"branch\"", "<updated>"]:
+                        k = t.find(needle)
+                        row[needle] = t[k:k + 90] if k >= 0 else ""
+                    row["head"] = t[:80]
+                except Exception as e:
+                    row["err"] = str(e)[:200]
+                out[url] = row
+            for u in rpcs.split(","):
+                try:
+                    r = gl.nondet.web.request(u, method="POST", body=json.dumps({"jsonrpc": "2.0", "id": 1, "method": "eth_blockNumber", "params": []}), headers={"Content-Type": "application/json"})
+                    head = int(json.loads(_raw(r).decode())["result"], 16)
+                    row = {"head": head}
+                    for lag in [16, 128, 600, 3000, 20000]:
+                        r2 = gl.nondet.web.request(u, method="POST", body=json.dumps({"jsonrpc": "2.0", "id": 1, "method": "eth_getStorageAt", "params": ["0x4200000000000000000000000000000000000016", "0x0", hex(head - lag)]}), headers={"Content-Type": "application/json"})
+                        row[str(lag)] = str(_status(r2)) + " " + _raw(r2)[:110].decode("utf-8", errors="ignore")
+                    out[u] = row
+                except Exception as e:
+                    out[u] = {"err": str(e)[:200]}
+            return json.dumps(out, sort_keys=True)
+
+        self.last = gl.vm.run_nondet(run, lambda r: isinstance(r, gl.vm.Return))
+
     @gl.public.view
     def get_last(self) -> str:
         return self.last
