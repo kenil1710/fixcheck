@@ -124,7 +124,14 @@ Full table with links, stakes, dates and the demo paths: [`docs/SEEDS.md`](docs/
 | `frontend/` | Next.js app (Vercel Root Directory) |
 | `docs/` | research, threat model, attack report, seeds, screenshots, demo video |
 
-## Known limits
+## Known limitations
+
+The third attack pass ([`docs/ATTACK_REPORT_R3.md`](docs/ATTACK_REPORT_R3.md)) found two gaps that are not fixed yet. Its three tests in `test/test_attacks_r3.py` are marked as expected failures, so they will turn the suite red once a fix makes them pass.
+
+* **Pinned report and docs commits are not yet checked against the original repository's branches.** GitHub serves a commit made in a fork under the original repository's path, so a report or docs commit that exists only in a fork could be pinned. The fix commit itself is already checked: it must be on the protocol's default branch. Planned fix: the same branch check for every pinned commit.
+* **Proxies are dated by creation, not by their last upgrade.** For a proxy, PREDATES_AUDIT and PREDATES_FIX use the creation dates of the proxy and its implementation, not the time the proxy was last pointed at that implementation. A proxy pointed at an old implementation after the fix existed could be marked PREDATES instead of NOT_FIXED. Planned fix: date the implementation by the proxy's `Upgraded` event.
+
+Other limits:
 
 * **One function per finding.** A fix that lives in another function looks "changed"; the model can only confirm it by quoting the fix's added lines, otherwise the check is inconclusive.
 * **Comments and whitespace are ignored; everything else counts.** A renamed variable, a reordered statement or an extra statement inside the fix's lines is a change; code then cannot decide FIXED by containment and the model must ground its answer.
