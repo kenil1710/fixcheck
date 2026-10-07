@@ -35,7 +35,8 @@
 - [x] Design review loop over every page at 1440/390 in light and dark
 
 ## Review of seeded results
-- [x] v1.0 model verdicts reviewed against the fix diffs; two wrong NOT_FIXED found → v1.1 (CODE_CONTAINS_FIX, fix change shown to the model, grounded quotes), redeployed and reseeded; v1.0 kept under `docs/superseded/`
+- [x] Earlier model verdicts reviewed against the fix diffs; two wrong NOT_FIXED found and the rules narrowed; earlier deployments kept under `docs/superseded/`
+- [x] Attack pass (`docs/ATTACK_REPORT.md`): all nine findings fixed, 12 attack tests + 35 regression tests pass, redeployed from the final contract commit and reseeded
 
 ## Finish
 - [x] README (problem, how it works, model vs code, full addresses, seed table, known limits, how to use in 5 steps)

@@ -4,12 +4,12 @@
   "explorer": "https://explorer-studio-dev.genlayer.com/",
   "contracts": {
     "FixCheck": {
-      "address": "0x525D730a0fEe81881af646A784337e005cC4E833",
-      "deploy_tx": "0x1efe5816e8fc0e498b0bd09faab76d4f0a1e0162ad2d1628cb7af720854df9e0",
+      "address": "0x2d7b3C465D6478Db4438999b1FD0340A54256364",
+      "deploy_tx": "0x80460db8ddf136f02dda197ce5572069bb32e61bc412d577ff0963601766888b",
       "file": "contracts/FixCheck.py",
-      "commit": "655d61e90e50a151dd84942b710d1652e7dd43fd",
-      "bytes": 70553,
-      "sha256": "107501bf56c3e96897f0c252eb497a016a9d1a3bb6016b73cac44c3ea336a030",
+      "commit": "0c20168e94b47e6f3d1ebf13638c7115137f9e10",
+      "bytes": 92583,
+      "sha256": "0344592ef7bd06a13f8e8c39eb42925506eb1cc364e9badfa77ffaaad336d576",
       "constructor_args": [
         "CANONICAL",
         3600,
@@ -18,16 +18,16 @@
         "0x8bfB2761bA064D3F829F382f444867EE10294b1C"
       ],
       "deployer": "0x8bfB2761bA064D3F829F382f444867EE10294b1C",
-      "deployed_at": "2026-10-06T16:52:26.646Z",
+      "deployed_at": "2026-10-07T06:26:40.479Z",
       "mode": "CANONICAL"
     },
     "FixCheckDemo": {
-      "address": "0x7bC20b8eAf5A80Ca717a5249029a75351234B24F",
-      "deploy_tx": "0x6b25b32c471b3995952ad90e425ad3e92cbe2b1ce0bc91a710c6333f40297dd6",
+      "address": "0x78D31dbB13e8348A2278b64A84eBfE129607fd91",
+      "deploy_tx": "0xb0dbb739f72fec8ed175d484d64f3b91e0a61cae260440cf891c3d049c402338",
       "file": "contracts/FixCheck.py",
-      "commit": "655d61e90e50a151dd84942b710d1652e7dd43fd",
-      "bytes": 70553,
-      "sha256": "107501bf56c3e96897f0c252eb497a016a9d1a3bb6016b73cac44c3ea336a030",
+      "commit": "0c20168e94b47e6f3d1ebf13638c7115137f9e10",
+      "bytes": 92583,
+      "sha256": "0344592ef7bd06a13f8e8c39eb42925506eb1cc364e9badfa77ffaaad336d576",
       "constructor_args": [
         "DEMO",
         90,
@@ -36,83 +36,22 @@
         "0x8bfB2761bA064D3F829F382f444867EE10294b1C"
       ],
       "deployer": "0x8bfB2761bA064D3F829F382f444867EE10294b1C",
-      "deployed_at": "2026-10-06T16:52:36.540Z",
+      "deployed_at": "2026-10-07T06:26:47.345Z",
       "mode": "DEMO"
     },
     "FixRegistry": {
-      "address": "0xC96B4a0aAbf6902fBF1F2D2F0C6591d41D152aCf",
-      "deploy_tx": "0xe7138c629123ac436866dce33b31b657b0ac85805b6c5270aa9f5ec388adadba",
+      "address": "0x8E93Ab199E737CF022F5D4cE0f171d0e68815E49",
+      "deploy_tx": "0x966be28f115e34d233b77f04d54c48af7a025b55b35a2e60a799979378308019",
       "file": "contracts/FixRegistry.py",
-      "commit": "655d61e90e50a151dd84942b710d1652e7dd43fd",
-      "bytes": 2757,
-      "sha256": "dac4e78b0a0c49ef8d9b1a50aa5a74f37a99d43f3f4f8d916b032003a2f8a541",
+      "commit": "0c20168e94b47e6f3d1ebf13638c7115137f9e10",
+      "bytes": 3147,
+      "sha256": "36a8801749b1cfab86777ff19b7ae6d0b10b2dbf96fa22b72bab6f06dc406812",
       "constructor_args": [
-        "0x525D730a0fEe81881af646A784337e005cC4E833"
+        "0x2d7b3C465D6478Db4438999b1FD0340A54256364"
       ],
       "deployer": "0x8bfB2761bA064D3F829F382f444867EE10294b1C",
-      "deployed_at": "2026-10-06T16:52:42.445Z",
-      "reads": "0x525D730a0fEe81881af646A784337e005cC4E833"
+      "deployed_at": "2026-10-07T06:26:53.687Z",
+      "reads": "0x2d7b3C465D6478Db4438999b1FD0340A54256364"
     }
-  },
-  "superseded": [
-    {
-      "name": "FixCheck",
-      "address": "0x6D4390521e584b71f29A7E97E0411c6141795cF3",
-      "deploy_tx": "0x404adf7c083abb497d1072d850f3f9711be8d3d5de246c2412e32dc584819c1b",
-      "file": "contracts/FixCheck.py",
-      "commit": "1dc7e589448d519e4ac916f3b466a0195f15d9a8",
-      "bytes": 64543,
-      "sha256": "1bd341717b07296c869fa554b43bfbf6f016ed5bd1c360108d17d6345d7fe0bc",
-      "constructor_args": [
-        "CANONICAL",
-        3600,
-        86400,
-        200,
-        "0x8bfB2761bA064D3F829F382f444867EE10294b1C"
-      ],
-      "deployer": "0x8bfB2761bA064D3F829F382f444867EE10294b1C",
-      "deployed_at": "2026-10-06T15:31:18.889Z",
-      "mode": "CANONICAL",
-      "superseded_by": "0x525D730a0fEe81881af646A784337e005cC4E833",
-      "why": "v1.1: v1.0 model returned NOT_FIXED for two Mellow functions that contain the fix"
-    },
-    {
-      "name": "FixCheckDemo",
-      "address": "0xd086D592522bcdC4B4eB15AFF23BB5AD9E203f56",
-      "deploy_tx": "0xc3055ae24bbe5068cf6b4829a8b4a2eed1e8f3c67c480c785d524aa12657d67e",
-      "file": "contracts/FixCheck.py",
-      "commit": "1dc7e589448d519e4ac916f3b466a0195f15d9a8",
-      "bytes": 64543,
-      "sha256": "1bd341717b07296c869fa554b43bfbf6f016ed5bd1c360108d17d6345d7fe0bc",
-      "constructor_args": [
-        "DEMO",
-        90,
-        300,
-        200,
-        "0x8bfB2761bA064D3F829F382f444867EE10294b1C"
-      ],
-      "deployer": "0x8bfB2761bA064D3F829F382f444867EE10294b1C",
-      "deployed_at": "2026-10-06T15:31:24.880Z",
-      "mode": "DEMO",
-      "superseded_by": "0x7bC20b8eAf5A80Ca717a5249029a75351234B24F",
-      "why": "v1.1: v1.0 model returned NOT_FIXED for two Mellow functions that contain the fix"
-    },
-    {
-      "name": "FixRegistry",
-      "address": "0xbdA30Ea646a6a82425db21559162923b2d833339",
-      "deploy_tx": "0x4997cf127c6e22b52fc9f52b39e04c83a46d3f1e51de554b3c78c7b8307918b5",
-      "file": "contracts/FixRegistry.py",
-      "commit": "1dc7e589448d519e4ac916f3b466a0195f15d9a8",
-      "bytes": 2757,
-      "sha256": "dac4e78b0a0c49ef8d9b1a50aa5a74f37a99d43f3f4f8d916b032003a2f8a541",
-      "constructor_args": [
-        "0x6D4390521e584b71f29A7E97E0411c6141795cF3"
-      ],
-      "deployer": "0x8bfB2761bA064D3F829F382f444867EE10294b1C",
-      "deployed_at": "2026-10-06T15:31:33.262Z",
-      "reads": "0x6D4390521e584b71f29A7E97E0411c6141795cF3",
-      "superseded_by": "0xC96B4a0aAbf6902fBF1F2D2F0C6591d41D152aCf",
-      "why": "v1.1: v1.0 model returned NOT_FIXED for two Mellow functions that contain the fix"
-    }
-  ]
+  }
 }

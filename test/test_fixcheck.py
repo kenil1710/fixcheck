@@ -236,10 +236,10 @@ class T01_RealEvidencePaths(unittest.TestCase):
         out = w.file(CAP)
         self.assertEqual(out["status"], "OK", out)
         ch = w.c.get_check(1)
-        # v1.2 (fix 4): resolved by the EIP-1967 slot, which equals the explorer's link
+        # (fix 4): resolved by the EIP-1967 slot, which equals the explorer's link
         self.assertEqual(ch["implementation"], "0x68c4f03b8640c0393a832987147bae7a0b27aaa7")
         self.assertNotEqual(ch["impl_source_sha256"], "")
-        # v1.2 (fix 3): Blockscout marks Cap's implementation as a PARTIAL match
+        # (fix 3): Blockscout marks Cap's implementation as a PARTIAL match
         self.assertEqual((ch["dep_status"], out["code_says"]), ("PARTIAL_MATCH", "INCONCLUSIVE"))
 
     def test_model_case_fixed(self):
@@ -319,7 +319,7 @@ class T02_UnpinnedOrMutableReportUrl(unittest.TestCase):
             self.refused(w.file(CLAIMER, report_url=bad), "REPORT_URL_NOT_PINNED")
 
     def test_query_and_fragment_are_normalised_not_pins(self):
-        # v1.2 (fix 8): "?x=1" / "#frag" / a trailing slash are dropped, so the
+        # (fix 8): "?x=1" / "#frag" / a trailing slash are dropped, so the
         # URL is the same pin (and the same check key) as the bare one
         bare = "https://raw.githubusercontent.com/a/b/" + "a" * 40 + "/README.md"
         for v in (bare + "?x=1", bare + "#L10", bare + "/", bare.replace("/a/b/", "/A/B/")):
@@ -476,7 +476,7 @@ class T06_FunctionRenamedOrOverloaded(unittest.TestCase):
         self.assertTrue(out["reason"].startswith("AUDITED_"), out)
 
     def test_fix_that_does_not_touch_function_refuses(self):
-        # v1.2: the "fix" must be linked by the finding (fix 1), so the report
+        # the "fix" must be linked by the finding (fix 1), so the report
         # here links it; the linked commit leaves claimPrizes unchanged
         w = World()
         fake_fix = "https://raw.githubusercontent.com/x/y/" + "c" * 40 + "/src/Claimer.sol"
@@ -676,8 +676,8 @@ class T10_ModelFlip(unittest.TestCase):
 
 
 class T10b_ModelEvidenceMustPointAtTheChange(unittest.TestCase):
-    """v1.1: on seeded v1.0 data the model answered NOT_FIXED for two Mellow
-    functions that contain the fix. Code now (a) decides FIXED when the
+    """On an earlier deployment the model answered NOT_FIXED for two Mellow
+    functions that contain the fix (docs/superseded/HISTORY.md). Code now (a) decides FIXED when the
     deployed function visibly holds the fix, and (b) refuses model verdicts
     whose quotes do not point at the change."""
 
@@ -711,7 +711,7 @@ class T10b_ModelEvidenceMustPointAtTheChange(unittest.TestCase):
         ch = MOD.fix_change(self.AUD, self.FIX)
         dep = "function f(uint a) external {\n    uint b = a;\n    if (b > 0 && verify(b)) { pay(b); }\n    done();\n}"
         self.assertEqual(MOD.read_model_answer({"verdict": "FIXED", "quoted_lines": ["uint b = a;"]}, dep, self.AUD, ch)["vote"], "UNGROUNDED")
-        # v1.2 (fix 6): a near-variant of the added line is not the added line
+        # (fix 6): a near-variant of the added line is not the added line
         self.assertEqual(MOD.read_model_answer({"verdict": "FIXED", "quoted_lines": ["if (b > 0 && verify(b)) { pay(b); }"]}, dep, self.AUD, ch)["vote"], "UNGROUNDED")
         dep2 = "function f(uint a) external {\n    uint c = a;\n    uint b = c;\n    if (b > 0 && ok(b)) { pay(b); }\n    done();\n}"
         self.assertEqual(MOD.read_model_answer({"verdict": "FIXED", "quoted_lines": ["if (b > 0 && ok(b)) { pay(b); }"]}, dep2, self.AUD, ch)["vote"], "FIXED")
@@ -721,7 +721,7 @@ class T10b_ModelEvidenceMustPointAtTheChange(unittest.TestCase):
         self.assertEqual(MOD.quote_indices(["x = call(\n        a,\n        b\n    );"], code), [1])
 
     def test_real_mellow_cases_on_v11(self):
-        # H-1 (deployed == fix) is decided by exact match; the two v1.0
+        # H-1 (deployed == fix) is decided by exact match; the two earlier
         # mistakes are checked in docs/RESEARCH.md section 6 with GenVM probes.
         w = World()
         w.file(CONSENSUS)
@@ -931,7 +931,7 @@ class T15_LedgerInvariantEveryPath(unittest.TestCase):
 
 
 # =============================================================================
-# v1.2 regressions - one class per fix of docs/ATTACK_REPORT.md
+# regressions - one class per fix of docs/ATTACK_REPORT.md
 # =============================================================================
 
 ATTACKER = "https://raw.githubusercontent.com/attacker/not-an-audit/" + "a" * 40 + "/"

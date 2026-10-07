@@ -66,7 +66,13 @@ Ledger invariant, checked after every call in the tests and shown live on `/bala
 
 ## Contracts (Studio Dev, chain 61997)
 
-@@ADDRESSES@@
+| Contract | Address |
+|---|---|
+| FixCheck — canonical (1 h counter, 24 h decide) | `0x2d7b3C465D6478Db4438999b1FD0340A54256364` |
+| FixCheck — demo (90 s counter, 300 s decide) | `0x78D31dbB13e8348A2278b64A84eBfE129607fd91` |
+| FixRegistry — read-only consumer | `0x8E93Ab199E737CF022F5D4cE0f171d0e68815E49` |
+
+Deployed from commit `0c20168e94b47e6f3d1ebf13638c7115137f9e10` with the bytes of `git show <commit>:<file>`; `node tools/verify_source.mjs` reads the code back from the chain and confirms all three are byte-identical to HEAD. sha256 and deploy transactions: [`ADDRESSES.md`](ADDRESSES.md). Explorer: https://explorer-studio-dev.genlayer.com/
 
 Other apps read verdicts with `FixRegistry.fix_status(chain, address, "<pinned report url>#<finding id>")` (or `is_fixed` / `is_known_unfixed`; `is_known_unfixed` is false for PREDATES AUDIT) — free cross-contract views, no payable methods. Earlier versions are listed in [`docs/superseded/`](docs/superseded/).
 

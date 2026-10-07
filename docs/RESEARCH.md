@@ -63,35 +63,38 @@ reports, audited commits and fix PRs are all GitHub-native and pinnable.
 
 ## 3. The seeded findings (22)
 
-Each row: report pinned at a SHA, finding id, function, audited commit
-(Sherlock contest repo), fix commit (the PR's merge commit), deployed address
+These are **22 checks of 21 findings**: PoolTogether M-1 is checked on two
+chains. Each row: report pinned at a SHA, finding id, function, audited commit
+(Sherlock contest repo, linked by the report), fix commit (the head commit of
+the fix PR the finding links — for every seed its function body is identical
+to the PR's merge commit), deployed address
 from the protocol's pinned docs page, verified on Blockscout/Sourcify.
 Proxies are followed one hop to the implementation the explorer names.
 
 | # | Protocol | Finding | Function | Chain | Deployed address | Audited commit | Fix commit | Offline result |
 |---|---|---|---|---|---|---|---|---|
-| 1 | PoolTogether V5 | M-5 | `claimPrizes` | optimism | `0x220C9398b0Ee07472bF8906e44574Cb9FE3B8D90` | [sherlock-audit@1aa1b8c](https://raw.githubusercontent.com/sherlock-audit/2024-05-pooltogether/1aa1b8c028b659585e4c7a6b9b652fb075f86db3/pt-v5-claimer/src/Claimer.sol) | [GenerationSoftware/pt-v5-claimer@7416bb3](https://raw.githubusercontent.com/GenerationSoftware/pt-v5-claimer/7416bb3850b657d7156b3d35c8897b03d353f800/src/Claimer.sol) | IDENTICAL_TO_FIX |
-| 2 | PoolTogether V5 | M-8 | `_computeFeePerClaim` | base | `0xcdCE635b774DE77cdF791647601dba64a75547ba` | [sherlock-audit@1aa1b8c](https://raw.githubusercontent.com/sherlock-audit/2024-05-pooltogether/1aa1b8c028b659585e4c7a6b9b652fb075f86db3/pt-v5-claimer/src/Claimer.sol) | [GenerationSoftware/pt-v5-claimer@20f52a6](https://raw.githubusercontent.com/GenerationSoftware/pt-v5-claimer/20f52a6f437166facb680ee4289be159a57fb763/src/Claimer.sol) | IDENTICAL_TO_FIX |
-| 3 | PoolTogether V5 | M-15 | `shutdownAt` | optimism | `0xF35fE10ffd0a9672d0095c435fd8767A7fe29B55` | [sherlock-audit@1aa1b8c](https://raw.githubusercontent.com/sherlock-audit/2024-05-pooltogether/1aa1b8c028b659585e4c7a6b9b652fb075f86db3/pt-v5-prize-pool/src/PrizePool.sol) | [GenerationSoftware/pt-v5-prize-pool@1338ae0](https://raw.githubusercontent.com/GenerationSoftware/pt-v5-prize-pool/1338ae0f6e19fc007e6446f15161d453dc7ce988/src/PrizePool.sol) | IDENTICAL_TO_VULNERABLE |
-| 4 | PoolTogether V5 | M-9 | `liquidatableBalanceOf` | optimism | `0xa52e38a9147f5eA9E0c5547376c21c9E3F3e5e1f` | [sherlock-audit@1aa1b8c](https://raw.githubusercontent.com/sherlock-audit/2024-05-pooltogether/1aa1b8c028b659585e4c7a6b9b652fb075f86db3/pt-v5-vault/src/PrizeVault.sol) | [GenerationSoftware/pt-v5-vault@d888632](https://raw.githubusercontent.com/GenerationSoftware/pt-v5-vault/d888632e8ad3ce87421cce96f3a17dd6db0bdbf5/src/PrizeVault.sol) | IDENTICAL_TO_VULNERABLE |
-| 5 | PoolTogether V5 | M-16 | `maxDeposit` | arbitrum | `0x97A9C02CFBBf0332D8172331461aB476dF1E8c95` | [sherlock-audit@1aa1b8c](https://raw.githubusercontent.com/sherlock-audit/2024-05-pooltogether/1aa1b8c028b659585e4c7a6b9b652fb075f86db3/pt-v5-vault/src/PrizeVault.sol) | [GenerationSoftware/pt-v5-vault@2acdde5](https://raw.githubusercontent.com/GenerationSoftware/pt-v5-vault/2acdde554f7309331b5b632a08f08cb6d223a4ee/src/PrizeVault.sol) | IDENTICAL_TO_VULNERABLE |
-| 6 | PoolTogether V5 | M-17 | `_convertToShares` | ethereum | `0x9eE31E845fF1358Bf6B1F914d3918c6223c75573` | [sherlock-audit@1aa1b8c](https://raw.githubusercontent.com/sherlock-audit/2024-05-pooltogether/1aa1b8c028b659585e4c7a6b9b652fb075f86db3/pt-v5-vault/src/PrizeVault.sol) | [GenerationSoftware/pt-v5-vault@a32024e](https://raw.githubusercontent.com/GenerationSoftware/pt-v5-vault/a32024ea18dc3217c13d15ac880a074128953b49/src/PrizeVault.sol) | IDENTICAL_TO_VULNERABLE |
-| 7 | PoolTogether V5 | M-19 | `claimPrize` | base | `0x6B5a5c55E9dD4bb502Ce25bBfbaA49b69cf7E4dd` | [sherlock-audit@1aa1b8c](https://raw.githubusercontent.com/sherlock-audit/2024-05-pooltogether/1aa1b8c028b659585e4c7a6b9b652fb075f86db3/pt-v5-vault/src/abstract/Claimable.sol) | [GenerationSoftware/pt-v5-vault@67516cd](https://raw.githubusercontent.com/GenerationSoftware/pt-v5-vault/67516cd5410d301f01eae4039105b304c142ca80/src/abstract/Claimable.sol) | IDENTICAL_TO_VULNERABLE |
-| 8 | PoolTogether V5 | M-1 | `isRequestComplete` | optimism | `0x3d2Ef6C091f7CB69f06Ec3117F36A28BC596aa7B` | [sherlock-audit@1aa1b8c](https://raw.githubusercontent.com/sherlock-audit/2024-05-pooltogether/1aa1b8c028b659585e4c7a6b9b652fb075f86db3/pt-v5-rng-witnet/src/RngWitnet.sol) | [GenerationSoftware/pt-v5-rng-witnet@e44b23c](https://raw.githubusercontent.com/GenerationSoftware/pt-v5-rng-witnet/e44b23c654de4b99a09e261be4a2106cf75eb7ca/src/RngWitnet.sol) | IDENTICAL_TO_VULNERABLE |
-| 9 | PoolTogether V5 | M-1 | `isRequestComplete` | arbitrum | `0xad1b8ec0151f13ba563226092b5f7308d8dc107b` | [sherlock-audit@1aa1b8c](https://raw.githubusercontent.com/sherlock-audit/2024-05-pooltogether/1aa1b8c028b659585e4c7a6b9b652fb075f86db3/pt-v5-rng-witnet/src/RngWitnet.sol) | [GenerationSoftware/pt-v5-rng-witnet@e44b23c](https://raw.githubusercontent.com/GenerationSoftware/pt-v5-rng-witnet/e44b23c654de4b99a09e261be4a2106cf75eb7ca/src/RngWitnet.sol) | IDENTICAL_TO_FIX |
-| 10 | PoolTogether V5 | M-14 | `canStartDraw` | optimism | `0x7eED7444dE862c4F79c5820ff867FA3A82641857` | [sherlock-audit@1aa1b8c](https://raw.githubusercontent.com/sherlock-audit/2024-05-pooltogether/1aa1b8c028b659585e4c7a6b9b652fb075f86db3/pt-v5-draw-manager/src/DrawManager.sol) | [GenerationSoftware/pt-v5-draw-manager@ac4f119](https://raw.githubusercontent.com/GenerationSoftware/pt-v5-draw-manager/ac4f119b29a7ececcafec3e9242a293652cffaab/src/DrawManager.sol) | IDENTICAL_TO_VULNERABLE |
-| 11 | PoolTogether V5 | H-3 | `startDrawReward` | optimism | `0x7eED7444dE862c4F79c5820ff867FA3A82641857` | [sherlock-audit@1aa1b8c](https://raw.githubusercontent.com/sherlock-audit/2024-05-pooltogether/1aa1b8c028b659585e4c7a6b9b652fb075f86db3/pt-v5-draw-manager/src/DrawManager.sol) | [GenerationSoftware/pt-v5-draw-manager@4b0ab4e](https://raw.githubusercontent.com/GenerationSoftware/pt-v5-draw-manager/4b0ab4eb5318aeef5f7c6fe21ea5d9bd5408043d/src/DrawManager.sol) | IDENTICAL_TO_VULNERABLE |
-| 12 | Mellow Flexible Vaults | H-1 | `checkSignatures` | ethereum | `0x0000000167598d2C78E2313fD5328E16bD9A0b13` | [sherlock-audit@eca8836](https://raw.githubusercontent.com/sherlock-audit/2025-07-mellow-flexible-vaults/eca8836d68d65bcbfc52c6f04cf6b4b1597555bf/flexible-vaults/src/permissions/Consensus.sol) | [mellow-finance/flexible-vaults@3c04a39](https://raw.githubusercontent.com/mellow-finance/flexible-vaults/3c04a39733672f6c43f9907459aee5c4d22a4e27/src/permissions/Consensus.sol) | IDENTICAL_TO_FIX |
+| 1 | PoolTogether V5 | M-5 | `claimPrizes` | optimism | `0x220C9398b0Ee07472bF8906e44574Cb9FE3B8D90` | [sherlock-audit@1aa1b8c](https://raw.githubusercontent.com/sherlock-audit/2024-05-pooltogether/1aa1b8c028b659585e4c7a6b9b652fb075f86db3/pt-v5-claimer/src/Claimer.sol) | [GenerationSoftware/pt-v5-claimer@0651d14](https://raw.githubusercontent.com/GenerationSoftware/pt-v5-claimer/0651d1457d34b51d02ab0f535edc7a3ca72b176f/src/Claimer.sol) | IDENTICAL_TO_FIX |
+| 2 | PoolTogether V5 | M-8 | `_computeFeePerClaim` | base | `0xcdCE635b774DE77cdF791647601dba64a75547ba` | [sherlock-audit@1aa1b8c](https://raw.githubusercontent.com/sherlock-audit/2024-05-pooltogether/1aa1b8c028b659585e4c7a6b9b652fb075f86db3/pt-v5-claimer/src/Claimer.sol) | [GenerationSoftware/pt-v5-claimer@21a9ed6](https://raw.githubusercontent.com/GenerationSoftware/pt-v5-claimer/21a9ed64437a9bf6780e6c47b2509c8bc0ea9b09/src/Claimer.sol) | IDENTICAL_TO_FIX |
+| 3 | PoolTogether V5 | M-15 | `shutdownAt` | optimism | `0xF35fE10ffd0a9672d0095c435fd8767A7fe29B55` | [sherlock-audit@1aa1b8c](https://raw.githubusercontent.com/sherlock-audit/2024-05-pooltogether/1aa1b8c028b659585e4c7a6b9b652fb075f86db3/pt-v5-prize-pool/src/PrizePool.sol) | [GenerationSoftware/pt-v5-prize-pool@6d57310](https://raw.githubusercontent.com/GenerationSoftware/pt-v5-prize-pool/6d57310ac572086a3cda88d0a80712d20a2150f7/src/PrizePool.sol) | IDENTICAL_TO_VULNERABLE |
+| 4 | PoolTogether V5 | M-9 | `liquidatableBalanceOf` | optimism | `0xa52e38a9147f5eA9E0c5547376c21c9E3F3e5e1f` | [sherlock-audit@1aa1b8c](https://raw.githubusercontent.com/sherlock-audit/2024-05-pooltogether/1aa1b8c028b659585e4c7a6b9b652fb075f86db3/pt-v5-vault/src/PrizeVault.sol) | [GenerationSoftware/pt-v5-vault@c33bfa6](https://raw.githubusercontent.com/GenerationSoftware/pt-v5-vault/c33bfa6befc8a9be683b52e101582d79ebef0dc9/src/PrizeVault.sol) | IDENTICAL_TO_VULNERABLE |
+| 5 | PoolTogether V5 | M-16 | `maxDeposit` | arbitrum | `0x97A9C02CFBBf0332D8172331461aB476dF1E8c95` | [sherlock-audit@1aa1b8c](https://raw.githubusercontent.com/sherlock-audit/2024-05-pooltogether/1aa1b8c028b659585e4c7a6b9b652fb075f86db3/pt-v5-vault/src/PrizeVault.sol) | [GenerationSoftware/pt-v5-vault@60be8fc](https://raw.githubusercontent.com/GenerationSoftware/pt-v5-vault/60be8fc2d5bbf1606e920ca49bb8100337a1ee2d/src/PrizeVault.sol) | IDENTICAL_TO_VULNERABLE |
+| 6 | PoolTogether V5 | M-17 | `_convertToShares` | ethereum | `0x9eE31E845fF1358Bf6B1F914d3918c6223c75573` | [sherlock-audit@1aa1b8c](https://raw.githubusercontent.com/sherlock-audit/2024-05-pooltogether/1aa1b8c028b659585e4c7a6b9b652fb075f86db3/pt-v5-vault/src/PrizeVault.sol) | [GenerationSoftware/pt-v5-vault@a812f89](https://raw.githubusercontent.com/GenerationSoftware/pt-v5-vault/a812f8957e4563b0bcaa01ed8c2ac767b2f3e996/src/PrizeVault.sol) | IDENTICAL_TO_VULNERABLE |
+| 7 | PoolTogether V5 | M-19 | `claimPrize` | base | `0x6B5a5c55E9dD4bb502Ce25bBfbaA49b69cf7E4dd` | [sherlock-audit@1aa1b8c](https://raw.githubusercontent.com/sherlock-audit/2024-05-pooltogether/1aa1b8c028b659585e4c7a6b9b652fb075f86db3/pt-v5-vault/src/abstract/Claimable.sol) | [GenerationSoftware/pt-v5-vault@e328b31](https://raw.githubusercontent.com/GenerationSoftware/pt-v5-vault/e328b319b66a341ea45d7aa565095888f2008294/src/abstract/Claimable.sol) | IDENTICAL_TO_VULNERABLE |
+| 8 | PoolTogether V5 | M-1 | `isRequestComplete` | optimism | `0x3d2Ef6C091f7CB69f06Ec3117F36A28BC596aa7B` | [sherlock-audit@1aa1b8c](https://raw.githubusercontent.com/sherlock-audit/2024-05-pooltogether/1aa1b8c028b659585e4c7a6b9b652fb075f86db3/pt-v5-rng-witnet/src/RngWitnet.sol) | [GenerationSoftware/pt-v5-rng-witnet@2ddd97f](https://raw.githubusercontent.com/GenerationSoftware/pt-v5-rng-witnet/2ddd97f1554374149594d633952422dd282d2588/src/RngWitnet.sol) | IDENTICAL_TO_VULNERABLE |
+| 9 | PoolTogether V5 | M-1 | `isRequestComplete` | arbitrum | `0xad1b8ec0151f13ba563226092b5f7308d8dc107b` | [sherlock-audit@1aa1b8c](https://raw.githubusercontent.com/sherlock-audit/2024-05-pooltogether/1aa1b8c028b659585e4c7a6b9b652fb075f86db3/pt-v5-rng-witnet/src/RngWitnet.sol) | [GenerationSoftware/pt-v5-rng-witnet@2ddd97f](https://raw.githubusercontent.com/GenerationSoftware/pt-v5-rng-witnet/2ddd97f1554374149594d633952422dd282d2588/src/RngWitnet.sol) | IDENTICAL_TO_FIX |
+| 10 | PoolTogether V5 | M-14 | `canStartDraw` | optimism | `0x7eED7444dE862c4F79c5820ff867FA3A82641857` | [sherlock-audit@1aa1b8c](https://raw.githubusercontent.com/sherlock-audit/2024-05-pooltogether/1aa1b8c028b659585e4c7a6b9b652fb075f86db3/pt-v5-draw-manager/src/DrawManager.sol) | [GenerationSoftware/pt-v5-draw-manager@b55a44c](https://raw.githubusercontent.com/GenerationSoftware/pt-v5-draw-manager/b55a44c7ec40a28570cf677fcd3fdf19c41a295a/src/DrawManager.sol) | IDENTICAL_TO_VULNERABLE |
+| 11 | PoolTogether V5 | H-3 | `startDrawReward` | optimism | `0x7eED7444dE862c4F79c5820ff867FA3A82641857` | [sherlock-audit@1aa1b8c](https://raw.githubusercontent.com/sherlock-audit/2024-05-pooltogether/1aa1b8c028b659585e4c7a6b9b652fb075f86db3/pt-v5-draw-manager/src/DrawManager.sol) | [GenerationSoftware/pt-v5-draw-manager@35f505f](https://raw.githubusercontent.com/GenerationSoftware/pt-v5-draw-manager/35f505f44d967ead5975a8cf7efc2696bc22d02b/src/DrawManager.sol) | IDENTICAL_TO_VULNERABLE |
+| 12 | Mellow Flexible Vaults | H-1 | `checkSignatures` | ethereum | `0x0000000167598d2C78E2313fD5328E16bD9A0b13` | [sherlock-audit@eca8836](https://raw.githubusercontent.com/sherlock-audit/2025-07-mellow-flexible-vaults/eca8836d68d65bcbfc52c6f04cf6b4b1597555bf/flexible-vaults/src/permissions/Consensus.sol) | [mellow-finance/flexible-vaults@de69983](https://raw.githubusercontent.com/mellow-finance/flexible-vaults/de69983271bf4f1a0b748eadc588f401d74a43bd/src/permissions/Consensus.sol) | IDENTICAL_TO_FIX |
 | 13 | Mellow Flexible Vaults | H-2 | `_handleReport` | ethereum | `0x000000000c139266BA06170Ed1DeacA6d11903c1` | [sherlock-audit@eca8836](https://raw.githubusercontent.com/sherlock-audit/2025-07-mellow-flexible-vaults/eca8836d68d65bcbfc52c6f04cf6b4b1597555bf/flexible-vaults/src/queues/RedeemQueue.sol) | [mellow-finance/flexible-vaults@8ff3ad4](https://raw.githubusercontent.com/mellow-finance/flexible-vaults/8ff3ad438f055a6b6427fe6f139fefced9049a58/src/queues/RedeemQueue.sol) | CHANGED |
-| 14 | Mellow Flexible Vaults | H-3 | `callHook` | ethereum | `0x0000000637f1b1ccDA4Af2dB6CDDf5e5Ec45fd93` | [sherlock-audit@eca8836](https://raw.githubusercontent.com/sherlock-audit/2025-07-mellow-flexible-vaults/eca8836d68d65bcbfc52c6f04cf6b4b1597555bf/flexible-vaults/src/hooks/BasicRedeemHook.sol) | [mellow-finance/flexible-vaults@50a2eed](https://raw.githubusercontent.com/mellow-finance/flexible-vaults/50a2eeda189443842441fb6972dfad7640edd43e/src/hooks/BasicRedeemHook.sol) | CHANGED |
-| 15 | Mellow Flexible Vaults | H-4 | `calculateFee` | ethereum | `0x0000000dE74e5D51651326E0A3e1ACA94bEAF6E1` | [sherlock-audit@eca8836](https://raw.githubusercontent.com/sherlock-audit/2025-07-mellow-flexible-vaults/eca8836d68d65bcbfc52c6f04cf6b4b1597555bf/flexible-vaults/src/managers/FeeManager.sol) | [mellow-finance/flexible-vaults@28261ee](https://raw.githubusercontent.com/mellow-finance/flexible-vaults/28261eef5155bf70587705681b28b967512c12f7/src/managers/FeeManager.sol) | CHANGED |
-| 16 | Mellow Flexible Vaults | H-5 | `calculateFee` | ethereum | `0x0000000dE74e5D51651326E0A3e1ACA94bEAF6E1` | [sherlock-audit@eca8836](https://raw.githubusercontent.com/sherlock-audit/2025-07-mellow-flexible-vaults/eca8836d68d65bcbfc52c6f04cf6b4b1597555bf/flexible-vaults/src/managers/FeeManager.sol) | [mellow-finance/flexible-vaults@a41231d](https://raw.githubusercontent.com/mellow-finance/flexible-vaults/a41231d9178d153efb4f808d48c68044fb67b686/src/managers/FeeManager.sol) | IDENTICAL_TO_FIX |
-| 17 | Mellow Flexible Vaults | M-1 | `updateChecks` | ethereum | `0x0000000E8eb7173fA1a3ba60eCA325bcB6aaf378` | [sherlock-audit@eca8836](https://raw.githubusercontent.com/sherlock-audit/2025-07-mellow-flexible-vaults/eca8836d68d65bcbfc52c6f04cf6b4b1597555bf/flexible-vaults/src/managers/ShareManager.sol) | [mellow-finance/flexible-vaults@2e6c78e](https://raw.githubusercontent.com/mellow-finance/flexible-vaults/2e6c78e033e8744985b9e6f699469e03e50454b5/src/managers/ShareManager.sol) | CHANGED |
-| 18 | Mellow Flexible Vaults | M-4 | `handleReport` | ethereum | `0x0000000615B2771511dAa693aC07BE5622869E01` | [sherlock-audit@eca8836](https://raw.githubusercontent.com/sherlock-audit/2025-07-mellow-flexible-vaults/eca8836d68d65bcbfc52c6f04cf6b4b1597555bf/flexible-vaults/src/modules/ShareModule.sol) | [mellow-finance/flexible-vaults@01b0a45](https://raw.githubusercontent.com/mellow-finance/flexible-vaults/01b0a4507a29703a776de79e5e007616d4efe591/src/modules/ShareModule.sol) | IDENTICAL_TO_FIX |
-| 19 | Mellow Flexible Vaults | M-5 | `cancelDepositRequest` | ethereum | `0x00000006dA9f179BFE250Dd1c51cD2d3581930c8` | [sherlock-audit@eca8836](https://raw.githubusercontent.com/sherlock-audit/2025-07-mellow-flexible-vaults/eca8836d68d65bcbfc52c6f04cf6b4b1597555bf/flexible-vaults/src/queues/DepositQueue.sol) | [mellow-finance/flexible-vaults@4478af2](https://raw.githubusercontent.com/mellow-finance/flexible-vaults/4478af2870610255abeaa7c1f1b0649345f05c47/src/queues/DepositQueue.sol) | CHANGED |
-| 20 | Cap | M-1 | `liquidate` | ethereum | `0x15622c3dbbc5614E6DFa9446603c1779647f01FC` → impl `0x68c4F03b8640C0393a832987147BaE7A0b27aaa7` | [sherlock-audit@2bd34fa](https://raw.githubusercontent.com/sherlock-audit/2025-07-cap/2bd34fa369d36af8ecc377090d3292ea74ccc669/cap-contracts/contracts/lendingPool/libraries/LiquidationLogic.sol) | [cap-labs-dev/cap-contracts@1bc019d](https://raw.githubusercontent.com/cap-labs-dev/cap-contracts/1bc019d2ccfeea4aab31f4b8a7ca948a9dd6e705/contracts/lendingPool/libraries/LiquidationLogic.sol) | CHANGED |
-| 21 | Cap | M-3 | `realizeRestakerInterest` | ethereum | `0x15622c3dbbc5614E6DFa9446603c1779647f01FC` → impl `0x68c4F03b8640C0393a832987147BaE7A0b27aaa7` | [sherlock-audit@2bd34fa](https://raw.githubusercontent.com/sherlock-audit/2025-07-cap/2bd34fa369d36af8ecc377090d3292ea74ccc669/cap-contracts/contracts/lendingPool/libraries/BorrowLogic.sol) | [cap-labs-dev/cap-contracts@0e8e7ef](https://raw.githubusercontent.com/cap-labs-dev/cap-contracts/0e8e7ef8bd27ce77b5bb6ef987563b791671e784/contracts/lendingPool/libraries/BorrowLogic.sol) | IDENTICAL_TO_FIX |
-| 22 | OP Stack fault proofs | M-3 | `create` | ethereum | `0xe5965Ab5962eDc7477C8520243A95517CD252fA9` → impl `0x72B971717E088B59F26d4236BE222ADB6ACD393b` | [sherlock-audit@f216b0d](https://raw.githubusercontent.com/sherlock-audit/2024-02-optimism-2024/f216b0d3ad08c1a0ead557ea74691aaefd5fd489/optimism/packages/contracts-bedrock/src/dispute/DisputeGameFactory.sol) | [ethereum-optimism/optimism@4a157b4](https://raw.githubusercontent.com/ethereum-optimism/optimism/4a157b4b0aad8eef2ea19320d5ed1a1d50a9807e/packages/contracts-bedrock/src/dispute/DisputeGameFactory.sol) | CHANGED |
+| 14 | Mellow Flexible Vaults | H-3 | `callHook` | ethereum | `0x0000000637f1b1ccDA4Af2dB6CDDf5e5Ec45fd93` | [sherlock-audit@eca8836](https://raw.githubusercontent.com/sherlock-audit/2025-07-mellow-flexible-vaults/eca8836d68d65bcbfc52c6f04cf6b4b1597555bf/flexible-vaults/src/hooks/BasicRedeemHook.sol) | [mellow-finance/flexible-vaults@8e3703f](https://raw.githubusercontent.com/mellow-finance/flexible-vaults/8e3703ff3871f5829b6df8bae8b26282cf14eb2a/src/hooks/BasicRedeemHook.sol) | CHANGED |
+| 15 | Mellow Flexible Vaults | H-4 | `calculateFee` | ethereum | `0x0000000dE74e5D51651326E0A3e1ACA94bEAF6E1` | [sherlock-audit@eca8836](https://raw.githubusercontent.com/sherlock-audit/2025-07-mellow-flexible-vaults/eca8836d68d65bcbfc52c6f04cf6b4b1597555bf/flexible-vaults/src/managers/FeeManager.sol) | [mellow-finance/flexible-vaults@db595fa](https://raw.githubusercontent.com/mellow-finance/flexible-vaults/db595fab94c2792e5c981867726b8981466ead6b/src/managers/FeeManager.sol) | CHANGED |
+| 16 | Mellow Flexible Vaults | H-5 | `calculateFee` | ethereum | `0x0000000dE74e5D51651326E0A3e1ACA94bEAF6E1` | [sherlock-audit@eca8836](https://raw.githubusercontent.com/sherlock-audit/2025-07-mellow-flexible-vaults/eca8836d68d65bcbfc52c6f04cf6b4b1597555bf/flexible-vaults/src/managers/FeeManager.sol) | [mellow-finance/flexible-vaults@e181487](https://raw.githubusercontent.com/mellow-finance/flexible-vaults/e181487a3db3358203beb219f5ffcc6744ba84ab/src/managers/FeeManager.sol) | IDENTICAL_TO_FIX |
+| 17 | Mellow Flexible Vaults | M-1 | `updateChecks` | ethereum | `0x0000000E8eb7173fA1a3ba60eCA325bcB6aaf378` | [sherlock-audit@eca8836](https://raw.githubusercontent.com/sherlock-audit/2025-07-mellow-flexible-vaults/eca8836d68d65bcbfc52c6f04cf6b4b1597555bf/flexible-vaults/src/managers/ShareManager.sol) | [mellow-finance/flexible-vaults@09ed3db](https://raw.githubusercontent.com/mellow-finance/flexible-vaults/09ed3dbc45db5a8918919a68c53792716b3adc6e/src/managers/ShareManager.sol) | CHANGED |
+| 18 | Mellow Flexible Vaults | M-4 | `handleReport` | ethereum | `0x0000000615B2771511dAa693aC07BE5622869E01` | [sherlock-audit@eca8836](https://raw.githubusercontent.com/sherlock-audit/2025-07-mellow-flexible-vaults/eca8836d68d65bcbfc52c6f04cf6b4b1597555bf/flexible-vaults/src/modules/ShareModule.sol) | [mellow-finance/flexible-vaults@b828fae](https://raw.githubusercontent.com/mellow-finance/flexible-vaults/b828fae29317c071449fdccaf8954ea84201465f/src/modules/ShareModule.sol) | IDENTICAL_TO_FIX |
+| 19 | Mellow Flexible Vaults | M-5 | `cancelDepositRequest` | ethereum | `0x00000006dA9f179BFE250Dd1c51cD2d3581930c8` | [sherlock-audit@eca8836](https://raw.githubusercontent.com/sherlock-audit/2025-07-mellow-flexible-vaults/eca8836d68d65bcbfc52c6f04cf6b4b1597555bf/flexible-vaults/src/queues/DepositQueue.sol) | [mellow-finance/flexible-vaults@18871f5](https://raw.githubusercontent.com/mellow-finance/flexible-vaults/18871f519e8600f0e0ff3298011d13b0409be8aa/src/queues/DepositQueue.sol) | CHANGED |
+| 20 | Cap | M-1 | `liquidate` | ethereum | `0x15622c3dbbc5614E6DFa9446603c1779647f01FC` → impl `0x68c4F03b8640C0393a832987147BaE7A0b27aaa7` | [sherlock-audit@2bd34fa](https://raw.githubusercontent.com/sherlock-audit/2025-07-cap/2bd34fa369d36af8ecc377090d3292ea74ccc669/cap-contracts/contracts/lendingPool/libraries/LiquidationLogic.sol) | [cap-labs-dev/cap-contracts@80ea01e](https://raw.githubusercontent.com/cap-labs-dev/cap-contracts/80ea01e47e7e063fd6d607823ca38ec7e2ff147a/contracts/lendingPool/libraries/LiquidationLogic.sol) | CHANGED |
+| 21 | Cap | M-3 | `realizeRestakerInterest` | ethereum | `0x15622c3dbbc5614E6DFa9446603c1779647f01FC` → impl `0x68c4F03b8640C0393a832987147BaE7A0b27aaa7` | [sherlock-audit@2bd34fa](https://raw.githubusercontent.com/sherlock-audit/2025-07-cap/2bd34fa369d36af8ecc377090d3292ea74ccc669/cap-contracts/contracts/lendingPool/libraries/BorrowLogic.sol) | [cap-labs-dev/cap-contracts@1655cf6](https://raw.githubusercontent.com/cap-labs-dev/cap-contracts/1655cf6c58c258fab8a148c41c5e777d8de38b9e/contracts/lendingPool/libraries/BorrowLogic.sol) | IDENTICAL_TO_FIX |
+| 22 | OP Stack fault proofs | M-3 | `create` | ethereum | `0xe5965Ab5962eDc7477C8520243A95517CD252fA9` → impl `0x72B971717E088B59F26d4236BE222ADB6ACD393b` | [sherlock-audit@f216b0d](https://raw.githubusercontent.com/sherlock-audit/2024-02-optimism-2024/f216b0d3ad08c1a0ead557ea74691aaefd5fd489/optimism/packages/contracts-bedrock/src/dispute/DisputeGameFactory.sol) | [ethereum-optimism/optimism@909d996](https://raw.githubusercontent.com/ethereum-optimism/optimism/909d996a6bb73989346d592ddd3a5138c7cc4b77/packages/contracts-bedrock/src/dispute/DisputeGameFactory.sol) | CHANGED |
 
 Seeded set: **7 identical to the fix, 8 identical to the audited (vulnerable)
 version, 7 changed** (decided by the model, §6).
@@ -172,6 +175,18 @@ disagree. The facts, each reproducible from public data:
    (`lib/pt-v5-vault/src/PrizeVault.sol`) still matches the **audited** version of
    `liquidatableBalanceOf`, `maxDeposit`, `_convertToShares` and `claimPrize`.
 
+**How FixCheck classifies them.** The contract binds each deployment's
+creation time and the audited commit's date (2024-05-16) at filing. Six of
+these deployments (OP prize pool, vault, RNG, draw manager — and the Base vault,
+created 2024-05-15) predate the audited commit and are not upgradeable:
+FixCheck decides them **PREDATES_AUDIT** ("deployed code matches the pre-audit
+version; the contract was deployed before the audit and can't be upgraded, so
+the fix could not be applied here"), not NOT_FIXED. Only the Arbitrum vault
+(2024-05-29) and the Ethereum vault (2024-08-19), deployed after the audit, are
+NOT_FIXED. (The Arbitrum RngWitnet, created 2024-05-29, already equals fix
+commit `e44b23c`, merged 2024-07-08: the change existed in the repository
+before that PR was merged.)
+
 **What this does and does not show.** It shows that, for these functions, the
 code running at the addresses PoolTogether's own docs list is the code the
 audit reviewed, not the code the fix PRs produced. PoolTogether V5's core
@@ -186,60 +201,30 @@ deployed implementations (Sept 2025 – Jan 2026) contain the fixes or later
 rewrites of the same functions, and the OP Stack's `DisputeGameFactory.create`
 has been rewritten since the audit (implementation deployed May 2026).
 
-## 6. The model path, measured — and what seeding v1.0 taught us
+## 6. The model path, measured
 
-For "changed" functions the contract may ask the model (twice). Probes
-(`test/probe_prompt.mjs`) run the exact prompt the contract builds, from GenVM
-on studio-dev.
+For a "changed" function code first tries to see the fix in place
+(`CODE_CONTAINS_FIX`: every block the fix added, with its context, contiguous,
+in order and at the same nesting, and no removed line left). Only when it
+can't does the model answer — twice, from GenVM — and code then checks its
+evidence: a FIXED must quote a line the fix ADDED with no removed line still
+deployed; a NOT_FIXED must quote a removed (vulnerable) line that is still
+deployed. Comments are removed and string literals blanked before the model
+reads the code or a quote is matched.
 
-**First probe (Mellow H-2, `_handleReport`).** Both answers `FIXED`, both quoting
-real deployed lines — but also short context lines (`return;`, `}`). The first
-draft voided any answer with a line under 8 characters, which turned this
-correct answer into INCONCLUSIVE on chain. Rule since: *every* quoted line must
-exist verbatim; short context lines are allowed but not stored; at least one
-substantive line is required.
+Measured on studio-dev with the exact prompt the contract builds:
 
-**v1.0 on chain: two wrong NOT_FIXED.** v1.0 (`0x6D4390…5cF3`, superseded; its
-22 decisions are kept in `docs/superseded/seed-canonical-v1.0.json`) showed the
-model only the finding and the deployed function. All 7 model cases agreed with
-themselves on both runs, and 5 were right — but two were not:
+* Mellow H-2 `_handleReport` and M-1 `updateChecks` (smoke deployment): both
+  answers were set aside as ungrounded — H-2's fix only removes a line (there
+  is no added line to quote) and `updateChecks` ships a refactored form of the
+  fix's line — so both end INCONCLUSIVE and everyone is refunded, instead of
+  an unsupported verdict either way.
+* The two model answers agreeing is not taken as evidence on its own: an
+  earlier deployment's model gave the same wrong answer twice (see
+  `docs/superseded/HISTORY.md`), which is why the grounding rules above exist.
 
-| Check | Model said | Deployed code | Why the model was wrong |
-|---|---|---|---|
-| Mellow H-3 `callHook` | NOT_FIXED | `uint256 liquid = asset.balanceOf(address(vault));` — exactly the fix commit's line | `asset.balanceOf` is `TransferLibrary.balanceOf` via `using TransferLibrary for address` (outside the function); read as the unfixed ERC-20 call |
-| Mellow M-1 `updateChecks` | NOT_FIXED | `if (!info.canTransfer \|\| !toInfo.canTransfer) {` — the fix's condition, refactored with a local | the auditor *recommended* `&&`, the protocol shipped a stricter `\|\|`; the model judged against the recommendation |
-
-Double-running did not catch them: both runs made the same mistake. So
-agreement between runs is not evidence of correctness, and v1.1 changes what
-the model is allowed to decide:
-
-1. **Code first, again:** if the deployed function contains every substantive
-   line the fix commit added and none it removed, code decides FIXED
-   (`CODE_CONTAINS_FIX`) — the model is not asked. This decides `callHook` and
-   `cancelDepositRequest`.
-2. **The model sees the fix:** the prompt includes the lines the fix commit
-   removed and added in this function (an ordered diff, so a moved line shows).
-3. **Evidence must point at the change:** a model FIXED must quote a line that
-   is new or moved by the fix; a model NOT_FIXED must quote a line the fix
-   removed that is still deployed. Otherwise `MODEL_UNGROUNDED` — everyone
-   refunded. `updateChecks` (model still says NOT_FIXED, quoting the *fixed*
-   line) becomes INCONCLUSIVE: an honest "we can't say" instead of a false
-   accusation.
-
-GenVM probes of the v1.1 prompt, two runs each: H-2 FIXED/FIXED, H-4
-FIXED/FIXED, Cap M-1 FIXED/FIXED (quotes the moved lines), OP M-3 FIXED/FIXED
-(quotes the new `msg.sender` argument), `updateChecks` NOT_FIXED/NOT_FIXED
-quoting the fixed line → ungrounded.
-
-**v1.1 on chain** (`docs/SEEDS.md`): of the 7 changed functions, code decided 2
-(`CODE_CONTAINS_FIX`: `callHook`, `cancelDepositRequest`), the model decided 3
-FIXED with grounded quotes on both runs (H-2, Cap M-1, OP M-3), and 2 ended
-INCONCLUSIVE because one of the two answers did not point at the change
-(H-4 `calculateFee`: UNGROUNDED|FIXED; `updateChecks`: FIXED|UNGROUNDED) —
-everyone refunded. No model answer produced a NOT_FIXED; all 8 NOT_FIXED
-verdicts are code facts (deployed function identical to the audited one), and
-all 15 findings research classified as identical to the fix or to the audited
-code got exactly that verdict by code match.
+On-chain double-run results for every seeded case that reaches the model are in
+`docs/SEEDS.md`.
 
 ## 7. Limits of this research
 

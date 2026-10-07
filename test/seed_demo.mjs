@@ -2,7 +2,7 @@
  * DEMO (90 s counter window, 300 s decide window): runs every path once on
  * real evidence. Resumable - every step first reads the chain.
  *
- *   D1 challenge WINS    PoolTogether M-9 on OP (deployed == audited) vs a defender
+ *   D1 challenge WINS    PoolTogether M-16 on Arbitrum (deployed after the audit, == audited) vs a defender
  *   D2 challenge LOSES   Mellow H-1 (deployed == fix) vs a defender
  *   D3 INCONCLUSIVE      PoolTogether M-19 `claimPrize` filed against the PrizePool
  *                        (listed in the docs, verified, but Claimable.sol is not in it)
@@ -10,6 +10,7 @@
  *   D5 EXPIRY            Cap M-3, never decided; expire() after the decide deadline
  *   D6 MODEL             Mellow M-5 (deployed function changed) decided by the model
  *   D7 REFUSAL           an unpinned report URL: refused, stake stays withdrawable
+ *   D8 PREDATES AUDIT    PoolTogether M-9 on OP (deployed 2024-04-18, before the audit) vs a defender: refund
  *   then sweep_fees() and every withdraw()
  */
 import { readFileSync, writeFileSync } from "node:fs";
@@ -28,12 +29,13 @@ const find = (p, id, fn, chain) => seeds.find((s) => s.protocol.startsWith(p) &&
 const PRIZEPOOL_OP = "0xF35fE10ffd0a9672d0095c435fd8767A7fe29B55";
 const m19 = find("PoolTogether", "M-19", "claimPrize");
 const PLAN = [
-  { tag: "D1", s: find("PoolTogether", "M-9", "liquidatableBalanceOf", "optimism"), defend: 1n },
+  { tag: "D1", s: find("PoolTogether", "M-16", "maxDeposit", "arbitrum"), defend: 1n },
   { tag: "D2", s: find("Mellow", "H-1", "checkSignatures"), defend: 1n },
   { tag: "D3", s: { ...m19, chain: "optimism", address: PRIZEPOOL_OP, docs_url: seeds.find((s) => s.chain === "optimism" && s.protocol.startsWith("PoolTogether")).docs_url }, defend: 1n },
   { tag: "D4", s: find("PoolTogether", "M-5", "claimPrizes", "optimism") },
   { tag: "D5", s: find("Cap", "M-3", "realizeRestakerInterest"), expire: true },
   { tag: "D6", s: find("Mellow", "M-5", "cancelDepositRequest") },
+  { tag: "D8", s: find("PoolTogether", "M-9", "liquidatableBalanceOf", "optimism"), defend: 1n },
 ];
 const state = {};
 const idOf = async (s) => { const st = await tr.view("fix_status", [s.chain, s.address, s.report_url, s.finding_id]); return Number(st.open_check_id || st.check_id || 0); };
@@ -56,7 +58,7 @@ for (const p of PLAN) {
   }
 }
 // D7 refusal
-const r = await ch.send("file_check", [PLAN[0].s.report_url.replace(/\/[0-9a-f]{40}\//, "/main/"), "M-9", "liquidatableBalanceOf", PLAN[0].s.audited_url, "", "optimism", PLAN[0].s.address, PLAN[0].s.docs_url], GEN);
+const r = await ch.send("file_check", [PLAN[0].s.report_url.replace(/\/[0-9a-f]{40}\//, "/main/"), PLAN[0].s.finding_id, PLAN[0].s.function, PLAN[0].s.audited_url, PLAN[0].s.fix_url, PLAN[0].s.chain, PLAN[0].s.address, PLAN[0].s.docs_url], GEN);
 log("D7 refusal", r.status, await ch.view("get_last_result", [ch.account.address]));
 // decide all but D5
 for (const p of PLAN.filter((p) => !p.expire)) {
