@@ -19,7 +19,7 @@ const led = plain(await view(dep.FixCheck.address, "get_ledger"));
 const dled = plain(await view(dep.FixCheckDemo.address, "get_ledger"));
 const verdict = (x) => x.state === "OPEN" ? "open" : x.state === "EXPIRED" ? "EXPIRED (refunded)" : x.verdict;
 let md = `# Seeds\n\nRead from the chain by \`tools/seeds_md.mjs\` on ${new Date().toISOString().slice(0, 16)}Z. Every row links to its page; every value comes from contract state.\n\n`;
-md += `## Canonical — ${dep.FixCheck.address}\n\n${stats.checks} real findings · **${stats.fixed} fixed** · **${stats.not_fixed} not fixed** · ${stats.inconclusive} inconclusive · ${stats.open} open. Ledger: balance ${gen(led.balance_wei)} = open ${gen(led.open_stakes_wei)} + withdrawable ${gen(led.claimable_wei)} + fees ${gen(led.fees_wei)} GEN (invariant ${led.invariant_holds ? "holds" : "BROKEN"}).\n\n`;
+md += `## Canonical — ${dep.FixCheck.address}\n\n${stats.checks} checks of ${new Set(canon.map((x) => x.report_url + "#" + x.finding_id)).size} findings · **${stats.fixed} fixed** · **${stats.not_fixed} not fixed** · **${stats.predates_audit} predates audit** · ${stats.inconclusive} inconclusive · ${stats.open} open. Ledger: balance ${gen(led.balance_wei)} = open ${gen(led.open_stakes_wei)} + withdrawable ${gen(led.claimable_wei)} + fees ${gen(led.fees_wei)} GEN (invariant ${led.invariant_holds ? "holds" : "BROKEN"}).\n\n`;
 md += "| # | Protocol | Finding | Function | Chain | Deployed | Offline research | On-chain verdict | Basis | Model (asked twice) | Stakes (not fixed / fixed) |\n|---|---|---|---|---|---|---|---|---|---|---|\n";
 for (const x of canon) {
   const s = seeds.find((y) => y.finding_id === x.finding_id && y.function === x.function && y.chain === x.chain && y.address.toLowerCase() === x.address);

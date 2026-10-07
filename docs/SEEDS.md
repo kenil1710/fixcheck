@@ -1,10 +1,10 @@
 # Seeds
 
-Read from the chain by `tools/seeds_md.mjs` on 2026-10-07T08:13Z. Every row links to its page; every value comes from contract state.
+Read from the chain by `tools/seeds_md.mjs` on 2026-10-07T08:23Z. Every row links to its page; every value comes from contract state.
 
 ## Canonical — 0x2d7b3C465D6478Db4438999b1FD0340A54256364
 
-22 real findings · **7 fixed** · **2 not fixed** · 7 inconclusive · 0 open. Ledger: balance 29 = open 0 + withdrawable 28.9 + fees 0.1 GEN (invariant holds).
+22 checks of 21 findings · **7 fixed** · **2 not fixed** · **6 predates audit** · 7 inconclusive · 0 open. Ledger: balance 29 = open 0 + withdrawable 28.9 + fees 0.1 GEN (invariant holds).
 
 | # | Protocol | Finding | Function | Chain | Deployed | Offline research | On-chain verdict | Basis | Model (asked twice) | Stakes (not fixed / fixed) |
 |---|---|---|---|---|---|---|---|---|---|---|

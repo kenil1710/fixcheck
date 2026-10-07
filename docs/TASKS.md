@@ -2,7 +2,7 @@
 
 ## Step 0 — research and probe
 - [x] Probe from GenVM on studio-dev: Blockscout v2 (eth, OP ✓; base/arbitrum/polygon behind a bot wall → Sourcify v2 ✓), GitHub raw at a SHA ✓, Sherlock README ✓, Code4rena page ✓, web.archive.org snapshot ✓ (`docs/research/probe_1.json`)
-- [x] 22 real findings marked fixed, with report pinned at a SHA, finding id, function, audited commit, fix commit, deployed address + chain, docs URL listing the address (`docs/research/seeds.json`)
+- [x] 22 checks of 21 real findings marked fixed (PoolTogether M-1 on two chains), with report pinned at a SHA, finding id, function, audited commit, fix commit, deployed address + chain, docs URL listing the address (`docs/research/seeds.json`)
 - [x] Offline comparison with the contract's own extractor: 64 deployment pairs — 13 identical to fix, 43 identical to audited, 7 changed, 1 inconclusive (`docs/RESEARCH.md`)
 - [x] The "Fixed" findings not present in deployed code documented with dates, creation txs and hashes, no claims about intent (PoolTogether V5, `docs/RESEARCH.md` §5)
 - [x] `docs/RESEARCH.md` written before contract code
@@ -21,7 +21,7 @@
 
 ## Deploy and seed
 - [x] CANONICAL (1 h / 24 h), DEMO (90 s / 300 s), FixRegistry deployed from committed HEAD (`test/deploy.mjs`), `ADDRESSES.md` with full addresses, commit, sha256
-- [x] All 22 real findings seeded on CANONICAL, resumable from chain (`test/seed_canonical.mjs`)
+- [x] All 22 checks seeded on CANONICAL, resumable from chain (`test/seed_canonical.mjs`)
 - [x] DEMO runs every path: challenge win, challenge lose, inconclusive refund, no-defender fee, model decision, expiry, refusal, sweep, withdraw, withdraw twice (`test/seed_demo.mjs`)
 - [x] `docs/SEEDS.md` from chain, with links and the model double-run agreement
 - [x] `tools/verify_source.mjs` — all 3 contracts byte-identical to HEAD
