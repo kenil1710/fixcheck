@@ -51,7 +51,7 @@ export function Specimen({ check, code }: { check: Check; code: CheckCode }) {
       </div>
       <figcaption id="specimen-cap" className="border-t hair px-4 py-3 t-small text-ink-2">
         <strong className="text-ink">{protocolMeta(check.protocol).name}, {check.finding_id}.</strong>{" "}
-        Marked fixed in the audit report. Deployed {day(check.created_at)}, after the audited commit ({day(check.audited_at)}); the deployed code still runs the audited line{missing === 1 ? "" : "s"}; the line{missing === 1 ? "" : "s"} written by fix commit <span className="mono">{commit7(check.fix_commit)}</span> {missing === 1 ? "is" : "are"} not there.{" "}
+        Marked fixed in the audit report. Deployed {day(check.created_at)}, after the audited commit ({day(check.audited_at)}) and after the fix existed ({day(check.fix_at)}); the deployed code still runs the audited line{missing === 1 ? "" : "s"}; the line{missing === 1 ? "" : "s"} written by fix commit <span className="mono">{commit7(check.fix_commit)}</span> {missing === 1 ? "is" : "are"} not there.{" "}
         <Link className="link" href={`/checks/${check.check_id}`}>See the evidence</Link>
       </figcaption>
     </figure>
