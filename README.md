@@ -78,7 +78,7 @@ Other apps read verdicts with `FixRegistry.fix_status(chain, address, "<pinned r
 
 ## Seeds
 
-All 22 real findings from Step 0, on the canonical contract (read from chain):
+All 22 checks of 21 findings from Step 0 (PoolTogether M-1 on two chains), on the canonical contract, read from chain:
 
 | # | Protocol | Finding | Function | Chain | Verdict | Basis | Model |
 |---|---|---|---|---|---|---|---|

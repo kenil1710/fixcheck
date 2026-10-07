@@ -20,5 +20,5 @@ for (const x of items) {
 const md = readFileSync(root + "README.md", "utf8");
 const start = md.indexOf("## Seeds\n\n") + "## Seeds\n\n".length;
 const end = md.indexOf("\n\nFull table with links");
-writeFileSync(root + "README.md", md.slice(0, start) + `All 22 real findings from Step 0, on the canonical contract (read from chain):\n\n` + t.trimEnd() + md.slice(end));
+writeFileSync(root + "README.md", md.slice(0, start) + `All 22 checks of 21 findings from Step 0 (PoolTogether M-1 on two chains), on the canonical contract, read from chain:\n\n` + t.trimEnd() + md.slice(end));
 console.log(t);
