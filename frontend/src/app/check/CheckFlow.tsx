@@ -87,8 +87,9 @@ export function CheckFlow() {
           <p className="mt-6 font-serif text-[1.25rem] leading-snug">
             {says === "FIXED" ? "Code already sees the fix in the deployed function. Unless it changes, this will be decided fixed." :
               says === "NOT_FIXED" ? "Code sees the audited version still deployed. Unless it changes, this will be decided not fixed." :
-              says === "INCONCLUSIVE" ? "Code can’t compare this function in the deployed source. Everyone will be refunded." :
-              "The deployed function differs from both versions; the model will be asked twice after the counter-stake window."}
+              says === "INCONCLUSIVE" ? "Code can’t prove which code runs here. Everyone will be refunded." :
+              says === "PREDATES_AUDIT" ? "The deployed code is the pre-audit version, and the contract was deployed before the audit and can’t be upgraded: unless it changes, this will be decided “predates audit” and everyone refunded." :
+              "The deployed function differs from both versions; after the counter-stake window the model will be asked twice and must quote a line the fix added (or a removed line still deployed), otherwise everyone is refunded."}
           </p>
           <p className="t-small mt-4 text-ink-2">Anyone can counter-stake “fixed” for the next {Math.round(DEPLOYMENTS[dep].counterWindowS / 60)} minutes. After that, anyone can ask validators to decide.</p>
           <div className="mt-6 flex flex-wrap items-center gap-3">

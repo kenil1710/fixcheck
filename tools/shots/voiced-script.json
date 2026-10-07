@@ -17,7 +17,7 @@
   },
   {
    "id": "scorecard",
-   "text": "FixCheck does. It took 22 findings that Sherlock reports mark as fixed, and read the code at each protocol's own listed address. 12 are confirmed in deployed code; 8 are not."
+   "text": "FixCheck does. It read 22 checks of 21 findings marked fixed, against the code at each protocol's listed address: {FIXED} fixed, {NOT_FIXED} not fixed, and {PREDATES} deployed before the audit."
   },
   {
    "id": "protocol",
@@ -25,7 +25,7 @@
   },
   {
    "id": "finding",
-   "text": "This finding was marked fixed. On the left is the function the auditors reviewed; on the right, the one deployed on Arbitrum. They're identical, line for line."
+   "text": "This finding was marked fixed. On the left is the function the auditors reviewed; on the right, the one deployed on Arbitrum after the audit. They're identical, line for line."
   },
   {
    "id": "vsfix",
@@ -33,7 +33,7 @@
   },
   {
    "id": "model",
-   "text": "When deployed code matches neither version, validators ask a model. It must quote exact deployed lines, highlighted here, and code checks they point at the fix."
+   "text": "When code can't decide, validators ask a model, but it must quote a line the fix added. Here it couldn't, so the check is inconclusive and everyone is refunded."
   },
   {
    "id": "preview",
@@ -41,19 +41,19 @@
   },
   {
    "id": "stake",
-   "text": "Then you stake that it isn't fixed. Every validator fetches the report, both commits and the verified source, and they must agree."
+   "text": "Then you stake that it isn't fixed. Every validator reads the report, both commits, the verified source and the deployment date."
   },
   {
    "id": "result",
-   "text": "The check is filed. Anyone can stake that it is fixed until the window closes."
+   "text": "This vault was deployed the day before the audit, so code already says: predates the audit."
   },
   {
    "id": "how",
-   "text": "Code decides everything it can. The model never decides what counts as evidence, the deadlines, or the money."
+   "text": "Code decides everything it can. The model never decides what counts as evidence, the dates, or the money."
   },
   {
    "id": "real",
-   "text": "The real result: PoolTogether's prize pool, vault and draw manager on OP Mainnet were deployed before the audit and still run the audited code. The redeployed claimer has its fixes."
+   "text": "The real result: six PoolTogether contracts run the audited code but predate the audit and can't be upgraded. Two vaults deployed after it are not fixed."
   },
   {
    "id": "close",

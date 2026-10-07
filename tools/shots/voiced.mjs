@@ -126,7 +126,10 @@ await record("model", script.modelPath, ACTIONS.model, S.model.len);
 await record("preview", "/check?d=demo", ACTIONS.preview, S.preview.len, { wallet: true });
 await recordStake(S.stake.len, S.result.len);
 await record("how", "/how-it-works", ACTIONS.how, S.how.len);
-await record("real", `/protocols/pooltogether`, async (p, L) => { await smooth(p, 260, 1200); await wait(p, L * 1000 - 1200); }, S.real.len);
+await record("real", `/protocols/pooltogether`, async (p, L) => {
+  await smooth(p, await yOf(p, "#findings", 30), 1200); await wait(p, 500);
+  await p.click("button:has-text('Predates audit')"); await wait(p, L * 1000 - 1700);
+}, S.real.len);
 await record("close", "/", ACTIONS.close, S.close.len);
 writeFileSync(`${(process.env.CLIPS_DIR ?? WORK)}clips.json`, JSON.stringify(clips));
 }
