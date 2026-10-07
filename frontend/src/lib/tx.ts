@@ -36,12 +36,23 @@ export async function sendWrite(
     const { transactionsStatusNumberToName: names } = await import("genlayer-js/types");
     const wallet = getWalletClient(account);
     const read = getReadClient();
+    // Fees: simulate this write first (it budgets any internal message, e.g. a
+    // withdraw's transfer); if the simulation fails, use the generic estimate;
+    // only then the node default. Studio Dev rejects a zero fee
+    // (FeeValueMustBeNonZero), and its write simulation fails for decide/expire.
     let fees: unknown = undefined;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const pick = (est: any) => (est?.distribution ? { distribution: est.distribution, ...(est.messageAllocations ? { messageAllocations: est.messageAllocations } : {}), feeValue: est.feeValue } : undefined);
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const est: any = await (wallet as any).estimateTransactionFeesForWrite?.({ address, functionName, args, value });
-      if (est?.distribution) fees = { distribution: est.distribution, ...(est.messageAllocations ? { messageAllocations: est.messageAllocations } : {}), feeValue: est.feeValue };
-    } catch { /* node default */ }
+      fees = pick(await (wallet as any).estimateTransactionFeesForWrite?.({ address, functionName, args, value }));
+    } catch { /* fall back below */ }
+    if (!fees) {
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        fees = pick(await (wallet as any).estimateTransactionFees?.());
+      } catch { /* node default */ }
+    }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const hash = (await wallet.writeContract({ address, functionName, args: args as any, value, ...(fees ? { fees } : {}) } as any)) as string;
     set({ phase: "submitted", hash });
