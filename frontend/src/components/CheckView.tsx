@@ -65,10 +65,15 @@ export function CheckView({ c, code, defenders, dep }: { c: Check; code: CheckCo
   const reportFile = c.report_url.split("/").slice(3, 5).join("/");
 
   const predates = !c.implementation && c.created_at > 0 && c.created_at < c.audited_at;
+  const codeBorn = c.implementation ? c.impl_created_at : c.created_at;
+  const predatesFix = !predates && codeBorn > 0 && codeBorn < c.fix_at;
+  const prNumber = c.fix_ref.startsWith("pull/") ? c.fix_ref.slice(5) : "";
   const preview = c.state === "OPEN"
     ? c.dep_status !== "OK" ? "Code will decide: inconclusive, everyone refunded — the function is " + (DEP_STATUS[c.dep_status] ?? c.dep_status) + "."
       : c.fix_canon_sha256 && c.dep_canon_sha256 === c.fix_canon_sha256 ? "Code will decide: fixed — the deployed function is identical to the fix commit."
-      : c.dep_canon_sha256 === c.aud_canon_sha256 ? (predates ? "Code will decide: predates the audit — the deployed function is the audited version, and the contract was deployed before the audit." : "Code will decide: not fixed — the deployed function is identical to the audited version.")
+      : c.dep_canon_sha256 === c.aud_canon_sha256 ? (predates ? "Code will decide: predates the audit — the deployed function is the audited version, and the contract was deployed before the audit."
+        : predatesFix ? "Code will decide: predates the fix — the deployed function is the audited version, and the code was deployed before the fix existed."
+        : "Code will decide: not fixed — the deployed function is identical to the audited version, and the code was deployed after the fix existed.")
       : "The deployed function matches neither version exactly. Unless it visibly contains the fix, the model will be asked twice and must quote deployed lines that point at the change."
     : "";
 
@@ -76,7 +81,7 @@ export function CheckView({ c, code, defenders, dep }: { c: Check; code: CheckCo
     { at: c.filed_at, text: `Filed by ${short(c.challenger)} with ${gen(c.stake_wei)} GEN on “not fixed”. Validators fetched and hashed every source.` },
     ...defenders.map((d) => ({ at: d.at, text: `${short(d.address)} staked ${gen(d.stake_wei)} GEN on “fixed”.` })),
     { at: c.counter_deadline, text: "Counter-stake window closes.", future: c.counter_deadline * 1000 > Date.now() },
-    ...(c.decided_at ? [{ at: c.decided_at, text: c.state === "EXPIRED" ? "Expired undecided; everyone refunded." : `Decided: ${kind === "FIXED" ? "fixed" : kind === "NOT_FIXED" ? "not fixed" : kind === "PREDATES" ? "predates the audit" : "inconclusive"} (${basis.short.toLowerCase()}).` }] :
+    ...(c.decided_at ? [{ at: c.decided_at, text: c.state === "EXPIRED" ? "Expired undecided; everyone refunded." : `Decided: ${kind === "FIXED" ? "fixed" : kind === "NOT_FIXED" ? "not fixed" : kind === "PREDATES" ? "predates the audit" : kind === "PREDATES_FIX" ? "predates the fix" : "inconclusive"} (${basis.short.toLowerCase()}).` }] :
       [{ at: c.decide_deadline, text: "Decide window closes; after this anyone can expire the check.", future: true }]),
   ].sort((a, b) => a.at - b.at);
 
@@ -84,6 +89,7 @@ export function CheckView({ c, code, defenders, dep }: { c: Check; code: CheckCo
     : kind === "NOT_FIXED" ? `The challenger was credited ${gen(c.challenger_paid_wei)} GEN: their stake plus every defender’s.`
     : kind === "FIXED" ? (c.defenders > 0 ? `Defenders were credited their stakes plus the challenger’s ${gen(c.stake_wei)} GEN, pro rata.` : `No one defended, so the challenger got ${gen(c.challenger_paid_wei)} GEN back; ${gen(c.fee_paid_wei, 4)} GEN went to the frozen fee.`)
     : kind === "PREDATES" ? "The code could not have held the fix, so every stake was refunded in full."
+    : kind === "PREDATES_FIX" ? "The fix did not exist yet when this code was deployed, so every stake was refunded in full."
     : "Every stake was refunded in full.";
 
   return (
@@ -130,10 +136,10 @@ export function CheckView({ c, code, defenders, dep }: { c: Check; code: CheckCo
               </li>
               <Evidence label="Docs listing the address" href={c.docs_url} sha={c.docs_sha256} />
               <Evidence label={`Audited source @${commit7(c.audited_commit)}`} href={c.audited_url} sha={c.audited_sha256} />
-              {c.fix_url && <Evidence label={`Fix source @${commit7(c.fix_commit)}`} href={c.fix_url} sha={c.fix_sha256} note={c.fix_ref.startsWith("pull/") ? `Head commit of PR #${c.fix_ref.slice(5)}, which the finding links.` : "A commit the finding links."} />}
+              {c.fix_url && <Evidence label={`Fix source @${commit7(c.fix_commit)}`} href={c.fix_url} sha={c.fix_sha256} note={`${prNumber ? `Head commit of PR #${prNumber}, which Sherlock’s status block links` : "A commit Sherlock’s status block links"}; on the protocol’s default branch ${c.fix_reach === "MERGE" ? "through the PR’s merge commit" : "directly"}.`} />}
               {c.patch_sha256 && <Evidence label="Fix PR patch" href={`https://github.com/${c.fix_url.split("/")[3]}/${c.fix_url.split("/")[4]}/${c.fix_ref}.patch`} sha={c.patch_sha256} />}
-              <Evidence label="Deployed verified source" href={c.source_url} sha={c.source_sha256} note={c.implementation ? "The proxy’s own source; the implementation’s is below." : undefined} />
-              {c.implementation && c.impl_source_url && <Evidence label="Implementation source" href={c.impl_source_url} sha={c.impl_source_sha256} />}
+              <Evidence label="Deployed verified source" href={c.source_url} sha={c.source_sha256} note={c.implementation ? "The proxy’s own source; the implementation’s is below." : c.compiled ? `Compiled contract: ${c.compiled.split(":").pop()} (${c.compiled.split(":")[0]}).` : undefined} />
+              {c.implementation && c.impl_source_url && <Evidence label="Implementation source" href={c.impl_source_url} sha={c.impl_source_sha256} note={c.compiled ? `Compiled contract: ${c.compiled.split(":").pop()} (${c.compiled.split(":")[0]}).` : undefined} />}
             </ul>
             <dl className="mt-4 grid gap-1 t-small">
               {[["Audited function", c.aud_canon_sha256], ["Fixed function", c.fix_canon_sha256], ["Deployed function", c.dep_canon_sha256]].filter(([, v]) => v).map(([k, v]) => (
@@ -162,12 +168,15 @@ export function CheckView({ c, code, defenders, dep }: { c: Check; code: CheckCo
             <p className="mt-2 t-small">{CHAIN_NAMES[c.chain] ?? c.chain}</p>
             <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 t-small">
               <dt className="text-ink-3">Deployed</dt>
-              <dd className={predates ? "font-medium" : ""}>{c.created_at ? day(c.created_at) : "—"}{c.creation_tx && <a className="link ml-1.5 mono text-[0.78rem]" href={`${explorer}/tx/${c.creation_tx}`}>tx</a>}</dd>
+              <dd className={predates || predatesFix ? "font-medium" : ""}>{c.created_at ? day(c.created_at) : "—"}{c.creation_tx && <a className="link ml-1.5 mono text-[0.78rem]" href={`${explorer}/tx/${c.creation_tx}`}>tx</a>}</dd>
+              {c.implementation && <><dt className="text-ink-3">Implementation</dt><dd className={predatesFix ? "font-medium" : ""}>{c.impl_created_at ? day(c.impl_created_at) : "—"}</dd></>}
               <dt className="text-ink-3">Audited commit</dt>
               <dd>{c.audited_at ? day(c.audited_at) : "—"} <span className="mono text-[0.78rem] text-ink-3">{commit7(c.audited_commit)}</span></dd>
+              <dt className="text-ink-3">Fix existed</dt>
+              <dd>{c.fix_at ? day(c.fix_at) : "—"} <span className="text-[0.78rem] text-ink-3">{c.fix_merged_at ? `PR #${prNumber} merged` : <span className="mono">{commit7(c.fix_commit)}</span>}</span></dd>
             </dl>
             <p className="mt-1 flex items-center gap-1"><a className="mono link min-w-0 truncate text-[0.82rem]" href={`${explorer}/address/${c.address}`}>{c.address}</a><Copy value={c.address} label="Copy address" /></p>
-            {c.implementation && <p className="t-small mt-2 text-ink-2">Proxy. Implementation <a className="link mono text-[0.78rem]" href={`${explorer}/address/${c.implementation}`}>{short(c.implementation)}</a>, read from its EIP-1967 slot.</p>}
+            {c.implementation && <p className="t-small mt-2 text-ink-2">Proxy. Implementation <a className="link mono text-[0.78rem]" href={`${explorer}/address/${c.implementation}`}>{short(c.implementation)}</a>, read from its EIP-1967 slot at block {c.slot_block.toLocaleString("en-US")}.</p>}
             <p className="t-small mt-2 text-ink-2"><span className="mono">{c.function}()</span> {c.dep_status === "OK" ? "found in the deployed source" : "is " + (DEP_STATUS[c.dep_status] ?? c.dep_status)}.</p>
           </section>
 

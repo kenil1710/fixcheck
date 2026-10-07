@@ -1,5 +1,5 @@
 {
- "notFixedId": 5,
+ "notFixedId": 6,
  "modelPath": "/checks/13",
  "example": "Mellow H-2 · _handleReport (changed since audit)",
  "stakeExample": "PoolTogether M-16 · maxDeposit on Base",
@@ -17,7 +17,7 @@
   },
   {
    "id": "scorecard",
-   "text": "FixCheck does. It read 22 checks of 21 findings marked fixed, against the code at each protocol's listed address: 7 fixed, 2 not fixed, and 6 deployed before the audit."
+   "text": "FixCheck does. It read 22 checks of 21 findings marked fixed: 7 fixed, 1 not fixed, 6 deployed before the audit, and 1 before its fix existed."
   },
   {
    "id": "protocol",
@@ -25,7 +25,7 @@
   },
   {
    "id": "finding",
-   "text": "This finding was marked fixed. On the left is the function the auditors reviewed; on the right, the one deployed on Arbitrum after the audit. They're identical, line for line."
+   "text": "This finding was marked fixed. On the left, the function the auditors reviewed; on the right, the one deployed on Ethereum after the fix was merged. They're identical."
   },
   {
    "id": "vsfix",
@@ -41,7 +41,7 @@
   },
   {
    "id": "stake",
-   "text": "Then you stake that it isn't fixed. Every validator reads the report, both commits, the verified source and the deployment date."
+   "text": "Then you stake that it isn't fixed. Every validator reads the report, both commits, the verified source, and when the code and the fix were made."
   },
   {
    "id": "result",
@@ -53,7 +53,7 @@
   },
   {
    "id": "real",
-   "text": "The real result: six PoolTogether contracts run the audited code but predate the audit and can't be upgraded. Two vaults deployed after it are not fixed."
+   "text": "The real result: six PoolTogether contracts predate the audit, one vault predates its fix, and one vault deployed after the fix is not fixed."
   },
   {
    "id": "close",

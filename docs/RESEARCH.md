@@ -31,6 +31,16 @@ A throwaway contract (`contracts/_probe.py`, deployed at
 Bodies are byte-stable: three fetches of the same Blockscout and Sourcify URLs
 produced identical sha256, so **strict sha256 equality between validators is viable**.
 
+A second probe (`test/probe_web2.mjs`, result `docs/research/probe_web2.json`)
+measured what the round-2 rules need:
+
+| Read | From GenVM | Used for |
+|---|---|---|
+| `github.com/<o>/<r>/pull/<n>` | **200 HTML**, ~340 KB, carries `"mergedTime"`, `"state"`, `"mergeCommitSha"` | when (and whether) the fix PR was merged |
+| `github.com/<o>/<r>/branch_commits/<sha>` | **200**, ~1 KB fragment; the default branch is the link to the repo root | is the fix on the default branch |
+| web.archive.org at a timestamp that is **not** a capture | **200** with the closest capture: GenVM follows the redirect, but the response's `Memento-Datetime` header names the capture served | refusing any capture that is not exactly the one requested |
+| `eth_getStorageAt` at a past block | Ethereum (publicnode) under 128 blocks; `mainnet.optimism.io`, `mainnet.base.org` and `polygon.drpc.org` 20 000+ blocks; Arbitrum 3 000 | reading the proxy slot at the block the leader names; OP and Polygon moved to RPCs that keep that history |
+
 **Decision (frozen in the contract):** one verified-source endpoint per chain —
 Blockscout for `ethereum` and `optimism`, Sourcify v2 for `base`, `arbitrum`,
 `polygon`. Two validators can never read two different explorers.
@@ -69,7 +79,7 @@ chains. Each row: report pinned at a SHA, finding id, function, audited commit
 the fix PR the finding links — for every seed its function body is identical
 to the PR's merge commit), deployed address
 from the protocol's pinned docs page, verified on Blockscout/Sourcify.
-Proxies are followed one hop to the implementation the explorer names.
+Proxies are followed one hop to the implementation in the EIP-1967 slot (checked against the explorer). For every seed, Sherlock's own status block links the fix, the fix repo belongs to the protocol's docs account, and the fix is on the default branch (directly, or through the PR's merge commit for the three squash-merged PRs: Cap #185 and #189, Optimism #10149).
 
 | # | Protocol | Finding | Function | Chain | Deployed address | Audited commit | Fix commit | Offline result |
 |---|---|---|---|---|---|---|---|---|
@@ -181,11 +191,16 @@ these deployments (OP prize pool, vault, RNG, draw manager — and the Base vaul
 created 2024-05-15) predate the audited commit and are not upgradeable:
 FixCheck decides them **PREDATES_AUDIT** ("deployed code matches the pre-audit
 version; the contract was deployed before the audit and can't be upgraded, so
-the fix could not be applied here"), not NOT_FIXED. Only the Arbitrum vault
-(2024-05-29) and the Ethereum vault (2024-08-19), deployed after the audit, are
-NOT_FIXED. (The Arbitrum RngWitnet, created 2024-05-29, already equals fix
-commit `e44b23c`, merged 2024-07-08: the change existed in the repository
-before that PR was merged.)
+the fix could not be applied here"), not NOT_FIXED. The contract also binds
+when the fix existed: the later of the fix PR's head commit and its merge
+(GitHub's commit feed and PR page). The Arbitrum vault (2024-05-29) came after
+the audit but before its fix existed (PR #113: head `60be8fc` committed
+2024-06-21, merged 2024-06-28), so it is **PREDATES_FIX** ("this contract was
+deployed before the fix existed, so it could not contain it"). Only the
+Ethereum vault (2024-08-19), deployed after its fix (PR #112, merged
+2024-06-28), is NOT_FIXED. (The Arbitrum RngWitnet, created 2024-05-29, already
+equals fix commit `2ddd97f`, committed 2024-05-24 and merged 2024-07-08: the
+change existed in the repository before that PR was merged.)
 
 **What this does and does not show.** It shows that, for these functions, the
 code running at the addresses PoolTogether's own docs list is the code the

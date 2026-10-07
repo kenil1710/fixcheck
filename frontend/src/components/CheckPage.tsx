@@ -16,7 +16,7 @@ export async function checkMetadata(idRaw: string, dep: Deployment): Promise<Met
   const id = Number(idRaw);
   const c = Number.isInteger(id) && id > 0 ? await getCheck(id, dep) : null;
   if (!c?.ok) return { title: `Check #${idRaw}` };
-  const verdict = c.data.state === "OPEN" ? "being checked" : c.data.verdict === "FIXED" ? "fixed in deployed code" : c.data.verdict === "NOT_FIXED" ? "not in deployed code" : c.data.verdict === "PREDATES_AUDIT" ? "deployed before the audit" : "inconclusive";
+  const verdict = c.data.state === "OPEN" ? "being checked" : c.data.verdict === "FIXED" ? "fixed in deployed code" : c.data.verdict === "NOT_FIXED" ? "not in deployed code" : c.data.verdict === "PREDATES_AUDIT" ? "deployed before the audit" : c.data.verdict === "PREDATES_FIX" ? "deployed before the fix existed" : "inconclusive";
   const title = `${protocolMeta(c.data.protocol).name} ${c.data.finding_id}: ${verdict}`;
   return { title, description: `${c.data.title.replace(/^Issue [A-Z]-\d+:\s*/, "")} — ${c.data.function}() checked against the deployed contract.`, openGraph: { title }, twitter: { title } };
 }

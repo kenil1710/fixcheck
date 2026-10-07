@@ -177,6 +177,65 @@
       "reads": "0xD0C3FA05E91189F23898332F3678cE92F139F1ad",
       "superseded_by": "0x8E93Ab199E737CF022F5D4cE0f171d0e68815E49",
       "why": "same rules as the current contract; redeployed from a commit whose source header carries no version history (never seeded)"
+    },
+    {
+      "name": "FixCheck",
+      "address": "0x2d7b3C465D6478Db4438999b1FD0340A54256364",
+      "deploy_tx": "0x80460db8ddf136f02dda197ce5572069bb32e61bc412d577ff0963601766888b",
+      "file": "contracts/FixCheck.py",
+      "commit": "0c20168e94b47e6f3d1ebf13638c7115137f9e10",
+      "bytes": 92583,
+      "sha256": "0344592ef7bd06a13f8e8c39eb42925506eb1cc364e9badfa77ffaaad336d576",
+      "constructor_args": [
+        "CANONICAL",
+        3600,
+        86400,
+        200,
+        "0x8bfB2761bA064D3F829F382f444867EE10294b1C"
+      ],
+      "deployer": "0x8bfB2761bA064D3F829F382f444867EE10294b1C",
+      "deployed_at": "2026-10-07T06:26:40.479Z",
+      "mode": "CANONICAL",
+      "superseded_by": "0x893f96A5c72771D40F0bB55035A013a77159cc33",
+      "why": "twelve findings of the second attack pass (docs/ATTACK_REPORT_R2.md): NOT_FIXED on code deployed before its fix existed, reports from any author, fix hunks off the live path, judged file not tied to the compiled contract, import aliases, helper overrides, moved-line grounding, floating archive captures, fix links from any comment, URL spellings, slot read at latest, operator-joining canon"
+    },
+    {
+      "name": "FixCheckDemo",
+      "address": "0x78D31dbB13e8348A2278b64A84eBfE129607fd91",
+      "deploy_tx": "0xb0dbb739f72fec8ed175d484d64f3b91e0a61cae260440cf891c3d049c402338",
+      "file": "contracts/FixCheck.py",
+      "commit": "0c20168e94b47e6f3d1ebf13638c7115137f9e10",
+      "bytes": 92583,
+      "sha256": "0344592ef7bd06a13f8e8c39eb42925506eb1cc364e9badfa77ffaaad336d576",
+      "constructor_args": [
+        "DEMO",
+        90,
+        300,
+        200,
+        "0x8bfB2761bA064D3F829F382f444867EE10294b1C"
+      ],
+      "deployer": "0x8bfB2761bA064D3F829F382f444867EE10294b1C",
+      "deployed_at": "2026-10-07T06:26:47.345Z",
+      "mode": "DEMO",
+      "superseded_by": "0xF5133724f0dffF025ceA878881285aE681d71c89",
+      "why": "twelve findings of the second attack pass (docs/ATTACK_REPORT_R2.md): NOT_FIXED on code deployed before its fix existed, reports from any author, fix hunks off the live path, judged file not tied to the compiled contract, import aliases, helper overrides, moved-line grounding, floating archive captures, fix links from any comment, URL spellings, slot read at latest, operator-joining canon"
+    },
+    {
+      "name": "FixRegistry",
+      "address": "0x8E93Ab199E737CF022F5D4cE0f171d0e68815E49",
+      "deploy_tx": "0x966be28f115e34d233b77f04d54c48af7a025b55b35a2e60a799979378308019",
+      "file": "contracts/FixRegistry.py",
+      "commit": "0c20168e94b47e6f3d1ebf13638c7115137f9e10",
+      "bytes": 3147,
+      "sha256": "36a8801749b1cfab86777ff19b7ae6d0b10b2dbf96fa22b72bab6f06dc406812",
+      "constructor_args": [
+        "0x2d7b3C465D6478Db4438999b1FD0340A54256364"
+      ],
+      "deployer": "0x8bfB2761bA064D3F829F382f444867EE10294b1C",
+      "deployed_at": "2026-10-07T06:26:53.687Z",
+      "reads": "0x2d7b3C465D6478Db4438999b1FD0340A54256364",
+      "superseded_by": "0x50a60867153d3C63F322340dcEfe492bdd0d8D04",
+      "why": "twelve findings of the second attack pass (docs/ATTACK_REPORT_R2.md): NOT_FIXED on code deployed before its fix existed, reports from any author, fix hunks off the live path, judged file not tied to the compiled contract, import aliases, helper overrides, moved-line grounding, floating archive captures, fix links from any comment, URL spellings, slot read at latest, operator-joining canon"
     }
   ]
 }

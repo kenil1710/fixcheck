@@ -44,12 +44,15 @@ export function stripComments(src: string): string {
   return out.join("");
 }
 
+/** Operator pairs that would fuse into another token without the space between them. */
+const FUSE = new Set(["++", "--", "**", "&&", "||", "<<", ">>", "<=", ">=", "==", "!=", "+=", "-=", "*=", "/=", "%=", "&=", "|=", "^=", "=>", "->", ":=", "=:", "//", "/*", "*/"]);
+
 export function canon(code: string): string {
   const out: string[] = [];
   let pending = false;
   for (const c of code) {
     if (" \t\r\n\f\v".includes(c)) { pending = true; continue; }
-    if (pending && out.length && isWord(out[out.length - 1]) && isWord(c)) out.push(" ");
+    if (pending && out.length && ((isWord(out[out.length - 1]) && isWord(c)) || FUSE.has(out[out.length - 1] + c))) out.push(" ");
     pending = false;
     out.push(c);
   }
@@ -184,22 +187,34 @@ export function findingSection(report: string, fid: string): Section {
   return { ok: true, title: lines[start].slice(level).trim(), text, status };
 }
 
-/** Same rules as contracts/FixCheck.py norm_url (fix 8). */
+const UNRESERVED = /^[A-Za-z0-9\-._~]$/;
+const unescape = (t: string) => t.replace(/%([0-9a-fA-F]{2})/g, (m, h) => { const c = String.fromCharCode(parseInt(h, 16)); return UNRESERVED.test(c) ? c : m; });
+
+/** Same rules as contracts/FixCheck.py norm_url. */
 export function normUrl(url: string): string {
   let t = url.trim();
   const h = t.indexOf("#"); if (h >= 0) t = t.slice(0, h);
-  const q = t.indexOf("?"); if (q >= 0) t = t.slice(0, q);
-  while (t.endsWith("/")) t = t.slice(0, -1);
   if (!t.toLowerCase().startsWith("https://")) return "";
   const rest = t.slice(8); const j = rest.indexOf("/");
-  t = "https://" + (j < 0 ? rest : rest.slice(0, j)).toLowerCase() + (j < 0 ? "" : rest.slice(j));
-  if (t.startsWith("https://raw.githubusercontent.com/")) {
+  const host = (j < 0 ? rest : rest.slice(0, j)).toLowerCase();
+  let path = j < 0 ? "" : rest.slice(j), query = "";
+  const q = path.indexOf("?"); if (q >= 0) { query = path.slice(q); path = path.slice(0, q); }
+  path = unescape(path);
+  while (path.endsWith("/")) path = path.slice(0, -1);
+  t = "https://" + host + path;
+  if (t.startsWith("https://web.archive.org/web/")) {
+    let r = t.slice(28); const k = r.indexOf("/");
+    if (k > 0 && !r.slice(0, k).endsWith("id_")) r = r.slice(0, k) + "id_" + r.slice(k);
+    t = "https://web.archive.org/web/" + r + (query !== "?" ? query : "");
+  } else if (t.startsWith("https://raw.githubusercontent.com/")) {
     const parts = t.slice(34).split("/");
     if (parts.length >= 2) { parts[0] = parts[0].toLowerCase(); parts[1] = parts[1].toLowerCase(); }
     t = "https://raw.githubusercontent.com/" + parts.join("/");
   }
   return t;
 }
+/** A %-escape in the path (before any query) - refused at filing. */
+export const percentInPath = (url: string) => url.trim().split("#")[0].split("?")[0].includes("%");
 
 /** Same rules as contracts/FixCheck.py github_pin / archive_pin. */
 export function githubPin(url: string): { owner: string; repo: string; sha: string; path: string } | null {
@@ -212,9 +227,9 @@ export function githubPin(url: string): { owner: string; repo: string; sha: stri
   if (parts.slice(3).some((s) => s === "" || s === "." || s === "..")) return null;
   return { owner: owner.toLowerCase(), repo: repo.toLowerCase(), sha, path: parts.slice(3).join("/") };
 }
-export function archivePin(url: string): { ts: string; target: string; host: string } | null {
+export function archivePin(url: string, now = -1): { ts: string; target: string; host: string } | null {
   const t = normUrl(url);
-  if (!t.startsWith("https://web.archive.org/web/") || /[?#\s]/.test(t)) return null;
+  if (!t.startsWith("https://web.archive.org/web/") || /[#\s]/.test(t)) return null;
   const rest = t.slice(28);
   const k = rest.indexOf("/");
   if (k < 0) return null;
@@ -222,15 +237,53 @@ export function archivePin(url: string): { ts: string; target: string; host: str
   const target = rest.slice(k + 1);
   if (stamp.endsWith("id_")) stamp = stamp.slice(0, -3);
   if (!/^\d{14}$/.test(stamp) || !/^https?:\/\//.test(target)) return null;
-  const host = target.split("//")[1]?.split("/")[0]?.toLowerCase() ?? "";
+  if (now >= 0) {
+    const at = Date.parse(`${stamp.slice(0, 4)}-${stamp.slice(4, 6)}-${stamp.slice(6, 8)}T${stamp.slice(8, 10)}:${stamp.slice(10, 12)}:${stamp.slice(12, 14)}Z`) / 1000;
+    if (!(at > 0) || at > now) return null;
+  }
+  const host = target.split("//")[1]?.split(/[/?]/)[0]?.toLowerCase() ?? "";
   return host ? { ts: stamp, target, host } : null;
+}
+/** Same rule as contracts/FixCheck.py report_source_ok: Sherlock only. */
+export function reportSourceOk(url: string): boolean {
+  const g = githubPin(url);
+  if (g) return g.owner === "sherlock-audit" && g.repo.endsWith("-judging");
+  const a = archivePin(url);
+  if (!a) return false;
+  if (a.host === "audits.sherlock.xyz") return a.target.startsWith("https://audits.sherlock.xyz/");
+  for (const pre of ["https://raw.githubusercontent.com/", "https://github.com/"]) {
+    if (a.target.toLowerCase().startsWith(pre)) {
+      const parts = a.target.slice(pre.length).split("/");
+      return parts.length >= 2 && parts[0].toLowerCase() === "sherlock-audit" && parts[1].toLowerCase().endsWith("-judging");
+    }
+  }
+  return false;
+}
+/** Same rule as contracts/FixCheck.py status_block: Sherlock's own status comments only. */
+export function statusBlock(section: string): string {
+  const lines = section.split("\n");
+  const d = lines.findIndex((l) => l.trim() === "## Discussion");
+  const out: string[] = [];
+  let cur: string[] = [], who = "";
+  const author = (l: string) => { const t = l.trim(); return /^\*\*[\w$-]+\*\*$/.test(t) && t.length >= 5 ? t.slice(2, -2) : ""; };
+  const sherlock = (n: string) => n === "sherlock-admin" || /^sherlock-admin\d+$/.test(n);
+  for (const l of [...lines.slice(d < 0 ? lines.length : d + 1), "**end-of-section**"]) {
+    const a = author(l);
+    if (a) {
+      const text = cur.join("\n");
+      if (sherlock(who) && STATUS_PHRASES.some((p) => text.includes(p))) out.push(text);
+      who = a; cur = []; continue;
+    }
+    cur.push(l);
+  }
+  return out.join("\n");
 }
 export const isPinned = (u: string) => Boolean(githubPin(u) || archivePin(u));
 
 /** Lines of the stored (comment-free) function, as the contract indexes them. */
 export const codeLines = (code: string) => stripComments(code).split("\n");
 
-/** Port of the v1.2 decision helpers (contracts/FixCheck.py), for the preview. */
+/** Port of the decision helpers in contracts/FixCheck.py, for the preview. */
 export function blankStrings(code: string): string {
   let out = ""; let i = 0;
   while (i < code.length) {
@@ -247,7 +300,8 @@ export function blankStrings(code: string): string {
 const blankedLines = (code: string) => blankStrings(stripComments(code)).split("\n");
 const canonLines = (code: string) => blankedLines(code).map(canon).filter(Boolean);
 const substantive = (l: string) => l.trim().length >= 8 && /[\p{L}\p{N}_$]/u.test(l);
-const depths = (lines: string[]) => { const out: number[] = []; let d = 0; for (const l of lines) { out.push(d); for (const ch of l) { if (ch === "{") d++; else if (ch === "}") d--; } } return out; };
+const frames = (lines: string[]) => { const out: string[] = []; const st: string[] = []; for (const l of lines) { out.push(st.slice(1).join("\n")); for (const ch of l) { if (ch === "{") st.push(l); else if (ch === "}") st.pop(); } } return out; };
+const exits = (l: string) => /(^|[^\w$])(return|revert|throw|selfdestruct)(?![\w$])/.test(l);
 function lcsOps(a: string[], f: string[]): [string, number, number][] {
   const n = a.length, m = f.length;
   const dp = Array.from({ length: n + 1 }, () => new Array<number>(m + 1).fill(0));
@@ -269,22 +323,26 @@ export function containsFix(dep: string, aud: string, fix: string): boolean {
   if (!fix) return false;
   const ch = fixChange(aud, fix);
   if (!ch.added.some(substantive)) return false;
-  const d = canonLines(dep), dd = depths(d);
+  const d = canonLines(dep), fd = frames(d);
   if (ch.removed.some((x) => !ch.added.includes(x) && substantive(x) && d.includes(x))) return false;
-  const a = canonLines(aud), f = canonLines(fix), df = depths(f);
+  const a = canonLines(aud), f = canonLines(fix), ff = frames(f);
+  const count = (xs: string[], x: string) => xs.filter((y) => y === x).length;
+  if (ch.added.some((x) => ch.removed.includes(x) && count(d, x) !== count(f, x))) return false;
   const addedJ = lcsOps(a, f).filter(([op]) => op === "+").map(([, , j]) => j);
   let pos = 0;
   for (let k = 0; k < addedJ.length; k++) {
     const start = addedJ[k]; let end = start;
     while (k + 1 < addedJ.length && addedJ[k + 1] === end + 1) end = addedJ[++k];
     const lo = start > 0 ? start - 1 : start, hi = end + 1 < f.length ? end + 1 : end;
-    const lines = f.slice(lo, hi + 1), ds = df.slice(lo, hi + 1).map((x) => x - df[lo]);
+    const idx = Array.from({ length: hi - lo + 1 }, (_, t) => lo + t);
     let found = -1;
-    for (let s = pos; s + lines.length <= d.length; s++) {
-      if (lines.every((l, t) => d[s + t] === l && dd[s + t] - dd[s] === ds[t])) { found = s; break; }
+    for (let s = pos; s + idx.length <= d.length; s++) {
+      if (idx.every((x, t) => d[s + t] === f[x] && fd[s + t] === ff[x])) { found = s; break; }
     }
     if (found < 0) return false;
-    pos = found + lines.length - 1;
+    const theirs = f.slice(0, lo).filter(exits);
+    for (const x of d.slice(0, found).filter(exits)) { const i = theirs.indexOf(x); if (i < 0) return false; theirs.splice(i, 1); }
+    pos = found + idx.length - 1;
   }
   return true;
 }

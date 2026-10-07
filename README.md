@@ -8,47 +8,51 @@ Live: **https://fixcheck-ledger.vercel.app** · GenLayer Studio Dev · contracts
 
 ## The problem
 
-Public audit reports (Sherlock, Code4rena, Cantina…) end with a list of findings and a status: *Fixed*. Users read "audited, all fixed" and trust the protocol. Nobody checks whether the code that is actually deployed on chain contains each fix. Sometimes it doesn't: the fix was merged in the repository but the deployed contract was never replaced, or the contract was deployed before the audit and can't be upgraded.
+Public audit reports (Sherlock, Code4rena, Cantina…) end with a list of findings and a status: *Fixed*. Users read "audited, all fixed" and trust the protocol. Nobody checks whether the code that is actually deployed on chain contains each fix. Sometimes it doesn't: the fix was merged in the repository but the deployed contract was never replaced, the contract was deployed before the audit and can't be upgraded, or it was deployed before the fix even existed.
 
-FixCheck checks it, one finding at a time, using the real report, the real commits and the verified code running at the protocol's own listed address.
+FixCheck checks it, one finding at a time, using the real report, the real commits and the verified code running at the protocol's own listed address. **Supports Sherlock contest reports; other auditors are future work.**
 
 ## What it found
 
 The seeds are **22 checks of 21 findings**: 21 Sherlock findings marked fixed, with PoolTogether M-1 checked on two chains (OP Mainnet and Arbitrum). They cover PoolTogether V5, Mellow Flexible Vaults, Cap and the OP Stack fault proofs. Every check is listed in [`docs/SEEDS.md`](docs/SEEDS.md); how the data was chosen is in [`docs/RESEARCH.md`](docs/RESEARCH.md).
 
 * **Fixed in deployed code** — the deployed function is the fix commit's, or holds the fix in place.
-* **Not fixed** — the deployed function is still the audited version, on a deployment created *after* the audit: PoolTogether's Arbitrum vault (2024-05-29) and Ethereum vault (2024-08-19).
+* **Not fixed** — the deployed function is still the audited version, on code deployed *after the fix existed*: PoolTogether's Ethereum vault, created 2024-08-19 by a factory deployed that day, while its fix (PR #112) was merged on 2024-06-28.
 * **Predates audit** — six PoolTogether contracts (prize pool, vaults on OP Mainnet and Base, draw manager, RNG) still run the audited code, but they were deployed before the audited commit (2024-05-16) and are not upgradeable, so the fix could not have been applied there. FixCheck says so instead of calling them "not fixed".
+* **Predates fix** — PoolTogether's Arbitrum vault was deployed on 2024-05-29, after the audit but before its fix existed (PR #113, committed 2024-06-21, merged 2024-06-28). This contract was deployed before the fix existed, so it could not contain it.
 * **Inconclusive** — code could not prove which function runs (partially verified source), or the model's answers did not point at the fix. Everyone is refunded; no verdict is invented.
 
 These are code facts, not claims about exploitability or anyone's intent.
 
 ## How it works
 
-1. **File.** A challenger stakes GEN on *not fixed* and names: a **pinned** report (GitHub raw at a commit SHA, or a web.archive.org snapshot), the finding id, the function, the audited source file at its commit, the **fix commit's** file (required), the chain, the deployed address, and a **pinned** docs page of the protocol that lists that address.
+1. **File.** A challenger stakes GEN on *not fixed* and names: a **pinned Sherlock** report (a `sherlock-audit/*-judging` repo on GitHub raw at a commit SHA, or a web.archive.org capture of one or of `audits.sherlock.xyz`), the finding id, the function, the audited source file at its commit, the **fix commit's** file (required), the chain, the deployed address, and a **pinned** docs page of the protocol that lists that address.
 2. **Validators read everything themselves** and must agree on every field and on the sha256 of every immutable body. Code checks, before anything is stored:
-   * the finding heads a section of the report with a fixed-status phrase and names the function;
-   * the audited file is the finding's own audited commit (a code link in the finding's section, or in the same report) and the fix file is the head of the PR the finding links (or a commit it links);
+   * every link is pinned and spelled one way (no `%`-escapes); an archived capture must be dated no later than the filing, and the capture served must be exactly that one (its `Memento-Datetime`);
+   * the finding heads a section of the report and names the function, and **Sherlock's own status block** (`sherlock-admin*`) marks it fixed;
+   * the audited file is the finding's own audited commit (a code link in the finding's section, or in the same report); the fix file is the head of the PR — or a commit — that Sherlock's status block links. Comments by anyone else are never read for the fix;
+   * the fix is in the protocol's own GitHub account (the owner of its pinned docs) and on its **default branch**, directly or through the PR's merge commit; the fix commit's date and the PR's merge date are recorded;
    * the docs page lists the address, and the contract has a **full/exact** verified-source match;
-   * a proxy is resolved through its EIP-1967 slot (cross-checked with the explorer) and only the implementation's code is judged;
-   * the function is the one that actually runs: no override, library copy or same-name copy elsewhere in the bundle;
-   * the audited commit's date and the deployment's creation time are recorded.
+   * a proxy is resolved through its EIP-1967 slot, read at a block the leader names and every validator re-reads, cross-checked with the explorer; only the implementation's code is judged;
+   * the function belongs to the contract the explorer says was **compiled** at that address, or to one of its parents (resolved through import aliases); nothing in that chain overrides it, and nothing overrides a function it — or the fix — calls;
+   * the audited commit's date and the creation time of the deployment (and of its implementation) are recorded.
 
-   Anything unpinned, unreadable or unlinked is refused, and the stake stays withdrawable.
+   Anything unpinned, unreadable, unlinked or from another source is refused, and the stake stays withdrawable.
 3. **Counter-stake.** Until the counter deadline (1 hour on the canonical contract) anyone else may stake *fixed*.
 4. **Decide** (anyone, after the deadline). Code decides first:
    * deployed == fix version → **FIXED** (`CODE_MATCH_FIX`)
-   * deployed == audited version → **NOT FIXED** (`CODE_MATCH_VULNERABLE`), or **PREDATES AUDIT** (`DEPLOYED_BEFORE_AUDIT`) when the contract is not a proxy and was created before the audited commit
-   * every fix hunk present as one block, in place, at the same nesting, and no removed line left → **FIXED** (`CODE_CONTAINS_FIX`)
-   * function missing, overloaded, overridden, partially verified, or proxy unresolved → **INCONCLUSIVE**
-   * otherwise the model only resolves what code can't: it is shown the finding, what the fix commit changed in this function, and the deployed function (comments removed, string literals blanked), and must quote deployed lines. Code accepts FIXED only if a quote is a line the fix **added** and no line the fix removed is still deployed; NOT FIXED only if a quote is a **removed** (vulnerable) line that is still deployed. It is asked twice; any disagreement, unsupported quote or error → **INCONCLUSIVE**.
-5. **Pay out.** NOT FIXED: the challenger takes every defender stake. FIXED: defenders split the challenger's stake (no defender: challenger refunded minus a frozen 2% fee). INCONCLUSIVE or PREDATES AUDIT: everyone refunded. Payouts are credited and withdrawn (pull). If nobody decides before the decide deadline, anyone can `expire` and everyone is refunded.
+   * deployed == audited version → **NOT FIXED** (`CODE_MATCH_VULNERABLE`) — or **PREDATES AUDIT** (`DEPLOYED_BEFORE_AUDIT`) when the contract is not a proxy and was created before the audited commit, or **PREDATES FIX** (`DEPLOYED_BEFORE_FIX`) when the code that runs (the implementation, for a proxy) was created before the fix existed. The fix date is the later of the fix commit's date and its PR's merge date. Only code created after the fix existed can be NOT FIXED
+   * every fix hunk present as one block, with the fix's own context lines, inside exactly the branches/loops (and at the absolute depth) that enclose it in the fix, with no `return`/`revert`/`throw`/`selfdestruct` before it that the fix doesn't have, and no removed line left; a line the fix only moved must appear in the fix's order and only there → **FIXED** (`CODE_CONTAINS_FIX`)
+   * function missing, overloaded, overridden, not in the compiled contract, a parent unresolved, a called function overridden, partially verified, or proxy unresolved → **INCONCLUSIVE**
+   * otherwise the model only resolves what code can't: it is shown the finding, what the fix commit changed in this function, and the deployed function (comments removed, string literals blanked), and must quote deployed lines. Code accepts FIXED only if a quote is a line the fix **added that the audited version does not have** and no line the fix removed is still deployed; NOT FIXED only if a quote is a **removed** (vulnerable) line that is still deployed — and on code created before the fix existed that becomes PREDATES FIX. A fix that only moves lines can never be grounded by the model; code checks the order. It is asked twice; any disagreement, unsupported quote or error → **INCONCLUSIVE**.
+5. **Pay out.** NOT FIXED: the challenger takes every defender stake. FIXED: defenders split the challenger's stake (no defender: challenger refunded minus a frozen 2% fee). INCONCLUSIVE, PREDATES AUDIT or PREDATES FIX: everyone refunded. Payouts are credited and withdrawn (pull). If nobody decides before the decide deadline, anyone can `expire` and everyone is refunded.
 
 ### What the model is never allowed to decide
 
-* which report, finding, commits or deployment are the evidence — code binds them to the finding;
-* whether two functions are identical, or whether the fix is present in place — code compares them;
-* whether a contract predates the audit, is a proxy, or is fully verified — code reads it on chain;
+* which report, finding, commits or deployment are the evidence — code binds them to the finding, to Sherlock's own status block and to the protocol's default branch;
+* whether two functions are identical, or whether the fix is present in place and on the live path — code compares them;
+* whether a contract predates the audit or the fix, is a proxy, is fully verified, or compiles the function that was judged — code reads it on chain;
+* whether a line that the fix only moved is in the right order — code checks it; the model can never ground such a fix;
 * anything from text inside comments or string literals — they are removed before it reads the code;
 * a verdict on its own word — its quotes must be exact deployed lines that touch what the fix changed, and two answers must agree;
 * deadlines, stakes, fees or payouts.
@@ -68,11 +72,11 @@ Ledger invariant, checked after every call in the tests and shown live on `/bala
 
 | Contract | Address |
 |---|---|
-| FixCheck — canonical (1 h counter, 24 h decide) | `0x2d7b3C465D6478Db4438999b1FD0340A54256364` |
-| FixCheck — demo (90 s counter, 300 s decide) | `0x78D31dbB13e8348A2278b64A84eBfE129607fd91` |
-| FixRegistry — read-only consumer | `0x8E93Ab199E737CF022F5D4cE0f171d0e68815E49` |
+| FixCheck — canonical (1 h counter, 24 h decide) | `0x893f96A5c72771D40F0bB55035A013a77159cc33` |
+| FixCheck — demo (90 s counter, 300 s decide) | `0xF5133724f0dffF025ceA878881285aE681d71c89` |
+| FixRegistry — read-only consumer | `0x50a60867153d3C63F322340dcEfe492bdd0d8D04` |
 
-Deployed from commit `0c20168e94b47e6f3d1ebf13638c7115137f9e10` with the bytes of `git show <commit>:<file>`; `node tools/verify_source.mjs` reads the code back from the chain and confirms all three are byte-identical to HEAD. sha256 and deploy transactions: [`ADDRESSES.md`](ADDRESSES.md). Explorer: https://explorer-studio-dev.genlayer.com/
+Deployed from commit `7efb699928b20cdd580b534a58609da1c1defe08` with the bytes of `git show <commit>:<file>`; `node tools/verify_source.mjs` reads the code back from the chain and confirms all three are byte-identical to HEAD. sha256 and deploy transactions: [`ADDRESSES.md`](ADDRESSES.md). Explorer: https://explorer-studio-dev.genlayer.com/
 
 Other apps read verdicts with `FixRegistry.fix_status(chain, address, "<pinned report url>#<finding id>")` (or `is_fixed` / `is_known_unfixed`; `is_known_unfixed` is false for PREDATES AUDIT) — free cross-contract views, no payable methods. Earlier versions are listed in [`docs/superseded/`](docs/superseded/).
 
@@ -127,5 +131,8 @@ Full table with links, stakes, dates and the demo paths: [`docs/SEEDS.md`](docs/
 * **Removal-only fixes** (the fix only deletes lines) cannot be confirmed FIXED by the model — there is no added line to quote — so such checks end inconclusive unless code matches exactly.
 * **"Not fixed" is a code fact, not an exploit claim.** Exploitability depends on configuration.
 * **Explorer trust.** Verified source comes from one public service per chain (Blockscout for Ethereum and OP Mainnet, Sourcify for Base, Arbitrum and Polygon); only full/exact matches are judged. Creation dates and proxy slots come from one public RPC per chain.
-* **Sherlock-shaped reports.** Binding expects GitHub code and PR links in the report, as Sherlock judging reports have; other report formats must link the audited commit and the fix the same way, or the filing is refused.
+* **Sherlock only.** Reports are accepted from `sherlock-audit/*-judging` repos (or archive captures of them or of `audits.sherlock.xyz`); every other author or host is refused. Other auditors are future work.
+* **Sherlock's status block is recognised by its author line.** Fix links are read only from `**sherlock-admin…**` blocks that carry a fixed-status phrase. A participant who types such a line into their own comment could still forge one; the forgery can only point at a commit that is in the protocol's own account and on its default branch. The lead judge can't be identified from the report, so their comments are not used.
+* **Fix provenance comes from GitHub's HTML.** Whether a commit is on the default branch and when a PR was merged are read from GitHub's `branch_commits` fragment and pull-request page (the API's rate limit is too low for validators), and validators compare only the extracted facts. A PR merged into a side branch counts from its merge date, though it may have reached the default branch later; the protocol's docs must be pinned on GitHub so the fix's account can be compared.
+* **Inheritance is resolved by name and import path.** Parents are traced through imports, aliases and remapped paths by unique suffix; anything ambiguous or unresolved makes the check inconclusive rather than guessing. Modifiers and external calls (`x.f()`) are not followed.
 * **Studio Dev.** This runs on a development network; windows are short so the canonical deployment can be seeded and decided in a day, and value transfers are queued by the network.

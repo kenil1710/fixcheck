@@ -48,19 +48,19 @@ add("B4", "Counter-before-revert scan", scan.status === 0, scan.stdout.trim().sp
 
 // ---- B5 views vs storage
 const count = (v) => canon.filter((x) => x.state === "DECIDED" && x.verdict === v).length;
-const exp = { fixed: count("FIXED"), not_fixed: count("NOT_FIXED"), predates_audit: count("PREDATES_AUDIT"), inconclusive: count("INCONCLUSIVE"), expired: canon.filter((x) => x.state === "EXPIRED").length, open: canon.filter((x) => x.state === "OPEN").length, checks: canon.length };
+const exp = { fixed: count("FIXED"), not_fixed: count("NOT_FIXED"), predates_audit: count("PREDATES_AUDIT"), predates_fix: count("PREDATES_FIX"), inconclusive: count("INCONCLUSIVE"), expired: canon.filter((x) => x.state === "EXPIRED").length, open: canon.filter((x) => x.state === "OPEN").length, checks: canon.length };
 const protos = await view(C, "get_protocols");
 const protoOk = protos.every((p) => p.checks === canon.filter((x) => x.protocol === p.protocol).length && p.fixed === canon.filter((x) => x.protocol === p.protocol && x.verdict === "FIXED").length);
 const b5 = Object.entries(exp).every(([k, v]) => statsC[k] === v) && protoOk;
 add("B5", "Views consistent with storage", b5, `get_stats ${JSON.stringify(statsC)} vs recount from get_checks ${JSON.stringify(exp)}; per-protocol scores match their checks: ${protoOk}.`);
 
 // ---- B6 evidence bound to the finding
-const b6 = canon.every((x) => x.audit_binding && x.fix_ref && x.section_sha256 && x.audited_commit && x.fix_commit);
-add("B6", "Evidence bound to the finding (fix 1)", b6, `All ${canon.length} canonical checks: binding ${[...new Set(canon.map((x) => x.audit_binding))].join("/")}, fix refs ${[...new Set(canon.map((x) => x.fix_ref.split("/")[0]))].join("/")}, section sha256 stored. Refusals tested in R1_* and A01_*.`);
+const b6 = canon.every((x) => x.audit_binding && x.fix_ref && x.section_sha256 && x.audited_commit && x.fix_commit && x.fix_reach && x.fix_at > 0 && x.compiled !== undefined);
+add("B6", "Evidence bound to the finding (fix 1)", b6, `All ${canon.length} canonical checks: binding ${[...new Set(canon.map((x) => x.audit_binding))].join("/")}, fix refs ${[...new Set(canon.map((x) => x.fix_ref.split("/")[0]))].join("/")}, fix on the default branch via ${[...new Set(canon.map((x) => x.fix_reach))].join("/")}, fix dates stored, section sha256 stored; every report is a sherlock-audit judging repo: ${canon.every((x) => x.report_url.startsWith("https://raw.githubusercontent.com/sherlock-audit/") && x.report_url.split("/")[4].endsWith("-judging"))}. Refusals tested in R1_*, S02_*, S09_* and A01_*.`);
 
 // ---- B7 snapshots
-const b7 = canon.every((x) => x.audited_at > 0 && x.created_at > 0 && x.counter_deadline > x.filed_at && x.decide_deadline > x.counter_deadline && x.creation_tx);
-add("B7", "Dates/params snapshotted at filing", b7, `Every check stores audited_at, created_at (+ creation tx), filed_at, counter/decide deadlines, all sha256s and both commits; windows and fee are frozen in the constructor (no setters: T13).`);
+const b7 = canon.every((x) => x.audited_at > 0 && x.created_at > 0 && x.fix_at > 0 && x.slot_block > 0 && (!x.implementation || x.impl_created_at > 0) && x.counter_deadline > x.filed_at && x.decide_deadline > x.counter_deadline && x.creation_tx);
+add("B7", "Dates/params snapshotted at filing", b7, `Every check stores audited_at, created_at (+ creation tx), the implementation's creation, the fix commit and merge dates, the slot block, the compiled contract, filed_at, counter/decide deadlines, all sha256s and both commits; windows and fee are frozen in the constructor (no setters: T13).`);
 
 // ---- B8 / B9 URLs
 const pinned = (u) => /^https:\/\/raw\.githubusercontent\.com\/[^/]+\/[^/]+\/[0-9a-f]{40}\//.test(u) || /^https:\/\/web\.archive\.org\/web\/\d{14}/.test(u);
@@ -98,7 +98,7 @@ const html = async (p) => { const r = await fetch(SITE + p, { cache: "no-store" 
 const text = (h) => h.replace(/<script[\s\S]*?<\/script>/g, "").replace(/<[^>]+>/g, " ").replace(/&[a-z#0-9]+;/g, " ").replace(/\s+/g, " ");
 const landing = text(await html("/"));
 const nums = [];
-const want = [[statsC.fixed, "confirmed in deployed code"], [statsC.not_fixed, "not in deployed code"], [statsC.predates_audit, "deployed before the audit"], [statsC.inconclusive + statsC.expired, "inconclusive"]];
+const want = [[statsC.fixed, "confirmed in deployed code"], [statsC.not_fixed, "not in deployed code"], [statsC.predates_audit, "deployed before the audit"], [statsC.predates_fix, "deployed before the fix"], [statsC.inconclusive + statsC.expired, "inconclusive"]];
 // the landing renders each label before its number (flex order); the number appears twice (animated + screen-reader copy)
 for (const [n, label] of want) nums.push({ where: "/", label, chain: n, site: Number((landing.match(new RegExp(label + " (\\d+)")) ?? [])[1]) });
 const fz = new Set(canon.map((x) => x.report_url + "#" + x.finding_id)).size;
@@ -106,10 +106,10 @@ const m = landing.match(/(\d+) checks of (\d+) findings/);
 nums.push({ where: "/", label: "checks", chain: canon.length, site: Number(m?.[1]) }, { where: "/", label: "distinct findings", chain: fz, site: Number(m?.[2]) });
 const pt = text(await html("/protocols/pooltogether"));
 const ptp = protos.find((p) => p.protocol.includes("pt-dev-docs"));
-for (const [k, label] of [["fixed", "Fixed"], ["not_fixed", "Not fixed"], ["predates_audit", "Predates audit"]]) nums.push({ where: "/protocols/pooltogether", label: label + " filter", chain: ptp[k], site: Number((pt.match(new RegExp(label + " (\\d+)")) ?? [])[1]) });
-for (const id of [3, 5, 13]) {
+for (const [k, label] of [["fixed", "Fixed"], ["not_fixed", "Not fixed"], ["predates_audit", "Predates audit"], ["predates_fix", "Predates fix"]]) nums.push({ where: "/protocols/pooltogether", label: label + " filter", chain: ptp[k], site: Number((pt.match(new RegExp(label + " (\\d+)")) ?? [])[1]) });
+for (const id of [3, 5, 6, 13]) {
   const x = canon.find((y) => y.check_id === id); const page = text(await html("/checks/" + id));
-  const word = x.verdict === "PREDATES_AUDIT" ? "Predates audit" : x.verdict === "NOT_FIXED" ? "Not fixed" : x.verdict === "FIXED" ? "Fixed" : "Inconclusive";
+  const word = x.verdict === "PREDATES_AUDIT" ? "Predates audit" : x.verdict === "PREDATES_FIX" ? "Predates fix" : x.verdict === "NOT_FIXED" ? "Not fixed" : x.verdict === "FIXED" ? "Fixed" : "Inconclusive";
   nums.push({ where: "/checks/" + id, label: "verdict", chain: word, site: page.includes(word) ? word : "missing" });
 }
 const ledP = text(await html("/balance"));
@@ -125,7 +125,7 @@ const tracked = sh("git", ["ls-files"]).stdout.trim().split("\n").filter((f) => 
 const leaks = tracked.filter((f) => { const s = readFileSync(root + f, "utf8").toLowerCase(); return old.some((a) => s.includes(a)); });
 const siteHtml = (await html("/")).toLowerCase() + (await html("/how-it-works")).toLowerCase();
 const siteOk = cur.every((a) => siteHtml.includes(a)) && !old.some((a) => siteHtml.includes(a));
-add("C2", "One consistent set of v1.2 addresses", leaks.length === 0 && siteOk, `Current: ${cur.join(", ")}. Superseded addresses found outside docs/superseded/: ${leaks.length ? leaks.join(", ") : "none"}; live site shows the current three and none of the ${old.length} superseded.`);
+add("C2", "One consistent set of current addresses", leaks.length === 0 && siteOk, `Current: ${cur.join(", ")}. Superseded addresses found outside docs/superseded/: ${leaks.length ? leaks.join(", ") : "none"}; live site shows the current three and none of the ${old.length} superseded.`);
 
 // ---- C3 375px
 const ov = sh("node", ["tools/shots/overflow.mjs", "/", "/protocols", "/protocols/pooltogether", "/checks", "/checks/3", "/checks/5", "/checks/13", "/check", "/balance", "/how-it-works", "/demo"], { env: { ...process.env, VW: "375", BASE: SITE } });

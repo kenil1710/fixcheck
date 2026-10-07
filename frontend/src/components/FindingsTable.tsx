@@ -9,8 +9,8 @@ import { Status, statusOf, type StatusKind } from "./Status";
 import { Inline } from "./Inline";
 
 type SortKey = "severity" | "status" | "id";
-const ORDER: Record<StatusKind, number> = { NOT_FIXED: 0, PREDATES: 1, INCONCLUSIVE: 2, EXPIRED: 3, OPEN: 4, FIXED: 5 };
-const FILTERS: [string, string][] = [["all", "All"], ["FIXED", "Fixed"], ["NOT_FIXED", "Not fixed"], ["PREDATES", "Predates audit"], ["INCONCLUSIVE", "Inconclusive"], ["OPEN", "Being checked"]];
+const ORDER: Record<StatusKind, number> = { NOT_FIXED: 0, PREDATES_FIX: 1, PREDATES: 2, INCONCLUSIVE: 3, EXPIRED: 4, OPEN: 5, FIXED: 6 };
+const FILTERS: [string, string][] = [["all", "All"], ["FIXED", "Fixed"], ["NOT_FIXED", "Not fixed"], ["PREDATES", "Predates audit"], ["PREDATES_FIX", "Predates fix"], ["INCONCLUSIVE", "Inconclusive"], ["OPEN", "Being checked"]];
 
 export function FindingsTable({ items, showProtocol = false, base = "/checks" }: { items: Check[]; showProtocol?: boolean; base?: string }) {
   const [sort, setSort] = useState<SortKey>("severity");
@@ -61,7 +61,7 @@ export function FindingsTable({ items, showProtocol = false, base = "/checks" }:
                   <p className="font-medium leading-snug group-hover:underline decoration-1 underline-offset-4"><Inline text={c.title.replace(/^Issue [A-Z]-\d+:\s*/, "")} /></p>
                   <p className="t-small mt-1 text-ink-3">
                     <span className="mono text-ink-2">{c.function}()</span> on {CHAIN_NAMES[c.chain] ?? c.chain} <span className="mono">{short(c.address)}</span>
-                    {c.created_at > 0 && <span className="block sm:inline"><span className="hidden sm:inline"> · </span>deployed {day(c.created_at)}, audited {day(c.audited_at)}</span>}
+                    {c.created_at > 0 && <span className="block sm:inline"><span className="hidden sm:inline"> · </span>deployed {day(c.created_at)}, audited {day(c.audited_at)}{c.fix_at > 0 && <>, fix {day(c.fix_at)}</>}</span>}
                     {showProtocol ? null : null}
                   </p>
                 </div>

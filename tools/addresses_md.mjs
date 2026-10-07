@@ -18,3 +18,14 @@ const c = d.contracts;
 const table = `| Contract | Address |\n|---|---|\n| FixCheck — canonical (1 h counter, 24 h decide) | \`${c.FixCheck.address}\` |\n| FixCheck — demo (90 s counter, 300 s decide) | \`${c.FixCheckDemo.address}\` |\n| FixRegistry — read-only consumer | \`${c.FixRegistry.address}\` |\n\nDeployed from commit \`${c.FixCheck.commit}\` with the bytes of \`git show <commit>:<file>\`; \`node tools/verify_source.mjs\` reads the code back from the chain and confirms all three are byte-identical to HEAD. sha256 and deploy transactions: [\`ADDRESSES.md\`](ADDRESSES.md). Explorer: https://explorer-studio-dev.genlayer.com/`;
 writeFileSync(root + "README.md", rd.slice(0, a) + table + rd.slice(b));
 console.log(md);
+// frontend constants
+writeFileSync(root + "frontend/src/lib/deployments.ts", `/** Generated from deployments.json (tools/addresses_md.mjs). */
+export const DEPLOYMENTS = {
+  canonical: { address: "${c.FixCheck.address}" as \`0x\${string}\`, counterWindowS: ${c.FixCheck.constructor_args[1]}, decideWindowS: ${c.FixCheck.constructor_args[2]}, label: "Canonical" },
+  demo: { address: "${c.FixCheckDemo.address}" as \`0x\${string}\`, counterWindowS: ${c.FixCheckDemo.constructor_args[1]}, decideWindowS: ${c.FixCheckDemo.constructor_args[2]}, label: "Demo" },
+} as const;
+export const REGISTRY_ADDRESS = "${c.FixRegistry.address}" as \`0x\${string}\`;
+export const COMMIT = "${c.FixCheck.commit}";
+export const EXPLORER = "https://explorer-studio-dev.genlayer.com";
+export type Deployment = keyof typeof DEPLOYMENTS;
+`);

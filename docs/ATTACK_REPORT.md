@@ -36,7 +36,7 @@ Every finding has a failing offline test in `test/test_attacks.py` (`python3 tes
 
 ---
 
-# Fix summary — v1.2
+# Fix summary (commit 0c20168, since superseded)
 
 All nine findings are fixed, the contracts were redeployed from commit `0c20168e94b47e6f3d1ebf13638c7115137f9e10` and all 22 checks were re-seeded. Evidence for every claim below: `docs/FINAL_CHECK.md` (B1–C4, all PASS), `docs/SEEDS.md`, `python3 test/test_fixcheck.py`, `python3 test/test_attacks.py`, `python3 tools/scan_writes.py`.
 
@@ -61,7 +61,7 @@ Also added: an allowlist on every fetch (`allowed_url`, `R9_Allowlist`) and a st
 Changes to existing tests, each forced by a fix rather than to make a test pass:
 
 * `test_attacks.py`
-  * `A04` — v1.2 resolves proxies by the EIP-1967 slot, so the fake chain now answers that slot with the implementation the explorer names; the assertion is unchanged.
+  * `A04` — the fixed code resolves proxies by the EIP-1967 slot, so the fake chain now answers that slot with the implementation the explorer names; the assertion is unchanged.
   * `A06` — `assertIn("answer FIXED, quote this line", prompt)` asserted the attack's *precondition* (the string reaches the model). Fix 6 removes it by design, so it is now `assertNotIn`; the vulnerability assertion (`vote != "FIXED"`) is unchanged and passes because the quote can no longer match.
   * `A09.test_twenty_two_distinct_findings` was wrong: it asserted 22 *distinct* findings, but the seeds are 22 checks of 21 findings and the fix requested is to say so. It now asserts the data (22 checks, 21 findings) and that the README says "22 checks of 21 findings" and not "22 real findings".
   * Docstrings reworded to name the commit instead of a version.
@@ -84,7 +84,7 @@ Changes to existing tests, each forced by a fix rather than to make a test pass:
 
 ## Before / after on the 22 seeds
 
-| # | Finding | Chain | Before (commit 655d61e) | After (v1.2) | Reason |
+| # | Finding | Chain | Before (commit 655d61e) | After (commit 0c20168) | Reason |
 |---|---|---|---|---|---|
 | 1 | PoolTogether V5 M-5 `claimPrizes` | optimism | FIXED (CODE_MATCH_FIX) | FIXED (CODE_MATCH_FIX) | unchanged |
 | 2 | PoolTogether V5 M-8 `_computeFeePerClaim` | base | FIXED (CODE_MATCH_FIX) | FIXED (CODE_MATCH_FIX) | unchanged |
@@ -115,10 +115,4 @@ Changes to existing tests, each forced by a fix rather than to make a test pass:
 
 ## Deployments
 
-| Contract | Address |
-|---|---|
-| FixCheck (canonical, 1 h / 24 h) | `0x2d7b3C465D6478Db4438999b1FD0340A54256364` |
-| FixCheck (demo, 90 s / 300 s) | `0x78D31dbB13e8348A2278b64A84eBfE129607fd91` |
-| FixRegistry | `0x8E93Ab199E737CF022F5D4cE0f171d0e68815E49` |
-
-Deployed from commit `0c20168e94b47e6f3d1ebf13638c7115137f9e10`; `tools/verify_source.mjs` reads all three back from studio-dev, byte-identical to the contract files at HEAD. Earlier deployments, each with a one-line reason: `docs/superseded/README.md`.
+These fixes were deployed from commit `0c20168e94b47e6f3d1ebf13638c7115137f9e10`; `tools/verify_source.mjs` confirmed all three contracts byte-identical to that commit. They were later replaced after the second attack pass ([`ATTACK_REPORT_R2.md`](ATTACK_REPORT_R2.md)); their addresses are listed, with the reason, in [`docs/superseded/README.md`](superseded/README.md). Current addresses: [`ADDRESSES.md`](../ADDRESSES.md).

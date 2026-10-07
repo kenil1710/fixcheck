@@ -1,6 +1,6 @@
-# Attack report, round 2: FixCheck v1.2
+# Attack report, round 2: FixCheck at commit 0c20168 (since superseded)
 
-Scope: the v1.2 code only (`git diff 655d61e..HEAD -- contracts/`: `FixCheck.py`, `FixRegistry.py`), measured against the fixes listed in `docs/ATTACK_REPORT.md` and the results in `docs/FINAL_CHECK.md`. Nothing in `contracts/` or `frontend/` was changed. Nothing was written to studio-dev. The on-chain totals come from FINAL_CHECK B5 (2026-10-07T08:23Z); the live site was read again during this pass.
+Scope: the code at commit 0c20168 only (`git diff 655d61e..0c20168 -- contracts/`: `FixCheck.py`, `FixRegistry.py`), measured against the fixes listed in `docs/ATTACK_REPORT.md` and the results in `docs/FINAL_CHECK.md`. Nothing in `contracts/` or `frontend/` was changed. Nothing was written to studio-dev. The on-chain totals come from FINAL_CHECK B5 (2026-10-07T08:23Z); the live site was read again during this pass.
 
 Every finding has a failing offline test in `test/test_attacks_r2.py` (`python3 test/test_attacks_r2.py` gives 14 failures, each for the reason in its docstring). The existing suites still pass: `test_fixcheck.py` 109 OK and `test_attacks.py` 12 OK, so 121 OK.
 

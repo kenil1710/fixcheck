@@ -6,8 +6,8 @@ Every contract was deployed with the bytes of `git show <commit>:<file>` (never 
 
 | Contract | Address | File | Commit | sha256 | Constructor | Deploy tx |
 |---|---|---|---|---|---|---|
-| FixCheck | `0x2d7b3C465D6478Db4438999b1FD0340A54256364` | contracts/FixCheck.py | `0c20168e94b47e6f3d1ebf13638c7115137f9e10` | `0344592ef7bd06a13f8e8c39eb42925506eb1cc364e9badfa77ffaaad336d576` | `["CANONICAL",3600,86400,200,"0x8bfB2761bA064D3F829F382f444867EE10294b1C"]` | `0x80460db8ddf136f02dda197ce5572069bb32e61bc412d577ff0963601766888b` |
-| FixCheckDemo | `0x78D31dbB13e8348A2278b64A84eBfE129607fd91` | contracts/FixCheck.py | `0c20168e94b47e6f3d1ebf13638c7115137f9e10` | `0344592ef7bd06a13f8e8c39eb42925506eb1cc364e9badfa77ffaaad336d576` | `["DEMO",90,300,200,"0x8bfB2761bA064D3F829F382f444867EE10294b1C"]` | `0xb0dbb739f72fec8ed175d484d64f3b91e0a61cae260440cf891c3d049c402338` |
-| FixRegistry | `0x8E93Ab199E737CF022F5D4cE0f171d0e68815E49` | contracts/FixRegistry.py | `0c20168e94b47e6f3d1ebf13638c7115137f9e10` | `36a8801749b1cfab86777ff19b7ae6d0b10b2dbf96fa22b72bab6f06dc406812` | `["0x2d7b3C465D6478Db4438999b1FD0340A54256364"]` | `0x966be28f115e34d233b77f04d54c48af7a025b55b35a2e60a799979378308019` |
+| FixCheck | `0x893f96A5c72771D40F0bB55035A013a77159cc33` | contracts/FixCheck.py | `7efb699928b20cdd580b534a58609da1c1defe08` | `9ecaac1fbb8a40a6d4ec05e354048f3f048d624b20dcaf5bb1ecc16270db65c6` | `["CANONICAL",3600,86400,200,"0x8bfB2761bA064D3F829F382f444867EE10294b1C"]` | `0xca6c44d302ef1361c79e5e9710045de0f8db84e3b502ba3de324fb746022ef00` |
+| FixCheckDemo | `0xF5133724f0dffF025ceA878881285aE681d71c89` | contracts/FixCheck.py | `7efb699928b20cdd580b534a58609da1c1defe08` | `9ecaac1fbb8a40a6d4ec05e354048f3f048d624b20dcaf5bb1ecc16270db65c6` | `["DEMO",90,300,200,"0x8bfB2761bA064D3F829F382f444867EE10294b1C"]` | `0x1173147bce2b51971bb84242f95ff2c50f060a766bff3e69f60b518913896b05` |
+| FixRegistry | `0x50a60867153d3C63F322340dcEfe492bdd0d8D04` | contracts/FixRegistry.py | `7efb699928b20cdd580b534a58609da1c1defe08` | `6d99a876d5dadfd4bc4f9e6864dd2ade203af9a49839d100adb793cb7b97330a` | `["0x893f96A5c72771D40F0bB55035A013a77159cc33"]` | `0x491f3cf87b089535d169fec7b0c9df966b880af33b28b355bcd6694e7fa0f707` |
 
 Earlier deployments, each with a one-line reason: [docs/superseded/](docs/superseded/README.md).

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Attack pass, round 2, on the v1.2 code (diff 655d61e..HEAD in contracts/).
+"""Attack pass, round 2, on the code at commit 0c20168 (diff 655d61e..0c20168 in contracts/).
 Every test here FAILS on the current code, for the reason its docstring states
 (docs/ATTACK_REPORT_R2.md):
 

@@ -89,6 +89,7 @@ export function CheckFlow() {
               says === "NOT_FIXED" ? "Code sees the audited version still deployed. Unless it changes, this will be decided not fixed." :
               says === "INCONCLUSIVE" ? "Code can’t prove which code runs here. Everyone will be refunded." :
               says === "PREDATES_AUDIT" ? "The deployed code is the pre-audit version, and the contract was deployed before the audit and can’t be upgraded: unless it changes, this will be decided “predates audit” and everyone refunded." :
+              says === "PREDATES_FIX" ? "The deployed code is the audited version, but it was deployed before the fix existed, so it could not contain it: this will be decided “predates fix” and everyone refunded." :
               "The deployed function differs from both versions; after the counter-stake window the model will be asked twice and must quote a line the fix added (or a removed line still deployed), otherwise everyone is refunded."}
           </p>
           <p className="t-small mt-4 text-ink-2">Anyone can counter-stake “fixed” for the next {Math.round(DEPLOYMENTS[dep].counterWindowS / 60)} minutes. After that, anyone can ask validators to decide.</p>
@@ -119,9 +120,9 @@ export function CheckFlow() {
       <div className="mt-8 grid gap-10 lg:grid-cols-[minmax(0,1fr)_20rem]">
         <div className="grid content-start gap-6">
           {step === 0 && (<>
-            <Field id="report_url" label="Audit report, pinned" hint="GitHub raw at a commit SHA (e.g. a Sherlock judging README) or a web.archive.org snapshot." value={f.report_url} onChange={set("report_url")} error={errs.report_url} placeholder="https://raw.githubusercontent.com/…/<40-char sha>/README.md" />
+            <Field id="report_url" label="Sherlock report, pinned" hint="A Sherlock judging README on GitHub raw at a commit SHA, or a web.archive.org capture of one. Supports Sherlock contest reports; other auditors are future work." value={f.report_url} onChange={set("report_url")} error={errs.report_url} placeholder="https://raw.githubusercontent.com/…/<40-char sha>/README.md" />
             <Field id="audited_url" label="Audited source file" hint="The .sol file at the audited commit the report links." value={f.audited_url} onChange={set("audited_url")} error={errs.audited_url} />
-            <Field id="fix_url" label="Fix source file" hint="The same file at the head commit of the fix PR the finding links (or a commit it links). Required: it is what shows the fix." value={f.fix_url} onChange={set("fix_url")} error={errs.fix_url} />
+            <Field id="fix_url" label="Fix source file" hint="The same file at the head commit of the fix PR that Sherlock’s status block links (or a commit it links), in the protocol’s own repo and merged. Required: it is what shows the fix." value={f.fix_url} onChange={set("fix_url")} error={errs.fix_url} />
           </>)}
           {step === 1 && (<>
             <Field id="finding_id" label="Finding id" hint="As the report writes it, like M-14." value={f.finding_id} onChange={set("finding_id")} error={errs.finding_id} />
@@ -134,7 +135,7 @@ export function CheckFlow() {
                 {Object.entries(CHAIN_NAMES).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
               </select>
             </div>
-            <Field id="address" label="Deployed address" hint="A proxy is fine: its implementation is read through the explorer’s own link." value={f.address} onChange={set("address")} error={errs.address} />
+            <Field id="address" label="Deployed address" hint="A proxy is fine: its implementation is read from its EIP-1967 slot and checked against the explorer." value={f.address} onChange={set("address")} error={errs.address} />
             <Field id="docs_url" label="Protocol docs listing that address, pinned" hint="The protocol’s own page with its deployments, pinned to a commit or snapshot." value={f.docs_url} onChange={set("docs_url")} error={errs.docs_url} />
           </>)}
           {step === 3 && (

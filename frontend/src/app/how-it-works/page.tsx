@@ -7,18 +7,20 @@ export const revalidate = 60;
 export const metadata: Metadata = { title: "How it works", description: "What FixCheck checks, what code decides and what the model never decides." };
 
 const CODE = [
-  "Whether every link is pinned to a commit or a timestamped snapshot",
+  "Whether every link is pinned to a commit or to an exact archived capture taken before the filing, with no %-escapes",
+  "Whether the report is Sherlock’s own: a sherlock-audit judging repo or a capture of it (other auditors are future work)",
   "Fetching every source — each validator does it itself — and hashing every byte",
   "Whether the finding is in the report, marked fixed, and names the function",
   "Whether the protocol’s own docs list the address",
   "Whether the contract is verified, and following a proxy to its implementation",
   "Pulling the function out of the audited, fixed and deployed code, comments removed",
-  "Which report, finding, commits and deployment are the evidence: the audited commit and the fix PR must be the ones the finding links",
-  "Proxies (EIP-1967 slot, checked against the explorer) and which implementation actually runs",
-  "Identical to the fix → fixed. Identical to the audited code → not fixed, or predates the audit if the contract was deployed before it and can’t be upgraded",
-  "Every block the fix added present in place, at the same nesting, and nothing it removed left → fixed",
+  "Which report, finding, commits and deployment are the evidence: the audited commit is the one the report links, and the fix PR is the one Sherlock’s own status block links — in the protocol’s own GitHub account and merged into its default branch",
+  "Proxies (EIP-1967 slot read at a block the leader names, checked against the explorer) and which implementation actually runs",
+  "That the function belongs to the contract the explorer says was compiled, through its parents and import aliases, and that nothing overrides it or anything it calls",
+  "Identical to the fix → fixed. Identical to the audited code → not fixed, or predates the audit if the contract was deployed before it and can’t be upgraded, or predates the fix if the code was deployed before the fix existed",
+  "Every block the fix added present in place, inside the same branches at the same depth, with no early exit before it, and nothing it removed left → fixed",
   "Missing, renamed or overloaded function → inconclusive, everyone refunded",
-  "That every line the model quotes is really in the deployed function, is a line the fix added (for fixed) or a removed line still deployed (for not fixed)",
+  "That every line the model quotes is really in the deployed function, and is a line the fix added that the audited code lacks (for fixed) or a removed line still deployed (for not fixed); a fix that only moves lines is judged by code alone",
   "That two answers from the model agree — otherwise inconclusive",
   "Deadlines, duplicates, every stake and every payout",
 ];
@@ -61,7 +63,7 @@ export default async function How() {
             ["File", "A challenger stakes that the fix is not in the deployed code and points at the evidence. Validators fetch it all; if anything is unpinned, unreadable, unlisted or unverified, the filing is refused and the stake stays in the challenger’s balance."],
             ["Counter-stake", "For a fixed window (one hour on the canonical contract), anyone else can stake that it is fixed."],
             ["Decide", "After the window, anyone can ask validators to decide. Code compares the functions; the model is consulted only if they differ from both versions."],
-            ["Pay out", "Not fixed: the challenger takes every defender’s stake. Fixed: defenders split the challenger’s stake; with no defender, the challenger gets it back minus a 2% fee. Inconclusive or predates the audit: everyone refunded."],
+            ["Pay out", "Not fixed: the challenger takes every defender’s stake. Fixed: defenders split the challenger’s stake; with no defender, the challenger gets it back minus a 2% fee. Inconclusive, predates the audit or predates the fix: everyone refunded."],
             ["Withdraw", "Payouts sit in your balance until you withdraw. If nobody decides before the deadline, anyone can expire the check and every stake goes back."],
           ].map(([t, d], i) => (
             <li key={t} className="grid grid-cols-[2.25rem_1fr] gap-x-3 border-t hair pt-5">
@@ -75,8 +77,10 @@ export default async function How() {
       <section aria-labelledby="limits" className="mt-16">
         <h2 id="limits" className="t-h2">What a verdict means — and doesn’t</h2>
         <ul className="mt-5 grid max-w-[70ch] gap-3 text-ink-2">
-          <li><strong className="text-ink">“Not fixed” is a code fact,</strong> not an exploit claim: the deployed function is the one the auditors reviewed, on a contract deployed after the audit. Whether it can be exploited depends on how the contract is configured.</li>
+          <li><strong className="text-ink">“Not fixed” is a code fact,</strong> not an exploit claim: the deployed function is the one the auditors reviewed, on code deployed after the fix existed. Whether it can be exploited depends on how the contract is configured.</li>
           <li><strong className="text-ink">“Predates the audit”</strong> means the deployed code matches the pre-audit version and the contract was deployed before the audit and can’t be upgraded, so the fix could not be applied there.</li>
+          <li><strong className="text-ink">“Predates the fix”</strong> means this contract was deployed before the fix existed, so it could not contain it. The fix date is the later of the fix commit and the merge of its pull request; for a proxy, the implementation’s deployment counts.</li>
+          <li><strong className="text-ink">Supports Sherlock contest reports;</strong> other auditors are future work.</li>
           <li><strong className="text-ink">Only fully verified source counts.</strong> A partial explorer match, an override elsewhere in the source or an unresolved proxy ends inconclusive.</li>
           <li><strong className="text-ink">One function per finding.</strong> If a fix lives in a different function than the one the finding names, the model is told to answer inconclusive.</li>
           <li><strong className="text-ink">Comments and whitespace are ignored;</strong> a renamed variable is a change and goes to the model.</li>

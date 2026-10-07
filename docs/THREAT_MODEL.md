@@ -41,8 +41,25 @@ undefined names, and FixRegistry has no payable method and no transfer (`T01`).
 | A7 | **Deployed-before-audit code called "not fixed"** | Creation time (Blockscout creation tx, or Sourcify deployment + block timestamp) and the audited commit's date (its GitHub commit feed) are bound at filing. Deployed == audited on a non-proxy created before the audited commit → `PREDATES_AUDIT` (refund). Registry `is_known_unfixed` is false for it. | `R7_PredatesAudit`, `A07_*` |
 | A8 | **Report URL spellings open duplicate checks** | URLs are normalised (host and GitHub owner/repo lowercased; query, fragment and trailing slashes dropped) before keys, storage and fetches; `fix_status` normalises the same way. | `R8_UrlSpellings`, `A08_*` |
 | A9 | **Published claims** | README/site say "22 checks of 21 findings" and describe the current rules. | `A09_*` |
-| B9 | **Fetching arbitrary URLs** | Every fetch goes through `allowed_url` (GitHub raw, PR patches, commit `.atom` feeds, the two Blockscout APIs, Sourcify, five frozen RPCs, web.archive.org). | `R9_Allowlist` |
+| B9 | **Fetching arbitrary URLs** | Every fetch goes through `allowed_url` (GitHub raw, PR patches, a commit's `.atom` feed, `branch_commits` fragment and its PR page on github.com, the two Blockscout APIs, Sourcify, five frozen RPCs, web.archive.org). | `R9_Allowlist` |
 | B4 | **State written before a revert** | `python3 tools/scan_writes.py` walks every write method's AST: no `raise` / `_check` after the first storage write. | run in CI by hand; result in `docs/ATTACK_REPORT.md` |
+
+## The second attack pass (`docs/ATTACK_REPORT_R2.md`)
+
+| # | Threat | What stops it | Test |
+|---|---|---|---|
+| R2-1 | **NOT_FIXED on code deployed before its fix existed** | The fix commit's date (`.atom`) and its PR's merge date (PR page) are snapshotted at filing; `fix_at` is the later of the two. Code (the implementation, for a proxy) created before `fix_at` is `PREDATES_FIX`, refunded, and never NOT_FIXED — also when the model says not fixed. `is_known_unfixed` is false for it. | `R2_01_*`, `S01_PredatesFix` |
+| R2-2 | **A report written by the challenger** | `report_source_ok`: a `sherlock-audit/*-judging` repo at a SHA, or a web.archive.org capture of one or of `audits.sherlock.xyz`; anything else is `REPORT_SOURCE_NOT_ALLOWED` before any fetch. | `R2_02_*`, `S02_ReportAllowlist` |
+| R2-3 | **A fix hunk off the live path** (dead block, early return) | Hunks must match with identical enclosing-block frames (the fix's own branches/loops at the fix's absolute depth), and no `return`/`revert`/`throw`/`selfdestruct` may precede a hunk unless the fix has it there too. | `R2_03_*`, `S03_ReachableFix` |
+| R2-4 | **Judging a file the contract does not compile** | The explorer's compiled contract (`file:Name`) is read; the function's holder must be it or one of its resolved ancestors, else `FUNCTION_NOT_IN_COMPILED_CONTRACT`. | `R2_04_*`, `S04_CompiledContract` |
+| R2-5 | **An override hidden behind an import alias** | Parents are resolved per file through `import {X as Y}`, `import "p" as Z`, `import * as Z` and remapped paths; an unresolved parent in the compiled chain is `PARENT_UNRESOLVED`. | `R2_05_*`, `S05_ImportAliases` |
+| R2-6 | **The fix calls a helper that is overridden** | Every function the judged function — or the fix's added lines — calls directly must run the implementation ours sees; one overridden further down the compiled chain is `HELPER_OVERRIDDEN`. | `R2_06_*`, `S06_HelpersTheFixCalls` |
+| R2-7 | **A moved line grounds FIXED** | FIXED is grounded only on an added line that is not in the audited function (`new`); moved lines are judged by code (order and count). | `R2_07_*`, `S07_GroundingOnNewLines` |
+| R2-8 | **A floating archive "pin"** | The timestamp must be a real time no later than the filing; captures are fetched in `id_` form and the response's `Memento-Datetime` must equal the requested timestamp (GenVM follows redirects). | `R2_08_*`, `S08_ArchiveCaptureIsExact` |
+| R2-9 | **A fix link in anyone's comment** | Fix links are read only from `sherlock-admin*` blocks that carry a status phrase; the fix must be in the protocol's own account (its docs' owner) and on its default branch, directly or through the PR's merge commit. | `R2_12_*`, `S09_*` |
+| R2-10 | **One document, two keys / two documents, one key** | `%` in a URL path is refused at filing; unreserved escapes are decoded in keys; an archived target keeps its query. | `R2_09_*`, `S10_*` |
+| R2-11 | **The proxy slot read at "latest"** | The leader names `head - margin`; validators read that block and accept it only within their own head and a per-chain lag. | `R2_10_*`, `S11_*` |
+| R2-12 | **Canonicalisation joins operators** | `canon` keeps a space where two operator characters would fuse (`+ +`, `- -`, `= =`, `> =`, …). | `R2_11_*`, `S12_*` |
 
 ## Out of scope / accepted
 

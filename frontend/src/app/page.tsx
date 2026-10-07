@@ -8,13 +8,12 @@ import type { Check } from "@/lib/types";
 
 export const revalidate = 30;
 
-/** The specimen: a decided NOT_FIXED code match with a fix commit, preferring a short function. */
+/** The specimen: a NOT_FIXED code match - a deployment created AFTER its fix existed that still runs the audited code. */
 function pickSpecimen(items: Check[]): Check | undefined {
-  // code facts are fixed at filing: deployed == audited, and a fix exists
-  // a deployment created AFTER the audit that still runs the audited code
+  // code facts are fixed at filing: deployed == audited, the code was created after the audit and after the fix
   const pool = items.filter((c) => c.state !== "EXPIRED" && c.fix_commit && c.dep_status === "OK" && c.dep_canon_sha256 === c.aud_canon_sha256
-    && !c.implementation && c.created_at > c.audited_at);
-  return pool.find((c) => c.function === "maxDeposit") ?? pool[0];
+    && !c.implementation && c.created_at > c.audited_at && c.created_at > c.fix_at);
+  return pool[0];
 }
 
 export default async function Home() {
@@ -38,14 +37,15 @@ export default async function Home() {
 
           <section className="mt-10" aria-label="Scorecard, read from the contract">
             <p className="t-small border-t hair pt-3 text-ink-2">{s.checks} checks of {findings} findings marked Fixed in audit reports</p>
-            <dl className="mt-1 grid grid-cols-2 border-t hair sm:grid-cols-4">
+            <dl className="mt-1 grid grid-cols-2 border-t hair sm:grid-cols-5">
               {[
                 [s.fixed, "confirmed in deployed code", "text-fixed"],
                 [s.not_fixed, "not in deployed code", "text-bad"],
                 [s.predates_audit, "deployed before the audit", "text-ink-2"],
+                [s.predates_fix ?? 0, "deployed before the fix", "text-ink-2"],
                 [unsure, "inconclusive", "text-unsure"],
               ].map(([n, label, cls], i) => (
-                <div key={String(label)} className={`flex flex-col border-b hair py-4 pr-4 ${i % 2 === 1 ? "pl-4 border-l sm:pl-4" : ""} ${i === 2 ? "sm:border-l sm:pl-4" : ""}`}>
+                <div key={String(label)} className={`flex flex-col border-b hair py-4 pr-3 ${i % 2 === 1 ? "pl-4 border-l" : ""} ${i > 0 ? "sm:border-l sm:pl-3" : ""}`}>
                   <dt className="t-small order-2 mt-2 text-ink-2">{label}</dt>
                   <dd className={`t-num order-1 text-[2.6rem] leading-none font-medium ${cls}`}><Tally value={Number(n)} /></dd>
                 </div>
@@ -53,6 +53,7 @@ export default async function Home() {
             </dl>
             {s.open > 0 && <p className="t-small mt-3 text-ink-3">{s.open} of them {s.open === 1 ? "is" : "are"} still inside the counter-stake window; verdicts land when it closes.</p>}
             {s.predates_audit > 0 && <p className="t-small mt-3 text-ink-3">“Deployed before the audit”: the contract still runs the audited code but was deployed before the audit and can’t be upgraded, so the fix could not be applied there.</p>}
+            {(s.predates_fix ?? 0) > 0 && <p className="t-small mt-2 text-ink-3">“Deployed before the fix”: the contract was deployed before the fix existed, so it could not contain it.</p>}
           </section>
 
           <div className="mt-8 flex flex-wrap gap-3">
@@ -68,9 +69,9 @@ export default async function Home() {
         <h2 id="how" className="t-h2">How a finding gets checked</h2>
         <ol className="mt-8 grid gap-8 md:grid-cols-3">
           {[
-            ["Point at the evidence", "A pinned audit report, the finding, the function it names, the audited commit and the fix — plus the protocol’s own page listing the deployed address."],
+            ["Point at the evidence", "A pinned Sherlock report, the finding, the function it names, the audited commit and the fix Sherlock links — plus the protocol’s own page listing the deployed address."],
             ["Validators read it all", "Each GenLayer validator fetches every source itself, pulls the function out of the audited, fixed and deployed code, and they must agree byte for byte."],
-            ["Code decides first", "Identical to the fix: fixed. Identical to the audited code: not fixed. Only when it’s neither does a model weigh in — and it must quote real deployed lines."],
+            ["Code decides first", "Identical to the fix: fixed. Identical to the audited code: not fixed — unless the contract was deployed before the audit or before the fix existed. Only when it’s neither does a model weigh in, and it must quote real deployed lines."],
           ].map(([t, d], i) => (
             <li key={t} className="grid grid-cols-[2.25rem_1fr] gap-x-3">
               <span className="t-num text-[1.6rem] leading-none text-ink-3" aria-hidden="true">{i + 1}</span>
@@ -81,7 +82,8 @@ export default async function Home() {
             </li>
           ))}
         </ol>
-        <p className="mt-8"><Link className="link" href="/how-it-works">What the model never decides</Link></p>
+        <p className="mt-8 t-small text-ink-2">Supports Sherlock contest reports; other auditors are future work.</p>
+        <p className="mt-3"><Link className="link" href="/how-it-works">What the model never decides</Link></p>
       </section>
 
       <section aria-labelledby="protocols" className="border-t hair py-14">
