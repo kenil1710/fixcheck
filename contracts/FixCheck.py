@@ -100,14 +100,9 @@ import typing
 #   9. PULL PAYMENTS. Verdicts credit balances; withdraw() zeroes the balance
 #      before the transfer is posted.
 #
-# HISTORY (docs/RESEARCH.md section 6, docs/ATTACK_REPORT.md)
-#   v1.1 - the model sees the fix change; code decides when the deployed code
-#          visibly contains the fix; model quotes must point at the change.
-#   v1.2 - the nine fixes of the attack pass: evidence bound to the finding,
-#          ordered/nested fix containment, running-implementation and full
-#          source checks, EIP-1967 proxies, fix commit required, strict
-#          grounding with string literals blanked, PREDATES_AUDIT, URL
-#          normalisation.
+# DESIGN NOTES: docs/RESEARCH.md (what the model got wrong on an earlier
+# deployment and why it is now this narrow) and docs/ATTACK_REPORT.md (the
+# nine findings these rules close: fix 1 .. fix 9 in the comments below).
 #
 # The runner rejects the str replace method; slice around find() instead.
 
