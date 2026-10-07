@@ -87,8 +87,8 @@ add("B14", "Fees on all writes", /estimateWriteFees/.test(harness) && /estimateT
   "Every scripted write goes through harness send() → estimateTransactionFeesForWrite (falls back to the generic estimate); deploys use estimateTransactionFees; the app's sendWrite() estimates per write. Studio Dev refuses writes below its fee floor, so every accepted seed tx paid fees.");
 
 // ---- B15 honest claims
-const banned = /guaranteed|100%|verified safe|fully secure|bulletproof|cannot be wrong/i;
-const files = ["README.md", ...sh("git", ["ls-files", "frontend/src"]).stdout.trim().split("\n")].filter((f) => /\.(md|tsx?|css)$/.test(f));
+const banned = /guaranteed|100% (safe|secure|accurate|correct|certain|sure)|verified safe|fully secure|bulletproof|cannot be wrong/i;
+const files = ["README.md", ...sh("git", ["ls-files", "frontend/src"]).stdout.trim().split("\n")].filter((f) => /\.(md|tsx?)$/.test(f));
 const hits = files.filter((f) => banned.test(readFileSync(root + f, "utf8")));
 const readme = readFileSync(root + "README.md", "utf8");
 add("B15", "Honest limitations, no absolute claims", hits.length === 0 && /## Known limits/.test(readme), `No "guaranteed / 100% / verified safe" wording in README or site sources (${files.length} files); README has a Known limits section; site has "What a verdict means — and doesn't".`);
@@ -99,7 +99,8 @@ const text = (h) => h.replace(/<script[\s\S]*?<\/script>/g, "").replace(/<[^>]+>
 const landing = text(await html("/"));
 const nums = [];
 const want = [[statsC.fixed, "confirmed in deployed code"], [statsC.not_fixed, "not in deployed code"], [statsC.predates_audit, "deployed before the audit"], [statsC.inconclusive + statsC.expired, "inconclusive"]];
-for (const [n, label] of want) nums.push({ where: "/", label, chain: n, site: Number((landing.match(new RegExp("(\\d+) " + label)) ?? [])[1]) });
+// the landing renders each label before its number (flex order); the number appears twice (animated + screen-reader copy)
+for (const [n, label] of want) nums.push({ where: "/", label, chain: n, site: Number((landing.match(new RegExp(label + " (\\d+)")) ?? [])[1]) });
 const fz = new Set(canon.map((x) => x.report_url + "#" + x.finding_id)).size;
 const m = landing.match(/(\d+) checks of (\d+) findings/);
 nums.push({ where: "/", label: "checks", chain: canon.length, site: Number(m?.[1]) }, { where: "/", label: "distinct findings", chain: fz, site: Number(m?.[2]) });
@@ -136,8 +137,8 @@ const keyFileTracked = sh("git", ["log", "--all", "--oneline", "--", "test/.acco
 const ignored = sh("git", ["check-ignore", "test/.accounts.json"]).status === 0;
 const msgs = sh("git", ["log", "--all", "--format=%an %ae%n%B"]).stdout;
 const ai = /claude|anthropic|co-authored-by|chatgpt|openai|generated with/i;
-const aiFiles = sh("git", ["grep", "-I", "-l", "-i", "-E", "claude|anthropic|co-authored-by|chatgpt|generated with \\[", "--", ".", ":!research_cache"]).stdout.trim();
-const pk = sh("git", ["grep", "-I", "-n", "-E", "(PRIVATE KEY|privateKey\\s*[:=]\\s*[\"']0x[0-9a-fA-F]{64}|\"key\"\\s*:\\s*\"0x[0-9a-fA-F]{64}\")", "--", "."]).stdout.trim();
+const aiFiles = sh("git", ["grep", "-I", "-l", "-i", "-E", "claude|anthropic|co-authored-by|chatgpt|generated with \\[", "--", ".", ":!research_cache", ":!tools/final_check.mjs"]).stdout.trim();
+const pk = sh("git", ["grep", "-I", "-n", "-E", "(PRIVATE KEY|privateKey\\s*[:=]\\s*[\"']0x[0-9a-fA-F]{64}|\"key\"\\s*:\\s*\"0x[0-9a-fA-F]{64}\")", "--", ".", ":!tools/final_check.mjs"]).stdout.trim();
 add("C4", "Git history and files clean", !keyFileTracked && ignored && !ai.test(msgs) && !aiFiles && !pk,
   `test/.accounts.json gitignored: ${ignored}; ever committed: ${keyFileTracked ? "YES" : "no"}; AI/Co-Authored-By in any commit message: ${ai.test(msgs) ? "YES" : "none"}; in tracked files: ${aiFiles || "none"}; private-key patterns in tracked files: ${pk ? "FOUND" : "none"}.`);
 

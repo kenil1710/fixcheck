@@ -1,6 +1,6 @@
 # Seeds
 
-Read from the chain by `tools/seeds_md.mjs` on 2026-10-07T08:01Z. Every row links to its page; every value comes from contract state.
+Read from the chain by `tools/seeds_md.mjs` on 2026-10-07T08:13Z. Every row links to its page; every value comes from contract state.
 
 ## Canonical — 0x2d7b3C465D6478Db4438999b1FD0340A54256364
 
@@ -50,5 +50,6 @@ Read from the chain by `tools/seeds_md.mjs` on 2026-10-07T08:01Z. Every row link
 | [5](https://fixcheck-ledger.vercel.app/demo/checks/5) | expiry → everyone refunded | M-3 `realizeRestakerInterest` | EXPIRED (refunded) | EXPIRED | challenger 1 GEN, fee 0 GEN |
 | [6](https://fixcheck-ledger.vercel.app/demo/checks/6) | function changed since the fix, still contains it in place → code decides (CODE_CONTAINS_FIX) | M-5 `cancelDepositRequest` | FIXED | CODE_CONTAINS_FIX | challenger 0.98 GEN, fee 0.02 GEN |
 | [7](https://fixcheck-ledger.vercel.app/demo/checks/7) | deployed before the audit → PREDATES_AUDIT, everyone refunded | M-9 `liquidatableBalanceOf` | PREDATES_AUDIT | DEPLOYED_BEFORE_AUDIT | challenger 1 GEN, fee 0 GEN |
+| [8](https://fixcheck-ledger.vercel.app/demo/checks/8) | filed on camera through the app (real wallet) → PREDATES_AUDIT | M-16 `maxDeposit` | PREDATES_AUDIT | DEPLOYED_BEFORE_AUDIT | challenger 1 GEN, fee 0 GEN |
 
-Also on the demo: an unpinned report URL refused (stake left withdrawable), `sweep_fees`, every account withdrew, and a second `withdraw` was refused ("nothing to withdraw"). Demo ledger: balance 0 = open 0 + withdrawable 0 + fees 0 (invariant holds). Raw logs: `docs/seed-demo.json`, `docs/seed-canonical.json`.
+Also on the demo: an unpinned report URL refused (stake left withdrawable), `sweep_fees`, every account withdrew, and a second `withdraw` was refused ("nothing to withdraw"). Demo ledger: balance 1 = open 0 + withdrawable 1 + fees 0 (invariant holds). Raw logs: `docs/seed-demo.json`, `docs/seed-canonical.json`.

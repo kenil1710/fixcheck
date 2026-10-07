@@ -17,7 +17,7 @@
   },
   {
    "id": "scorecard",
-   "text": "FixCheck does. It read 22 checks of 21 findings marked fixed, against the code at each protocol's listed address: {FIXED} fixed, {NOT_FIXED} not fixed, and {PREDATES} deployed before the audit."
+   "text": "FixCheck does. It read 22 checks of 21 findings marked fixed, against the code at each protocol's listed address: 7 fixed, 2 not fixed, and 6 deployed before the audit."
   },
   {
    "id": "protocol",

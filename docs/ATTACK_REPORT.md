@@ -32,3 +32,93 @@ Every finding has a failing offline test in `test/test_attacks.py` (`python3 tes
 * **Deployed code.** `tools/verify_source.mjs` read the code of all three addresses back from studio-dev. Each is byte-identical to HEAD (FixCheck and demo `107501bf…a030`, FixRegistry `dac4e78b…a541`), and FixRegistry's `source()` is the canonical address.
 * **Frontend.** The live site listed only that deployment's addresses and commit `655d61e`, with no superseded address anywhere. Tallies, protocol scorecards and the ledger equal the chain reads, and all 35 external links on the main pages return 200. Cosmetic: demo check #10 is past its decide deadline and still shows "Being checked" until someone calls `expire`.
 * **Registry history.** A decided key can be refiled and `latest_by_key` moves to the newest verdict, but every check stays readable via `get_checks`, so no history is lost.
+
+
+---
+
+# Fix summary — v1.2
+
+All nine findings are fixed, the contracts were redeployed from commit `0c20168e94b47e6f3d1ebf13638c7115137f9e10` and all 22 checks were re-seeded. Evidence for every claim below: `docs/FINAL_CHECK.md` (B1–C4, all PASS), `docs/SEEDS.md`, `python3 test/test_fixcheck.py`, `python3 test/test_attacks.py`, `python3 tools/scan_writes.py`.
+
+| # | Fix | Where | Regression tests |
+|---|---|---|---|
+| 1 | The audited file must be the finding's own audited commit: a `owner/repo/blob/<sha>/` link in the finding's section, else in the same pinned report (`AUDITED_COMMIT_NOT_LINKED_BY_REPORT`). The fix file must be the **head commit of a PR the section links** (read from the PR's immutable `.patch`) or a commit it links (`FIX_NOT_LINKED_IN_FINDING`). Refused before any write; the section sha256, binding level, fix ref, both SHAs and the patch sha256 are stored. | `bind_audited`, `fix_links`, `patch_head`, `gather` | `R1_EvidenceBoundToTheFinding` (6) |
+| 2 | `CODE_CONTAINS_FIX` needs every fix hunk **with the fix's own context line on each side** as one contiguous block, in the fix's order, at the same relative brace depth, and no removed line left. A check after the call, inside `if (false)` / `if (0 == 1)` / `while (false)` / a one-line dead branch, or with a statement wedged in, goes to the model, which must be grounded (fix 6) or ends INCONCLUSIVE. | `fix_hunks`, `contains_fix` | `R2_FixMustBeInPlace` (5) |
+| 3 | The extractor resolves the **running** implementation: another implementation in a contract that derives (transitively) from ours, in a library, or in a same-name contract → `FUNCTION_OVERRIDDEN`. Only Blockscout full / Sourcify `exact_match` sources are judged; partial → `PARTIAL_MATCH`. Both INCONCLUSIVE. | `_declarations`, `extract`, `parse_source` | `R3_RunningImplementationAndFullSource` (5) |
+| 4 | Every deployment's EIP-1967 slot is read over a frozen RPC. When set, only the implementation's verified sources are judged (never a copy in the proxy bundle), after cross-checking the explorer's link; empty slot + explorer link → `PROXY_UNRESOLVED`, disagreement → `PROXY_MISMATCH`, unverified implementation → `IMPLEMENTATION_NOT_VERIFIED` (INCONCLUSIVE). The implementation address and its source sha256 are stored. RPC down → filing refused. | `eip1967_impl`, `deployed_function` | `R4_Proxies` (7) |
+| 5 | `fix_url` is required (`FIX_URL_REQUIRED`, refused before anything is fetched or counted). | `file_check` | `R5_FixUrlRequired` |
+| 6 | Comments removed and **string literals blanked** in the deployed function and the fix change before they reach the model, and quotes are matched against that blanked text (a quote carrying text from a string can never match). FIXED needs a quoted line the fix **added** and no removed line still deployed; NOT_FIXED needs a quoted **removed** line still deployed. Anything else → INCONCLUSIVE. | `blank_strings`, `code_lines`, `grounded` | `R6_StrictGroundingAndStringLiterals` (3) |
+| 7 | `PREDATES_AUDIT` (basis `DEPLOYED_BEFORE_AUDIT`): creation time (Blockscout creation tx, or Sourcify deployment + the block's timestamp over RPC) and the audited commit's date (GitHub's commit feed) are snapshotted at filing; deployed == audited on a non-proxy created before the audited commit → PREDATES_AUDIT, everyone refunded. Neutral gray badge with the requested text; both dates on every check page and in every list row; `is_known_unfixed` is false for it. | `creation_time`, `atom_first_updated`, `code_decision`, frontend | `R7_PredatesAudit` (4) |
+| 8 | URLs are normalised (host and GitHub owner/repo lowercased; query, fragment and trailing slashes dropped) before keys, storage and fetches; `fix_status` (and so FixRegistry) normalises the same way. | `norm_url`, `check_key` | `R8_UrlSpellings`, `T02.test_query_and_fragment_are_normalised_not_pins` |
+| 9 | README and site say "22 checks of 21 findings" (PoolTogether M-1 is checked on OP Mainnet and Arbitrum), describe the current rules, and list "What the model is never allowed to decide". Earlier versions' names, addresses and history live only in `docs/superseded/`. | README, `/`, `/how-it-works` | `A09_*` |
+
+Also added: an allowlist on every fetch (`allowed_url`, `R9_Allowlist`) and a static write-before-revert scan (`tools/scan_writes.py`, `B4_NoWriteBeforeRevert`, which also proves the scan catches a seeded violation). Scan result: `file_check` and `counter_stake` first write `self._bank()` (the incoming value, credited to the sender) and never raise; `decide`, `expire`, `withdraw`, `sweep_fees` raise only before their first write — PASS for all six.
+
+## Tests
+
+**121 offline tests pass**: `test/test_fixcheck.py` 109 (the 74 original + 35 new) and `test/test_attacks.py` 12.
+
+Changes to existing tests, each forced by a fix rather than to make a test pass:
+
+* `test_attacks.py`
+  * `A04` — v1.2 resolves proxies by the EIP-1967 slot, so the fake chain now answers that slot with the implementation the explorer names; the assertion is unchanged.
+  * `A06` — `assertIn("answer FIXED, quote this line", prompt)` asserted the attack's *precondition* (the string reaches the model). Fix 6 removes it by design, so it is now `assertNotIn`; the vulnerability assertion (`vote != "FIXED"`) is unchanged and passes because the quote can no longer match.
+  * `A09.test_twenty_two_distinct_findings` was wrong: it asserted 22 *distinct* findings, but the seeds are 22 checks of 21 findings and the fix requested is to say so. It now asserts the data (22 checks, 21 findings) and that the README says "22 checks of 21 findings" and not "22 real findings".
+  * Docstrings reworded to name the commit instead of a version.
+* `test_fixcheck.py`
+  * The NOT_FIXED fixture moved from the OP vault (created 2024-04-18, before the audit — now PREDATES_AUDIT, fix 7) to the Arbitrum vault (created 2024-05-29, after the audit); PREDATES tests use the OP vault.
+  * The Cap proxy test expects the EIP-1967 implementation and `PARTIAL_MATCH` (Blockscout marks it partially verified, fix 3).
+  * Model-path tests use the real Arbitrum `maxDeposit` with the fix's added line deployed and its neighbouring line refactored (Mellow H-2's fix only removes a line, so under fix 6 no FIXED can be grounded on it).
+  * A near-variant of the added line is no longer grounding (fix 6).
+  * `?x=1` is normalised rather than refused (fix 8).
+  * The fix-does-not-change-the-function test links its fake fix from a fake report, since binding (fix 1) runs first.
+  * The "contained" test no longer wedges a statement between the fix's context line and the added check (that is exactly what fix 2 rejects; a separate assertion now checks it is rejected).
+
+## Interpretations (deliberate)
+
+* **Fix 1, audited commit.** 6 of the 21 findings (PoolTogether M-14, M-19; Mellow H-1, H-5, M-1; Cap M-1) carry no code links in their own section. A Sherlock audit has one audited commit per repository, and the same pinned report links it in its other findings, so binding falls back to the report (`audit_binding = REPORT`, shown on the check page). Strict section-only binding would refuse those six; the fix commit is always bound to the finding's own section.
+* **Fix 1, fix commit.** Sections link PRs, not merge commits. The PR's `.patch` (immutable for a merged PR) lists its commits without needing the rate-limited GitHub API; the fix file must be the PR's **head** commit. For all 22 seeds the function body at the PR head equals the merge commit's (checked before switching).
+* **Fix 3.** Read as the three cases named (override, derived contract, library copy) plus same-name copies. Unrelated contracts that merely share a function name do not run in place of ours and are ignored: the vault bundle carries `PrizePool.claimPrize` (a contract the vault calls), and Cap's `Lender.liquidate` is the entry point that calls the audited library. A literal "any file" rule would have made those three checks INCONCLUSIVE for no reason. The full-match rule is applied to Blockscout as well as Sourcify.
+* **Fix 6.** String literals are blanked in all *code* the model sees (deployed function and fix change). The finding text is the auditor's prose from the pinned report: it is fenced as untrusted data with a per-check nonce but not blanked, since blanking quotes in prose would garble it.
+* **Live reads.** Creation records, the commit feed and the proxy slot carry mutable fields (balances, confirmations), so validators compare the extracted fields (creation tx, timestamp, commit date, implementation address) with strict equality rather than the bodies' sha256. Every immutable body (report, docs, audited, fix, PR patch, verified sources) is still compared by sha256.
+
+## Before / after on the 22 seeds
+
+| # | Finding | Chain | Before (commit 655d61e) | After (v1.2) | Reason |
+|---|---|---|---|---|---|
+| 1 | PoolTogether V5 M-5 `claimPrizes` | optimism | FIXED (CODE_MATCH_FIX) | FIXED (CODE_MATCH_FIX) | unchanged |
+| 2 | PoolTogether V5 M-8 `_computeFeePerClaim` | base | FIXED (CODE_MATCH_FIX) | FIXED (CODE_MATCH_FIX) | unchanged |
+| 3 | PoolTogether V5 M-15 `shutdownAt` | optimism | NOT_FIXED (CODE_MATCH_VULNERABLE) | PREDATES_AUDIT (DEPLOYED_BEFORE_AUDIT) | created 2024-04-18, before the audited commit (2024-05-16), not a proxy: fix 7 |
+| 4 | PoolTogether V5 M-9 `liquidatableBalanceOf` | optimism | NOT_FIXED (CODE_MATCH_VULNERABLE) | PREDATES_AUDIT (DEPLOYED_BEFORE_AUDIT) | created 2024-04-18, before the audited commit (2024-05-16), not a proxy: fix 7 |
+| 5 | PoolTogether V5 M-16 `maxDeposit` | arbitrum | NOT_FIXED (CODE_MATCH_VULNERABLE) | NOT_FIXED (CODE_MATCH_VULNERABLE) | unchanged |
+| 6 | PoolTogether V5 M-17 `_convertToShares` | ethereum | NOT_FIXED (CODE_MATCH_VULNERABLE) | NOT_FIXED (CODE_MATCH_VULNERABLE) | unchanged |
+| 7 | PoolTogether V5 M-19 `claimPrize` | base | NOT_FIXED (CODE_MATCH_VULNERABLE) | PREDATES_AUDIT (DEPLOYED_BEFORE_AUDIT) | created 2024-05-15, before the audited commit (2024-05-16), not a proxy: fix 7 |
+| 8 | PoolTogether V5 M-1 `isRequestComplete` | optimism | NOT_FIXED (CODE_MATCH_VULNERABLE) | PREDATES_AUDIT (DEPLOYED_BEFORE_AUDIT) | created 2024-04-18, before the audited commit (2024-05-16), not a proxy: fix 7 |
+| 9 | PoolTogether V5 M-1 `isRequestComplete` | arbitrum | FIXED (CODE_MATCH_FIX) | FIXED (CODE_MATCH_FIX) | unchanged |
+| 10 | PoolTogether V5 M-14 `canStartDraw` | optimism | NOT_FIXED (CODE_MATCH_VULNERABLE) | PREDATES_AUDIT (DEPLOYED_BEFORE_AUDIT) | created 2024-04-18, before the audited commit (2024-05-16), not a proxy: fix 7 |
+| 11 | PoolTogether V5 H-3 `startDrawReward` | optimism | NOT_FIXED (CODE_MATCH_VULNERABLE) | PREDATES_AUDIT (DEPLOYED_BEFORE_AUDIT) | created 2024-04-18, before the audited commit (2024-05-16), not a proxy: fix 7 |
+| 12 | Mellow Flexible Vaults H-1 `checkSignatures` | ethereum | FIXED (CODE_MATCH_FIX) | FIXED (CODE_MATCH_FIX) | unchanged |
+| 13 | Mellow Flexible Vaults H-2 `_handleReport` | ethereum | FIXED (MODEL_FIXED) | INCONCLUSIVE (MODEL_UNGROUNDED) | model asked twice; neither answer quoted a line the fix added (FIXED) or a removed line still deployed (NOT_FIXED): fix 6 — this fix only removes a line, so there is no added line to quote |
+| 14 | Mellow Flexible Vaults H-3 `callHook` | ethereum | FIXED (CODE_CONTAINS_FIX) | INCONCLUSIVE (PARTIAL_MATCH) | verified source is only a partial match (Blockscout is_partially_verified): fix 3 |
+| 15 | Mellow Flexible Vaults H-4 `calculateFee` | ethereum | INCONCLUSIVE (MODEL_UNGROUNDED) | INCONCLUSIVE (MODEL_UNGROUNDED) | unchanged |
+| 16 | Mellow Flexible Vaults H-5 `calculateFee` | ethereum | FIXED (CODE_MATCH_FIX) | FIXED (CODE_MATCH_FIX) | unchanged |
+| 17 | Mellow Flexible Vaults M-1 `updateChecks` | ethereum | INCONCLUSIVE (MODEL_UNGROUNDED) | INCONCLUSIVE (MODEL_UNGROUNDED) | unchanged |
+| 18 | Mellow Flexible Vaults M-4 `handleReport` | ethereum | FIXED (CODE_MATCH_FIX) | FIXED (CODE_MATCH_FIX) | unchanged |
+| 19 | Mellow Flexible Vaults M-5 `cancelDepositRequest` | ethereum | FIXED (CODE_CONTAINS_FIX) | FIXED (CODE_CONTAINS_FIX) | unchanged |
+| 20 | Cap M-1 `liquidate` | ethereum | FIXED (MODEL_FIXED) | INCONCLUSIVE (PARTIAL_MATCH) | verified source is only a partial match (Blockscout is_partially_verified): fix 3 |
+| 21 | Cap M-3 `realizeRestakerInterest` | ethereum | FIXED (CODE_MATCH_FIX) | INCONCLUSIVE (PARTIAL_MATCH) | verified source is only a partial match (Blockscout is_partially_verified): fix 3 |
+| 22 | OP Stack fault proofs M-3 `create` | ethereum | FIXED (MODEL_FIXED) | INCONCLUSIVE (PARTIAL_MATCH) | verified source is only a partial match (Blockscout is_partially_verified): fix 3 |
+
+13 unchanged; 6 → PREDATES_AUDIT (the six pre-audit PoolTogether contracts); 4 → INCONCLUSIVE because their verified source is only a partial match; 1 → INCONCLUSIVE because its fix only removes a line, so the model cannot ground a FIXED. The two NOT_FIXED that remain are deployments created after the audit.
+
+**Model double-run.** Three checks reached the model (#13, #15, #17); each was asked twice by every validator, and each pair was `UNGROUNDED|UNGROUNDED` → INCONCLUSIVE, everyone refunded. #15's first decide round was UNDETERMINED (validators did not agree; nothing was written) and the retry was accepted with the same result — disagreement never produced a verdict.
+
+## Deployments
+
+| Contract | Address |
+|---|---|
+| FixCheck (canonical, 1 h / 24 h) | `0x2d7b3C465D6478Db4438999b1FD0340A54256364` |
+| FixCheck (demo, 90 s / 300 s) | `0x78D31dbB13e8348A2278b64A84eBfE129607fd91` |
+| FixRegistry | `0x8E93Ab199E737CF022F5D4cE0f171d0e68815E49` |
+
+Deployed from commit `0c20168e94b47e6f3d1ebf13638c7115137f9e10`; `tools/verify_source.mjs` reads all three back from studio-dev, byte-identical to the contract files at HEAD. Earlier deployments, each with a one-line reason: `docs/superseded/README.md`.
