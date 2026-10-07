@@ -76,7 +76,7 @@ export function CheckView({ c, code, defenders, dep }: { c: Check; code: CheckCo
     { at: c.filed_at, text: `Filed by ${short(c.challenger)} with ${gen(c.stake_wei)} GEN on “not fixed”. Validators fetched and hashed every source.` },
     ...defenders.map((d) => ({ at: d.at, text: `${short(d.address)} staked ${gen(d.stake_wei)} GEN on “fixed”.` })),
     { at: c.counter_deadline, text: "Counter-stake window closes.", future: c.counter_deadline * 1000 > Date.now() },
-    ...(c.decided_at ? [{ at: c.decided_at, text: c.state === "EXPIRED" ? "Expired undecided; everyone refunded." : `Decided: ${kind === "FIXED" ? "fixed" : kind === "NOT_FIXED" ? "not fixed" : "inconclusive"} (${basis.short.toLowerCase()}).` }] :
+    ...(c.decided_at ? [{ at: c.decided_at, text: c.state === "EXPIRED" ? "Expired undecided; everyone refunded." : `Decided: ${kind === "FIXED" ? "fixed" : kind === "NOT_FIXED" ? "not fixed" : kind === "PREDATES" ? "predates the audit" : "inconclusive"} (${basis.short.toLowerCase()}).` }] :
       [{ at: c.decide_deadline, text: "Decide window closes; after this anyone can expire the check.", future: true }]),
   ].sort((a, b) => a.at - b.at);
 
