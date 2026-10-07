@@ -1,0 +1,11 @@
+{
+  "address": "0x1A9B8608F5BE52652Ec8807DbF97AD8419fe1f0D",
+  "tx": "0xa1d0e9170dd135506149fed9899e4bf86cc00f104858c70cbb871454d91b1c21",
+  "result": {
+    "https://arbitrum-one-rpc.publicnode.com {\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"eth_getBlockByNumber\",\"par": "200 {\"jsonrpc\":\"2.0\",\"result\":{\"difficulty\":\"0x0\",\"extraData\":\"0x\",\"gasLimit\":\"0xbdaab9e\",\"gasUsed\":\"0x164d3\",\"hash\":\"0x830d1aae7f5b55f81c76970b5253c8a19317cd024cbb",
+    "https://base-rpc.publicnode.com {\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"eth_getBlockByNumber\",\"par": "200 {\"jsonrpc\":\"2.0\",\"id\":1,\"error\":{\"code\":4444,\"message\":\"pruned history unavailable: requested 15000000, earliest available 50500000\"}}\n",
+    "https://ethereum-rpc.publicnode.com {\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"eth_getStorageAt\",\"params\"": "200 {\"jsonrpc\":\"2.0\",\"id\":1,\"result\":\"0x00000000000000000000000068c4f03b8640c0393a832987147bae7a0b27aaa7\"}\n",
+    "https://optimism-rpc.publicnode.com {\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"eth_getStorageAt\",\"params\"": "200 {\"jsonrpc\":\"2.0\",\"id\":1,\"result\":\"0x0000000000000000000000000000000000000000000000000000000000000000\"}\n",
+    "https://polygon-bor-rpc.publicnode.com {\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"eth_chainId\",\"params\":[]}": "200 {\"jsonrpc\":\"2.0\",\"result\":\"0x89\",\"id\":1}\n"
+  }
+}

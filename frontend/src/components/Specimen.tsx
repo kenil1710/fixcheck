@@ -2,7 +2,7 @@ import Link from "next/link";
 import { diffLines, dedent, squeeze } from "@/lib/diff";
 import { codeLines } from "@/lib/solfn";
 import { CHAIN_NAMES, protocolMeta } from "@/lib/catalog";
-import { commit7, short } from "@/lib/format";
+import { commit7, day, short } from "@/lib/format";
 import type { Check, CheckCode } from "@/lib/types";
 
 /**
@@ -51,7 +51,7 @@ export function Specimen({ check, code }: { check: Check; code: CheckCode }) {
       </div>
       <figcaption id="specimen-cap" className="border-t hair px-4 py-3 t-small text-ink-2">
         <strong className="text-ink">{protocolMeta(check.protocol).name}, {check.finding_id}.</strong>{" "}
-        Marked fixed in the audit report. The deployed code still runs the audited line{missing === 1 ? "" : "s"}; the line{missing === 1 ? "" : "s"} written by fix commit <span className="mono">{commit7(check.fix_commit)}</span> {missing === 1 ? "is" : "are"} not there.{" "}
+        Marked fixed in the audit report. Deployed {day(check.created_at)}, after the audited commit ({day(check.audited_at)}); the deployed code still runs the audited line{missing === 1 ? "" : "s"}; the line{missing === 1 ? "" : "s"} written by fix commit <span className="mono">{commit7(check.fix_commit)}</span> {missing === 1 ? "is" : "are"} not there.{" "}
         <Link className="link" href={`/checks/${check.check_id}`}>See the evidence</Link>
       </figcaption>
     </figure>

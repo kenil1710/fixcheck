@@ -44,14 +44,14 @@ export function CheckFlow() {
   const errs = useMemo(() => ({
     report_url: f.report_url && !isPinned(f.report_url) ? "Not pinned. Use GitHub raw at a full commit SHA, or a web.archive.org/web/<14 digits>/… snapshot." : "",
     audited_url: f.audited_url && !(githubPin(f.audited_url)?.path.endsWith(".sol")) ? "Use the GitHub raw link to the .sol file at the audited commit SHA." : "",
-    fix_url: f.fix_url && !githubPin(f.fix_url) ? "Use the GitHub raw link at the fix commit SHA, or leave empty." : f.fix_url && githubPin(f.audited_url) && githubPin(f.fix_url) && githubPin(f.fix_url)!.path.split("/").pop() !== githubPin(f.audited_url)!.path.split("/").pop() ? "The fix link must point at the same file name." : "",
+    fix_url: f.fix_url && !githubPin(f.fix_url) ? "Use the GitHub raw link at the fix commit SHA." : f.fix_url && githubPin(f.audited_url) && githubPin(f.fix_url) && githubPin(f.fix_url)!.path.split("/").pop() !== githubPin(f.audited_url)!.path.split("/").pop() ? "The fix link must point at the same file name." : "",
     finding_id: f.finding_id && !/^[A-Za-z0-9-]{2,16}$/.test(f.finding_id.trim()) ? "Like H-1 or M-14, as the report writes it." : "",
     function_name: f.function_name && !/^[A-Za-z_$][\w$]{0,63}$/.test(f.function_name.trim()) ? "Just the name, like maxDeposit — no parentheses." : "",
     address: f.address && !/^0x[0-9a-fA-F]{40}$/.test(f.address.trim()) ? "0x followed by 40 hex characters." : "",
     docs_url: f.docs_url && !isPinned(f.docs_url) ? "Not pinned. Use GitHub raw at a commit SHA or an archive.org snapshot." : "",
   }), [f]);
   const okStep = [
-    f.report_url && f.audited_url && !errs.report_url && !errs.audited_url && !errs.fix_url,
+    f.report_url && f.audited_url && f.fix_url && !errs.report_url && !errs.audited_url && !errs.fix_url,
     f.finding_id && f.function_name && !errs.finding_id && !errs.function_name,
     f.address && f.docs_url && !errs.address && !errs.docs_url,
     Boolean(pv?.accepted),
@@ -119,8 +119,8 @@ export function CheckFlow() {
         <div className="grid content-start gap-6">
           {step === 0 && (<>
             <Field id="report_url" label="Audit report, pinned" hint="GitHub raw at a commit SHA (e.g. a Sherlock judging README) or a web.archive.org snapshot." value={f.report_url} onChange={set("report_url")} error={errs.report_url} placeholder="https://raw.githubusercontent.com/…/<40-char sha>/README.md" />
-            <Field id="audited_url" label="Audited source file" hint="The .sol file at the commit the auditors reviewed." value={f.audited_url} onChange={set("audited_url")} error={errs.audited_url} />
-            <Field id="fix_url" label="Fix source file (optional)" hint="The same file at the commit that fixed it. Without it, only “not fixed” can be decided by code alone." value={f.fix_url} onChange={set("fix_url")} error={errs.fix_url} />
+            <Field id="audited_url" label="Audited source file" hint="The .sol file at the audited commit the report links." value={f.audited_url} onChange={set("audited_url")} error={errs.audited_url} />
+            <Field id="fix_url" label="Fix source file" hint="The same file at the head commit of the fix PR the finding links (or a commit it links). Required: it is what shows the fix." value={f.fix_url} onChange={set("fix_url")} error={errs.fix_url} />
           </>)}
           {step === 1 && (<>
             <Field id="finding_id" label="Finding id" hint="As the report writes it, like M-14." value={f.finding_id} onChange={set("finding_id")} error={errs.finding_id} />

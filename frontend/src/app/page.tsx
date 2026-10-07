@@ -11,7 +11,9 @@ export const revalidate = 30;
 /** The specimen: a decided NOT_FIXED code match with a fix commit, preferring a short function. */
 function pickSpecimen(items: Check[]): Check | undefined {
   // code facts are fixed at filing: deployed == audited, and a fix exists
-  const pool = items.filter((c) => c.state !== "EXPIRED" && c.fix_commit && c.dep_status === "OK" && c.dep_canon_sha256 === c.aud_canon_sha256);
+  // a deployment created AFTER the audit that still runs the audited code
+  const pool = items.filter((c) => c.state !== "EXPIRED" && c.fix_commit && c.dep_status === "OK" && c.dep_canon_sha256 === c.aud_canon_sha256
+    && !c.implementation && c.created_at > c.audited_at);
   return pool.find((c) => c.function === "maxDeposit") ?? pool[0];
 }
 
@@ -23,6 +25,7 @@ export default async function Home() {
   const spec = pickSpecimen(items);
   const code = spec ? await getCheckCode(spec.check_id) : null;
   const unsure = s.inconclusive + s.expired;
+  const findings = new Set(items.map((c) => c.report_url + "#" + c.finding_id)).size;
 
   return (
     <>
@@ -34,11 +37,12 @@ export default async function Home() {
           </p>
 
           <section className="mt-10" aria-label="Scorecard, read from the contract">
-            <dl className="grid grid-cols-2 border-t hair sm:grid-cols-4">
+            <p className="t-small border-t hair pt-3 text-ink-2">{s.checks} checks of {findings} findings marked Fixed in audit reports</p>
+            <dl className="mt-1 grid grid-cols-2 border-t hair sm:grid-cols-4">
               {[
-                [s.checks, "findings marked Fixed", "text-ink"],
                 [s.fixed, "confirmed in deployed code", "text-fixed"],
                 [s.not_fixed, "not in deployed code", "text-bad"],
+                [s.predates_audit, "deployed before the audit", "text-ink-2"],
                 [unsure, "inconclusive", "text-unsure"],
               ].map(([n, label, cls], i) => (
                 <div key={String(label)} className={`flex flex-col border-b hair py-4 pr-4 ${i % 2 === 1 ? "pl-4 border-l sm:pl-4" : ""} ${i === 2 ? "sm:border-l sm:pl-4" : ""}`}>
@@ -48,6 +52,7 @@ export default async function Home() {
               ))}
             </dl>
             {s.open > 0 && <p className="t-small mt-3 text-ink-3">{s.open} of them {s.open === 1 ? "is" : "are"} still inside the counter-stake window; verdicts land when it closes.</p>}
+            {s.predates_audit > 0 && <p className="t-small mt-3 text-ink-3">“Deployed before the audit”: the contract still runs the audited code but was deployed before the audit and can’t be upgraded, so the fix could not be applied there.</p>}
           </section>
 
           <div className="mt-8 flex flex-wrap gap-3">

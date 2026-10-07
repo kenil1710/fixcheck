@@ -3,7 +3,7 @@ import type { Check, CheckCode, Defender } from "@/lib/types";
 import type { Deployment } from "@/lib/deployments";
 import { CHAIN_EXPLORERS, CHAIN_NAMES, firmName, protocolMeta, severityOf } from "@/lib/catalog";
 import { basisOf, DEP_STATUS } from "@/lib/basis";
-import { commit7, gen, short, when } from "@/lib/format";
+import { commit7, day, gen, short, when } from "@/lib/format";
 import { DiffViewer } from "./DiffViewer";
 import { Status, statusOf, tone } from "./Status";
 import { Copy } from "./Copy";
@@ -64,10 +64,11 @@ export function CheckView({ c, code, defenders, dep }: { c: Check; code: CheckCo
   const explorer = CHAIN_EXPLORERS[c.chain];
   const reportFile = c.report_url.split("/").slice(3, 5).join("/");
 
+  const predates = !c.implementation && c.created_at > 0 && c.created_at < c.audited_at;
   const preview = c.state === "OPEN"
-    ? c.dep_status !== "OK" ? "Code will decide: inconclusive, everyone refunded — the function " + (DEP_STATUS[c.dep_status] ?? c.dep_status) + "."
+    ? c.dep_status !== "OK" ? "Code will decide: inconclusive, everyone refunded — the function is " + (DEP_STATUS[c.dep_status] ?? c.dep_status) + "."
       : c.fix_canon_sha256 && c.dep_canon_sha256 === c.fix_canon_sha256 ? "Code will decide: fixed — the deployed function is identical to the fix commit."
-      : c.dep_canon_sha256 === c.aud_canon_sha256 ? "Code will decide: not fixed — the deployed function is identical to the audited version."
+      : c.dep_canon_sha256 === c.aud_canon_sha256 ? (predates ? "Code will decide: predates the audit — the deployed function is the audited version, and the contract was deployed before the audit." : "Code will decide: not fixed — the deployed function is identical to the audited version.")
       : "The deployed function matches neither version exactly. Unless it visibly contains the fix, the model will be asked twice and must quote deployed lines that point at the change."
     : "";
 
@@ -82,6 +83,7 @@ export function CheckView({ c, code, defenders, dep }: { c: Check; code: CheckCo
   const payout = c.state === "OPEN" ? null
     : kind === "NOT_FIXED" ? `The challenger was credited ${gen(c.challenger_paid_wei)} GEN: their stake plus every defender’s.`
     : kind === "FIXED" ? (c.defenders > 0 ? `Defenders were credited their stakes plus the challenger’s ${gen(c.stake_wei)} GEN, pro rata.` : `No one defended, so the challenger got ${gen(c.challenger_paid_wei)} GEN back; ${gen(c.fee_paid_wei, 4)} GEN went to the frozen fee.`)
+    : kind === "PREDATES" ? "The code could not have held the fix, so every stake was refunded in full."
     : "Every stake was refunded in full.";
 
   return (
@@ -121,11 +123,17 @@ export function CheckView({ c, code, defenders, dep }: { c: Check; code: CheckCo
             <h2 id="ev" className="t-h2">Evidence</h2>
             <p className="t-small mt-2 max-w-[62ch] text-ink-2">Every validator fetched each of these itself when the check was filed, and all of them had to get the same bytes. The hashes below are what they agreed on.</p>
             <ul className="mt-4 border-t hair">
-              <Evidence label="Audit report (pinned)" href={c.report_url} sha={c.report_sha256} note={`${firmName(c.firm)}, ${reportFile}`} />
+              <Evidence label="Audit report (pinned)" href={c.report_url} sha={c.report_sha256} note={`${firmName(c.firm)}, ${reportFile}. Finding section sha256 below; the audited commit is linked by ${c.audit_binding === "SECTION" ? "this finding" : "this report"}.`} />
+              <li className="grid gap-1 border-b hair py-3 sm:grid-cols-[11rem_1fr]">
+                <span className="t-small text-ink-2">Finding section</span>
+                <div className="flex min-w-0 items-center gap-1"><span className="t-label">sha256</span><code className="min-w-0 truncate text-[0.78rem] text-ink-2">{c.section_sha256}</code><Copy value={c.section_sha256} label="Copy sha256" /></div>
+              </li>
               <Evidence label="Docs listing the address" href={c.docs_url} sha={c.docs_sha256} />
               <Evidence label={`Audited source @${commit7(c.audited_commit)}`} href={c.audited_url} sha={c.audited_sha256} />
-              {c.fix_url && <Evidence label={`Fix source @${commit7(c.fix_commit)}`} href={c.fix_url} sha={c.fix_sha256} />}
-              <Evidence label="Deployed verified source" href={c.source_url} sha={c.source_sha256} note={c.implementation ? `Proxy; implementation ${c.implementation} read through the explorer’s own link.` : undefined} />
+              {c.fix_url && <Evidence label={`Fix source @${commit7(c.fix_commit)}`} href={c.fix_url} sha={c.fix_sha256} note={c.fix_ref.startsWith("pull/") ? `Head commit of PR #${c.fix_ref.slice(5)}, which the finding links.` : "A commit the finding links."} />}
+              {c.patch_sha256 && <Evidence label="Fix PR patch" href={`https://github.com/${c.fix_url.split("/")[3]}/${c.fix_url.split("/")[4]}/${c.fix_ref}.patch`} sha={c.patch_sha256} />}
+              <Evidence label="Deployed verified source" href={c.source_url} sha={c.source_sha256} note={c.implementation ? "The proxy’s own source; the implementation’s is below." : undefined} />
+              {c.implementation && c.impl_source_url && <Evidence label="Implementation source" href={c.impl_source_url} sha={c.impl_source_sha256} />}
             </ul>
             <dl className="mt-4 grid gap-1 t-small">
               {[["Audited function", c.aud_canon_sha256], ["Fixed function", c.fix_canon_sha256], ["Deployed function", c.dep_canon_sha256]].filter(([, v]) => v).map(([k, v]) => (
@@ -152,8 +160,15 @@ export function CheckView({ c, code, defenders, dep }: { c: Check; code: CheckCo
           <section aria-labelledby="dep" className="sheet p-5">
             <h2 id="dep" className="t-label">Deployed contract</h2>
             <p className="mt-2 t-small">{CHAIN_NAMES[c.chain] ?? c.chain}</p>
+            <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 t-small">
+              <dt className="text-ink-3">Deployed</dt>
+              <dd className={predates ? "font-medium" : ""}>{c.created_at ? day(c.created_at) : "—"}{c.creation_tx && <a className="link ml-1.5 mono text-[0.78rem]" href={`${explorer}/tx/${c.creation_tx}`}>tx</a>}</dd>
+              <dt className="text-ink-3">Audited commit</dt>
+              <dd>{c.audited_at ? day(c.audited_at) : "—"} <span className="mono text-[0.78rem] text-ink-3">{commit7(c.audited_commit)}</span></dd>
+            </dl>
             <p className="mt-1 flex items-center gap-1"><a className="mono link min-w-0 truncate text-[0.82rem]" href={`${explorer}/address/${c.address}`}>{c.address}</a><Copy value={c.address} label="Copy address" /></p>
-            <p className="t-small mt-2 text-ink-2"><span className="mono">{c.function}()</span> {DEP_STATUS[c.dep_status] ?? c.dep_status}.</p>
+            {c.implementation && <p className="t-small mt-2 text-ink-2">Proxy. Implementation <a className="link mono text-[0.78rem]" href={`${explorer}/address/${c.implementation}`}>{short(c.implementation)}</a>, read from its EIP-1967 slot.</p>}
+            <p className="t-small mt-2 text-ink-2"><span className="mono">{c.function}()</span> {c.dep_status === "OK" ? "found in the deployed source" : "is " + (DEP_STATUS[c.dep_status] ?? c.dep_status)}.</p>
           </section>
 
           <section aria-labelledby="stakes" className="sheet p-5">

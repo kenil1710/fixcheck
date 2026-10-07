@@ -18,6 +18,7 @@ export function ProtocolCard({ p, checks }: { p: ProtocolScore; checks: Check[] 
       <dl className="t-small mt-3 flex flex-wrap gap-x-4 gap-y-1">
         <div className="flex gap-1.5"><dt className="text-ink-3">Fixed</dt><dd className="font-semibold" style={{ color: "var(--fixed)" }}>{p.fixed}</dd></div>
         <div className="flex gap-1.5"><dt className="text-ink-3">Not fixed</dt><dd className="font-semibold" style={{ color: "var(--bad)" }}>{p.not_fixed}</dd></div>
+        {(p.predates_audit ?? 0) > 0 && <div className="flex gap-1.5"><dt className="text-ink-3">Predates audit</dt><dd className="font-semibold text-ink-2">{p.predates_audit}</dd></div>}
         <div className="flex gap-1.5"><dt className="text-ink-3">Inconclusive</dt><dd className="font-semibold" style={{ color: "var(--unsure)" }}>{unsure}</dd></div>
         {p.open > 0 && <div className="flex gap-1.5"><dt className="text-ink-3">Open</dt><dd className="font-semibold">{p.open}</dd></div>}
       </dl>

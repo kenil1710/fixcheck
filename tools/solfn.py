@@ -162,7 +162,7 @@ def basename(path: str) -> str:
     return s[k + 1:] if k >= 0 else s
 
 
-def extract(files: dict, file_name: str, fn: str) -> dict:
+def extract_plain(files: dict, file_name: str, fn: str) -> dict:
     """Pick the ONE implemented `fn` from the files whose basename equals
     file_name. {"ok": True, "code": raw, "canon": canonical} or
     {"ok": False, "why": "FILE_NOT_FOUND" | "FUNCTION_NOT_FOUND" |
@@ -195,6 +195,146 @@ def extract(files: dict, file_name: str, fn: str) -> dict:
     if len(hits) > 1:
         return {"ok": False, "why": "FUNCTION_OVERLOADED"}
     return {"ok": True, "code": hits[0], "canon": canon(hits[0])}
+
+def _declarations(src: str) -> list:
+    """Every contract / abstract contract / library / interface declared in a
+    comment-free source: [{"name", "kind", "parents", "lo", "hi"}] where
+    lo..hi is the body span."""
+    out = []
+    i = 0
+    n = len(src)
+    while i < n:
+        hit = ""
+        for kw in ("contract", "library", "interface"):
+            if src[i:i + len(kw)] == kw and (i == 0 or not _word(src[i - 1])) \
+                    and i + len(kw) < n and src[i + len(kw)] in " \t\r\n":
+                hit = kw
+                break
+        if hit == "":
+            if src[i] == '"' or src[i] == "'":
+                q = src[i]
+                j = i + 1
+                while j < n and src[j] != q:
+                    if src[j] == "\\":
+                        j += 1
+                    j += 1
+                i = j + 1
+                continue
+            i += 1
+            continue
+        j = i + len(hit)
+        while j < n and src[j] in " \t\r\n":
+            j += 1
+        e = j
+        while e < n and _word(src[e]):
+            e += 1
+        name = src[j:e]
+        b = src.find("{", e)
+        if name == "" or b < 0:
+            i = e
+            continue
+        head = src[e:b].strip()
+        clean = []
+        if head.startswith("is") and (len(head) == 2 or not _word(head[2])):
+            depth = 0
+            cur = []
+            parts = []
+            for ch in head[2:]:
+                if ch == "(":
+                    depth += 1
+                    continue
+                if ch == ")":
+                    depth -= 1
+                    continue
+                if depth > 0:
+                    continue
+                if ch == ",":
+                    parts.append("".join(cur))
+                    cur = []
+                    continue
+                cur.append(ch)
+            parts.append("".join(cur))
+            for p in parts:
+                t = p.strip()
+                w = 0
+                while w < len(t) and (_word(t[w]) or t[w] == "."):
+                    w += 1
+                t = t[:w]
+                if t.find(".") >= 0:
+                    t = t[t.rfind(".") + 1:]
+                if t != "":
+                    clean.append(t)
+        hi = _match(src, b, "{", "}")
+        if hi < 0:
+            i = b + 1
+            continue
+        kind = hit
+        pre = src[max(0, i - 9):i]
+        if pre.strip().endswith("abstract"):
+            kind = "contract"
+        out.append({"name": name, "kind": kind, "parents": clean, "lo": b, "hi": hi})
+        i = b + 1
+    return out
+
+
+def _derives(name: str, target: str, graph: dict, seen: list) -> bool:
+    if name == target:
+        return True
+    if name in seen:
+        return False
+    seen.append(name)
+    for p in graph.get(name, []):
+        if _derives(p, target, graph, seen):
+            return True
+    return False
+
+
+def extract(files: dict, file_name: str, fn: str) -> dict:
+    """extract_plain() plus the implementation the contract actually runs.
+    If any OTHER file implements `fn` inside a contract that derives from the
+    one holding ours (an override), inside a library (a library copy), or in
+    a contract with the same name as ours (a copy or decoy), the running code
+    is not provable -> FUNCTION_OVERRIDDEN. Same-name functions in unrelated
+    contracts (a contract ours calls, an entry point that calls our library)
+    do not run in its place and are ignored."""
+    got = extract_plain(files, file_name, fn)
+    if not got["ok"]:
+        return got
+    want = basename(file_name)
+    ours = ""
+    graph = {}
+    others = []
+    for p in sorted(files.keys()):
+        stripped = strip_comments(str(files[p]))
+        decls = _declarations(stripped)
+        for d in decls:
+            if d["name"] not in graph:
+                graph[d["name"]] = d["parents"]
+        impls = find_functions(stripped, fn)
+        if impls is None:
+            continue
+        for body in impls:
+            at = stripped.find(body)
+            holder = None
+            for d in decls:
+                if d["lo"] <= at < d["hi"] and (holder is None or d["lo"] > holder["lo"]):
+                    holder = d
+            if basename(p) == want and canon(body) == got["canon"]:
+                if holder is not None and ours == "":
+                    ours = holder["name"]
+                continue
+            if basename(p) == want:
+                continue    # same file: extract() already judged overloads
+            others.append(holder)
+    for h in others:
+        if h is None:
+            return {"ok": False, "why": "FUNCTION_OVERRIDDEN"}
+        if h["kind"] == "library" or h["name"] == ours:
+            return {"ok": False, "why": "FUNCTION_OVERRIDDEN"}
+        if ours != "" and _derives(h["name"], ours, graph, []):
+            return {"ok": False, "why": "FUNCTION_OVERRIDDEN"}
+    return got
+
 
 STATUS_PHRASES = [
     "The protocol team fixed this issue",

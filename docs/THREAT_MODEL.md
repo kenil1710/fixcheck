@@ -16,7 +16,7 @@ consensus round fails is asserted to have written nothing.
 | 6 | **Comment / whitespace tricks to fake a match** | Comparison is on a canonical form: comments removed (string literals respected, so `"//"` in a string is code), whitespace dropped except one space between word characters (`uint x` ≠ `uintx`). Unicode look-alikes are not folded. A function inside a comment is not a function. | `T07_CommentWhitespaceTricks` |
 | 7 | **Quoted lines not in the code** | Every line the model quotes must equal a line of the comment-free deployed function after trimming; one invented line voids the answer (`MODEL_QUOTE_INVALID`). Context lines like `}` are allowed but at least one substantive line is required. Validators reject a leader whose stored quote indices do not point at real, substantive lines. | `T08_QuotedLinesNotInCode` |
 | 7b | **Model verdict not grounded in the change** (found on seeded v1.0 data: two false NOT_FIXED) | Code decides FIXED first when the deployed function holds every line the fix added and none it removed (`CODE_CONTAINS_FIX`). The model sees what the fix commit changed. A model FIXED must quote a line that is new or moved by the fix; a model NOT_FIXED must quote a line the fix removed (the vulnerable line, still deployed). Otherwise `MODEL_UNGROUNDED` → everyone refunded. | `T10b_ModelEvidenceMustPointAtTheChange` |
-| 8 | **Prompt injection** in the report or in code comments | Comments are stripped before anything reaches the model or storage, so a comment can never be shown, quoted or obeyed. Report text and code are fenced with a per-check nonce and defanged (fence markers and the nonce removed). Code-decided cases never consult the model, whatever the report says. The model sees only the finding and the deployed function. | `T09_PromptInjection` |
+| 8 | **Prompt injection** in the report or in code comments | Comments are stripped before anything reaches the model or storage, so a comment can never be shown, quoted or obeyed. Report text and code are fenced with a per-check nonce and defanged (fence markers and the nonce removed). Code-decided cases never consult the model, whatever the report says. The model sees only the finding, what the fix commit changed in the function, and the deployed function with comments removed and string literals blanked (v1.2). | `T09_PromptInjection` |
 | 9 | **Model flip / disagreement** | The model is asked twice per validator; different answers → `INCONCLUSIVE (MODEL_FLIP)`, both unsure → `MODEL_UNSURE`, an error → `MODEL_ERROR`. Validators recompute and must agree on verdict and basis; otherwise the round fails and nothing is written (retry until the decide deadline, then `expire`). | `T10_ModelFlip` |
 | 10 | **Duplicate check** | One open check per `sha256(report | finding | chain | address)`; addresses are canonicalised so spellings collide. A new check is allowed once the previous one is decided or expired. A leader that forges evidence (e.g. swaps the deployed code for the fix) is rejected by validators recomputing it. | `T11_DuplicateCheck` |
 | 11 | **Defender griefing** | The challenger cannot defend their own check; a minimum stake; at most 16 defenders (existing ones may top up); counter-stakes close at the counter deadline; defenders cannot delay or block `decide`; pro-rata flooring dust goes to fees, never trapped. | `T12_DefenderGriefing` |
@@ -28,6 +28,22 @@ Also covered: the extractor block in the contract is byte-identical to the one
 used for the research (`T00`), no `str.replace` (rejected by the runner), no
 undefined names, and FixRegistry has no payable method and no transfer (`T01`).
 
+## v1.2 — the attack pass (`docs/ATTACK_REPORT.md`)
+
+| # | Threat | What stops it | Tests |
+|---|---|---|---|
+| A1 | **Audited / fix files from an unrelated repo** turn fixed code into NOT_FIXED or vulnerable code into FIXED | The audited `owner/repo/blob/<sha>/` must be linked by the finding's section (else by the same pinned report: one audited commit per repo per audit); the fix file must be the head commit of a PR the section links (read from the PR's immutable `.patch`) or a commit it links. Refused otherwise, before any write. Snapshot: section sha256, binding level, fix ref, both SHAs. | `R1_EvidenceBoundToTheFinding`, `A01_*` |
+| A2 | **Fix present but misplaced** (check after the call, in a dead branch) decided FIXED by containment | `CODE_CONTAINS_FIX` needs each fix hunk with the fix's own context line on each side as ONE contiguous block, in order, at the same relative nesting, and no removed line left. Otherwise the model path, which must be grounded (A6) or ends INCONCLUSIVE. | `R2_FixMustBeInPlace`, `A02_*` |
+| A3 | **Override / library copy / decoy** elsewhere in the bundle; **partial source match** | The extractor resolves the running implementation: another implementation in a contract deriving from ours, in a library, or in a same-name contract → `FUNCTION_OVERRIDDEN`. Only Blockscout full / Sourcify exact matches are judged; partial → `PARTIAL_MATCH`. Both INCONCLUSIVE, everyone refunded. | `R3_RunningImplementationAndFullSource`, `A03_*` |
+| A4 | **Stale implementation copy inside a proxy bundle** | The EIP-1967 slot is read over RPC for every deployment; when set, only the implementation's verified sources are judged, after cross-checking the explorer's link. Slot empty but explorer names an implementation → `PROXY_UNRESOLVED`; disagreement → `PROXY_MISMATCH`; unverified implementation → `IMPLEMENTATION_NOT_VERIFIED` (all INCONCLUSIVE). The implementation address and its source hash are stored. RPC down → filing refused. | `R4_Proxies`, `A04_*` |
+| A5 | **No fix commit disables grounding** | `fix_url` is required (`FIX_URL_REQUIRED`, refused before anything is fetched). | `R5_FixUrlRequired`, `A05_*` |
+| A6 | **Model FIXED grounded by any new line / string-literal injection** | Comments removed and string literals blanked in everything sent to the model and in quote matching. FIXED needs a quoted line the fix ADDED and no removed line still deployed; NOT_FIXED needs a quoted removed line still deployed. | `R6_StrictGroundingAndStringLiterals`, `A06_*` |
+| A7 | **Deployed-before-audit code called "not fixed"** | Creation time (Blockscout creation tx, or Sourcify deployment + block timestamp) and the audited commit's date (its GitHub commit feed) are bound at filing. Deployed == audited on a non-proxy created before the audited commit → `PREDATES_AUDIT` (refund). Registry `is_known_unfixed` is false for it. | `R7_PredatesAudit`, `A07_*` |
+| A8 | **Report URL spellings open duplicate checks** | URLs are normalised (host and GitHub owner/repo lowercased; query, fragment and trailing slashes dropped) before keys, storage and fetches; `fix_status` normalises the same way. | `R8_UrlSpellings`, `A08_*` |
+| A9 | **Published claims** | README/site say "22 checks of 21 findings" and describe v1.2. | `A09_*` |
+| B9 | **Fetching arbitrary URLs** | Every fetch goes through `allowed_url` (GitHub raw, PR patches, commit `.atom` feeds, the two Blockscout APIs, Sourcify, five frozen RPCs, web.archive.org). | `R9_Allowlist` |
+| B4 | **State written before a revert** | `python3 tools/scan_writes.py` walks every write method's AST: no `raise` / `_check` after the first storage write. | run in CI by hand; result in `docs/ATTACK_REPORT.md` |
+
 ## Out of scope / accepted
 
 * **Leader chooses quote indices.** Validators check the indices point at real
@@ -36,8 +52,12 @@ undefined names, and FixRegistry has no payable method and no transfer (`T01`).
   the verdict, which every validator recomputes.
 * **Explorer/Sourcify honesty.** Verified source is read from one frozen public
   service per chain; FixCheck trusts that service's verification.
-* **Fix in another function.** Only the named function is compared; the model is
-  told to answer INCONCLUSIVE when the function alone cannot show the fix.
+* **Fix in another function.** Only the named function is compared; the model can
+  confirm a fix only by quoting lines the fix added to this function.
+* **Live reads.** Creation records, the commit feed and the EIP-1967 slot are live
+  reads compared field-by-field between validators (their bodies carry mutable
+  fields such as balances, so their sha256 is not compared); the values used are
+  immutable facts (a creation tx, a commit date) or change only on upgrade (the slot).
 * **Studio Dev value transfers.** `withdraw` posts `emit_transfer`; on Studio Dev
   queued transfers may not execute (see makewhole). The contract's books are
   correct either way.

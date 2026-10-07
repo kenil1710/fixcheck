@@ -8,10 +8,12 @@
   "report_url": "https://raw.githubusercontent.com/sherlock-audit/2024-05-pooltogether-judging/88298eacec6f178fd0b5f9f13e4605c58aa58072/README.md",
   "docs_url": "https://raw.githubusercontent.com/GenerationSoftware/pt-dev-docs/9f3322e7280f2e91346cabfc2512046c6cfcd2a8/docs/deployments/optimism.md",
   "audited_url": "https://raw.githubusercontent.com/sherlock-audit/2024-05-pooltogether/1aa1b8c028b659585e4c7a6b9b652fb075f86db3/pt-v5-claimer/src/Claimer.sol",
-  "fix_url": "https://raw.githubusercontent.com/GenerationSoftware/pt-v5-claimer/7416bb3850b657d7156b3d35c8897b03d353f800/src/Claimer.sol",
+  "fix_url": "https://raw.githubusercontent.com/GenerationSoftware/pt-v5-claimer/0651d1457d34b51d02ab0f535edc7a3ca72b176f/src/Claimer.sol",
   "title": "Issue M-5: The claimer's fee will be stolen by the winner",
   "offline": "IDENTICAL_TO_FIX",
-  "impl": ""
+  "impl": "",
+  "fix_merge_url": "https://raw.githubusercontent.com/GenerationSoftware/pt-v5-claimer/7416bb3850b657d7156b3d35c8897b03d353f800/src/Claimer.sol",
+  "fix_ref": "pull/32"
  },
  {
   "protocol": "PoolTogether V5",
@@ -22,10 +24,12 @@
   "report_url": "https://raw.githubusercontent.com/sherlock-audit/2024-05-pooltogether-judging/88298eacec6f178fd0b5f9f13e4605c58aa58072/README.md",
   "docs_url": "https://raw.githubusercontent.com/GenerationSoftware/pt-dev-docs/9f3322e7280f2e91346cabfc2512046c6cfcd2a8/docs/deployments/base.md",
   "audited_url": "https://raw.githubusercontent.com/sherlock-audit/2024-05-pooltogether/1aa1b8c028b659585e4c7a6b9b652fb075f86db3/pt-v5-claimer/src/Claimer.sol",
-  "fix_url": "https://raw.githubusercontent.com/GenerationSoftware/pt-v5-claimer/20f52a6f437166facb680ee4289be159a57fb763/src/Claimer.sol",
+  "fix_url": "https://raw.githubusercontent.com/GenerationSoftware/pt-v5-claimer/21a9ed64437a9bf6780e6c47b2509c8bc0ea9b09/src/Claimer.sol",
   "title": "Issue M-8: Claimers Cannot Claim Prizes When Last Tier Liquidity is 0, Preventing Winners from Receiving Their Prizes",
   "offline": "IDENTICAL_TO_FIX",
-  "impl": ""
+  "impl": "",
+  "fix_merge_url": "https://raw.githubusercontent.com/GenerationSoftware/pt-v5-claimer/20f52a6f437166facb680ee4289be159a57fb763/src/Claimer.sol",
+  "fix_ref": "pull/34"
  },
  {
   "protocol": "PoolTogether V5",
@@ -36,10 +40,12 @@
   "report_url": "https://raw.githubusercontent.com/sherlock-audit/2024-05-pooltogether-judging/88298eacec6f178fd0b5f9f13e4605c58aa58072/README.md",
   "docs_url": "https://raw.githubusercontent.com/GenerationSoftware/pt-dev-docs/9f3322e7280f2e91346cabfc2512046c6cfcd2a8/docs/deployments/optimism.md",
   "audited_url": "https://raw.githubusercontent.com/sherlock-audit/2024-05-pooltogether/1aa1b8c028b659585e4c7a6b9b652fb075f86db3/pt-v5-prize-pool/src/PrizePool.sol",
-  "fix_url": "https://raw.githubusercontent.com/GenerationSoftware/pt-v5-prize-pool/1338ae0f6e19fc007e6446f15161d453dc7ce988/src/PrizePool.sol",
+  "fix_url": "https://raw.githubusercontent.com/GenerationSoftware/pt-v5-prize-pool/6d57310ac572086a3cda88d0a80712d20a2150f7/src/PrizePool.sol",
   "title": "Issue M-15: User's might be able to claim their prizes even after shutdown",
   "offline": "IDENTICAL_TO_VULNERABLE",
-  "impl": ""
+  "impl": "",
+  "fix_merge_url": "https://raw.githubusercontent.com/GenerationSoftware/pt-v5-prize-pool/1338ae0f6e19fc007e6446f15161d453dc7ce988/src/PrizePool.sol",
+  "fix_ref": "pull/116"
  },
  {
   "protocol": "PoolTogether V5",
@@ -50,10 +56,12 @@
   "report_url": "https://raw.githubusercontent.com/sherlock-audit/2024-05-pooltogether-judging/88298eacec6f178fd0b5f9f13e4605c58aa58072/README.md",
   "docs_url": "https://raw.githubusercontent.com/GenerationSoftware/pt-dev-docs/9f3322e7280f2e91346cabfc2512046c6cfcd2a8/docs/deployments/optimism.md",
   "audited_url": "https://raw.githubusercontent.com/sherlock-audit/2024-05-pooltogether/1aa1b8c028b659585e4c7a6b9b652fb075f86db3/pt-v5-vault/src/PrizeVault.sol",
-  "fix_url": "https://raw.githubusercontent.com/GenerationSoftware/pt-v5-vault/d888632e8ad3ce87421cce96f3a17dd6db0bdbf5/src/PrizeVault.sol",
+  "fix_url": "https://raw.githubusercontent.com/GenerationSoftware/pt-v5-vault/c33bfa6befc8a9be683b52e101582d79ebef0dc9/src/PrizeVault.sol",
   "title": "Issue M-9: DoSed liquidations as `PrizeVault::liquidatableBalanceOf()` does not take into account the `mintLimit` when the token out is the asset",
   "offline": "IDENTICAL_TO_VULNERABLE",
-  "impl": ""
+  "impl": "",
+  "fix_merge_url": "https://raw.githubusercontent.com/GenerationSoftware/pt-v5-vault/d888632e8ad3ce87421cce96f3a17dd6db0bdbf5/src/PrizeVault.sol",
+  "fix_ref": "pull/114"
  },
  {
   "protocol": "PoolTogether V5",
@@ -64,10 +72,12 @@
   "report_url": "https://raw.githubusercontent.com/sherlock-audit/2024-05-pooltogether-judging/88298eacec6f178fd0b5f9f13e4605c58aa58072/README.md",
   "docs_url": "https://raw.githubusercontent.com/GenerationSoftware/pt-dev-docs/9f3322e7280f2e91346cabfc2512046c6cfcd2a8/docs/deployments/arbitrum.md",
   "audited_url": "https://raw.githubusercontent.com/sherlock-audit/2024-05-pooltogether/1aa1b8c028b659585e4c7a6b9b652fb075f86db3/pt-v5-vault/src/PrizeVault.sol",
-  "fix_url": "https://raw.githubusercontent.com/GenerationSoftware/pt-v5-vault/2acdde554f7309331b5b632a08f08cb6d223a4ee/src/PrizeVault.sol",
+  "fix_url": "https://raw.githubusercontent.com/GenerationSoftware/pt-v5-vault/60be8fc2d5bbf1606e920ca49bb8100337a1ee2d/src/PrizeVault.sol",
   "title": "Issue M-16: `maxDeposit` doesn't comply with ERC-4626",
   "offline": "IDENTICAL_TO_VULNERABLE",
-  "impl": ""
+  "impl": "",
+  "fix_merge_url": "https://raw.githubusercontent.com/GenerationSoftware/pt-v5-vault/2acdde554f7309331b5b632a08f08cb6d223a4ee/src/PrizeVault.sol",
+  "fix_ref": "pull/113"
  },
  {
   "protocol": "PoolTogether V5",
@@ -78,10 +88,12 @@
   "report_url": "https://raw.githubusercontent.com/sherlock-audit/2024-05-pooltogether-judging/88298eacec6f178fd0b5f9f13e4605c58aa58072/README.md",
   "docs_url": "https://raw.githubusercontent.com/GenerationSoftware/pt-dev-docs/9f3322e7280f2e91346cabfc2512046c6cfcd2a8/docs/deployments/ethereum.md",
   "audited_url": "https://raw.githubusercontent.com/sherlock-audit/2024-05-pooltogether/1aa1b8c028b659585e4c7a6b9b652fb075f86db3/pt-v5-vault/src/PrizeVault.sol",
-  "fix_url": "https://raw.githubusercontent.com/GenerationSoftware/pt-v5-vault/a32024ea18dc3217c13d15ac880a074128953b49/src/PrizeVault.sol",
+  "fix_url": "https://raw.githubusercontent.com/GenerationSoftware/pt-v5-vault/a812f8957e4563b0bcaa01ed8c2ac767b2f3e996/src/PrizeVault.sol",
   "title": "Issue M-17: `maxRedeem` doesn't comply with ERC-4626",
   "offline": "IDENTICAL_TO_VULNERABLE",
-  "impl": ""
+  "impl": "",
+  "fix_merge_url": "https://raw.githubusercontent.com/GenerationSoftware/pt-v5-vault/a32024ea18dc3217c13d15ac880a074128953b49/src/PrizeVault.sol",
+  "fix_ref": "pull/112"
  },
  {
   "protocol": "PoolTogether V5",
@@ -92,10 +104,12 @@
   "report_url": "https://raw.githubusercontent.com/sherlock-audit/2024-05-pooltogether-judging/88298eacec6f178fd0b5f9f13e4605c58aa58072/README.md",
   "docs_url": "https://raw.githubusercontent.com/GenerationSoftware/pt-dev-docs/9f3322e7280f2e91346cabfc2512046c6cfcd2a8/docs/deployments/base.md",
   "audited_url": "https://raw.githubusercontent.com/sherlock-audit/2024-05-pooltogether/1aa1b8c028b659585e4c7a6b9b652fb075f86db3/pt-v5-vault/src/abstract/Claimable.sol",
-  "fix_url": "https://raw.githubusercontent.com/GenerationSoftware/pt-v5-vault/67516cd5410d301f01eae4039105b304c142ca80/src/abstract/Claimable.sol",
+  "fix_url": "https://raw.githubusercontent.com/GenerationSoftware/pt-v5-vault/e328b319b66a341ea45d7aa565095888f2008294/src/abstract/Claimable.sol",
   "title": "Issue M-19: Gas Manipulation by Malicious Winners in claimPrizes Function",
   "offline": "IDENTICAL_TO_VULNERABLE",
-  "impl": ""
+  "impl": "",
+  "fix_merge_url": "https://raw.githubusercontent.com/GenerationSoftware/pt-v5-vault/67516cd5410d301f01eae4039105b304c142ca80/src/abstract/Claimable.sol",
+  "fix_ref": "pull/115"
  },
  {
   "protocol": "PoolTogether V5",
@@ -106,10 +120,12 @@
   "report_url": "https://raw.githubusercontent.com/sherlock-audit/2024-05-pooltogether-judging/88298eacec6f178fd0b5f9f13e4605c58aa58072/README.md",
   "docs_url": "https://raw.githubusercontent.com/GenerationSoftware/pt-dev-docs/9f3322e7280f2e91346cabfc2512046c6cfcd2a8/docs/deployments/optimism.md",
   "audited_url": "https://raw.githubusercontent.com/sherlock-audit/2024-05-pooltogether/1aa1b8c028b659585e4c7a6b9b652fb075f86db3/pt-v5-rng-witnet/src/RngWitnet.sol",
-  "fix_url": "https://raw.githubusercontent.com/GenerationSoftware/pt-v5-rng-witnet/e44b23c654de4b99a09e261be4a2106cf75eb7ca/src/RngWitnet.sol",
+  "fix_url": "https://raw.githubusercontent.com/GenerationSoftware/pt-v5-rng-witnet/2ddd97f1554374149594d633952422dd282d2588/src/RngWitnet.sol",
   "title": "Issue M-1: Draws can be retried even if a random number is available or the current draw has finished",
   "offline": "IDENTICAL_TO_VULNERABLE",
-  "impl": ""
+  "impl": "",
+  "fix_merge_url": "https://raw.githubusercontent.com/GenerationSoftware/pt-v5-rng-witnet/e44b23c654de4b99a09e261be4a2106cf75eb7ca/src/RngWitnet.sol",
+  "fix_ref": "pull/8"
  },
  {
   "protocol": "PoolTogether V5",
@@ -120,10 +136,12 @@
   "report_url": "https://raw.githubusercontent.com/sherlock-audit/2024-05-pooltogether-judging/88298eacec6f178fd0b5f9f13e4605c58aa58072/README.md",
   "docs_url": "https://raw.githubusercontent.com/GenerationSoftware/pt-dev-docs/9f3322e7280f2e91346cabfc2512046c6cfcd2a8/docs/deployments/arbitrum.md",
   "audited_url": "https://raw.githubusercontent.com/sherlock-audit/2024-05-pooltogether/1aa1b8c028b659585e4c7a6b9b652fb075f86db3/pt-v5-rng-witnet/src/RngWitnet.sol",
-  "fix_url": "https://raw.githubusercontent.com/GenerationSoftware/pt-v5-rng-witnet/e44b23c654de4b99a09e261be4a2106cf75eb7ca/src/RngWitnet.sol",
+  "fix_url": "https://raw.githubusercontent.com/GenerationSoftware/pt-v5-rng-witnet/2ddd97f1554374149594d633952422dd282d2588/src/RngWitnet.sol",
   "title": "Issue M-1: Draws can be retried even if a random number is available or the current draw has finished",
   "offline": "IDENTICAL_TO_FIX",
-  "impl": ""
+  "impl": "",
+  "fix_merge_url": "https://raw.githubusercontent.com/GenerationSoftware/pt-v5-rng-witnet/e44b23c654de4b99a09e261be4a2106cf75eb7ca/src/RngWitnet.sol",
+  "fix_ref": "pull/8"
  },
  {
   "protocol": "PoolTogether V5",
@@ -134,10 +152,12 @@
   "report_url": "https://raw.githubusercontent.com/sherlock-audit/2024-05-pooltogether-judging/88298eacec6f178fd0b5f9f13e4605c58aa58072/README.md",
   "docs_url": "https://raw.githubusercontent.com/GenerationSoftware/pt-dev-docs/9f3322e7280f2e91346cabfc2512046c6cfcd2a8/docs/deployments/optimism.md",
   "audited_url": "https://raw.githubusercontent.com/sherlock-audit/2024-05-pooltogether/1aa1b8c028b659585e4c7a6b9b652fb075f86db3/pt-v5-draw-manager/src/DrawManager.sol",
-  "fix_url": "https://raw.githubusercontent.com/GenerationSoftware/pt-v5-draw-manager/ac4f119b29a7ececcafec3e9242a293652cffaab/src/DrawManager.sol",
+  "fix_url": "https://raw.githubusercontent.com/GenerationSoftware/pt-v5-draw-manager/b55a44c7ec40a28570cf677fcd3fdf19c41a295a/src/DrawManager.sol",
   "title": "Issue M-14: `DrawManager.canStartDraw` does not consider retried RNG requests when determining if a new draw auction can be started",
   "offline": "IDENTICAL_TO_VULNERABLE",
-  "impl": ""
+  "impl": "",
+  "fix_merge_url": "https://raw.githubusercontent.com/GenerationSoftware/pt-v5-draw-manager/ac4f119b29a7ececcafec3e9242a293652cffaab/src/DrawManager.sol",
+  "fix_ref": "pull/15"
  },
  {
   "protocol": "PoolTogether V5",
@@ -148,10 +168,12 @@
   "report_url": "https://raw.githubusercontent.com/sherlock-audit/2024-05-pooltogether-judging/88298eacec6f178fd0b5f9f13e4605c58aa58072/README.md",
   "docs_url": "https://raw.githubusercontent.com/GenerationSoftware/pt-dev-docs/9f3322e7280f2e91346cabfc2512046c6cfcd2a8/docs/deployments/optimism.md",
   "audited_url": "https://raw.githubusercontent.com/sherlock-audit/2024-05-pooltogether/1aa1b8c028b659585e4c7a6b9b652fb075f86db3/pt-v5-draw-manager/src/DrawManager.sol",
-  "fix_url": "https://raw.githubusercontent.com/GenerationSoftware/pt-v5-draw-manager/4b0ab4eb5318aeef5f7c6fe21ea5d9bd5408043d/src/DrawManager.sol",
+  "fix_url": "https://raw.githubusercontent.com/GenerationSoftware/pt-v5-draw-manager/35f505f44d967ead5975a8cf7efc2696bc22d02b/src/DrawManager.sol",
   "title": "Issue H-3: Draw auction rewards likely exceed the available rewards, resulting in overpaying rewards or running into an `InsufficientReserve` error",
   "offline": "IDENTICAL_TO_VULNERABLE",
-  "impl": ""
+  "impl": "",
+  "fix_merge_url": "https://raw.githubusercontent.com/GenerationSoftware/pt-v5-draw-manager/4b0ab4eb5318aeef5f7c6fe21ea5d9bd5408043d/src/DrawManager.sol",
+  "fix_ref": "pull/18"
  },
  {
   "protocol": "Mellow Flexible Vaults",
@@ -162,10 +184,12 @@
   "report_url": "https://raw.githubusercontent.com/sherlock-audit/2025-07-mellow-flexible-vaults-judging/4bcbdcfe643761c67d7dd862ca5909168c3ad859/README.md",
   "docs_url": "https://raw.githubusercontent.com/mellow-finance/docs/3905b75a0f5b649b2dc5906f8b9b670f20c57944/core-vaults/core-deployments.mdx",
   "audited_url": "https://raw.githubusercontent.com/sherlock-audit/2025-07-mellow-flexible-vaults/eca8836d68d65bcbfc52c6f04cf6b4b1597555bf/flexible-vaults/src/permissions/Consensus.sol",
-  "fix_url": "https://raw.githubusercontent.com/mellow-finance/flexible-vaults/3c04a39733672f6c43f9907459aee5c4d22a4e27/src/permissions/Consensus.sol",
+  "fix_url": "https://raw.githubusercontent.com/mellow-finance/flexible-vaults/de69983271bf4f1a0b748eadc588f401d74a43bd/src/permissions/Consensus.sol",
   "title": "Issue H-1: `Consensus`.`checkSignatures` doesn't check duplication of signers",
   "offline": "IDENTICAL_TO_FIX",
-  "impl": ""
+  "impl": "",
+  "fix_merge_url": "https://raw.githubusercontent.com/mellow-finance/flexible-vaults/3c04a39733672f6c43f9907459aee5c4d22a4e27/src/permissions/Consensus.sol",
+  "fix_ref": "pull/5"
  },
  {
   "protocol": "Mellow Flexible Vaults",
@@ -179,7 +203,9 @@
   "fix_url": "https://raw.githubusercontent.com/mellow-finance/flexible-vaults/8ff3ad438f055a6b6427fe6f139fefced9049a58/src/queues/RedeemQueue.sol",
   "title": "Issue H-2: RedeemQueue Accounting Mismatch Between Batch Creation and Claim Eligibility",
   "offline": "CHANGED",
-  "impl": ""
+  "impl": "",
+  "fix_merge_url": "https://raw.githubusercontent.com/mellow-finance/flexible-vaults/8ff3ad438f055a6b6427fe6f139fefced9049a58/src/queues/RedeemQueue.sol",
+  "fix_ref": "pull/11"
  },
  {
   "protocol": "Mellow Flexible Vaults",
@@ -190,10 +216,12 @@
   "report_url": "https://raw.githubusercontent.com/sherlock-audit/2025-07-mellow-flexible-vaults-judging/4bcbdcfe643761c67d7dd862ca5909168c3ad859/README.md",
   "docs_url": "https://raw.githubusercontent.com/mellow-finance/docs/3905b75a0f5b649b2dc5906f8b9b670f20c57944/core-vaults/core-deployments.mdx",
   "audited_url": "https://raw.githubusercontent.com/sherlock-audit/2025-07-mellow-flexible-vaults/eca8836d68d65bcbfc52c6f04cf6b4b1597555bf/flexible-vaults/src/hooks/BasicRedeemHook.sol",
-  "fix_url": "https://raw.githubusercontent.com/mellow-finance/flexible-vaults/50a2eeda189443842441fb6972dfad7640edd43e/src/hooks/BasicRedeemHook.sol",
+  "fix_url": "https://raw.githubusercontent.com/mellow-finance/flexible-vaults/8e3703ff3871f5829b6df8bae8b26282cf14eb2a/src/hooks/BasicRedeemHook.sol",
   "title": "Issue H-3: Unable to withdraw native tokens because vault and redeem hooks do not handle native tokens",
   "offline": "CHANGED",
-  "impl": ""
+  "impl": "",
+  "fix_merge_url": "https://raw.githubusercontent.com/mellow-finance/flexible-vaults/50a2eeda189443842441fb6972dfad7640edd43e/src/hooks/BasicRedeemHook.sol",
+  "fix_ref": "pull/10"
  },
  {
   "protocol": "Mellow Flexible Vaults",
@@ -204,10 +232,12 @@
   "report_url": "https://raw.githubusercontent.com/sherlock-audit/2025-07-mellow-flexible-vaults-judging/4bcbdcfe643761c67d7dd862ca5909168c3ad859/README.md",
   "docs_url": "https://raw.githubusercontent.com/mellow-finance/docs/3905b75a0f5b649b2dc5906f8b9b670f20c57944/core-vaults/core-deployments.mdx",
   "audited_url": "https://raw.githubusercontent.com/sherlock-audit/2025-07-mellow-flexible-vaults/eca8836d68d65bcbfc52c6f04cf6b4b1597555bf/flexible-vaults/src/managers/FeeManager.sol",
-  "fix_url": "https://raw.githubusercontent.com/mellow-finance/flexible-vaults/28261eef5155bf70587705681b28b967512c12f7/src/managers/FeeManager.sol",
+  "fix_url": "https://raw.githubusercontent.com/mellow-finance/flexible-vaults/db595fab94c2792e5c981867726b8981466ead6b/src/managers/FeeManager.sol",
   "title": "Issue H-4: Protocol Fee Multiple Accrual in Oracle.submitReports",
   "offline": "CHANGED",
-  "impl": ""
+  "impl": "",
+  "fix_merge_url": "https://raw.githubusercontent.com/mellow-finance/flexible-vaults/28261eef5155bf70587705681b28b967512c12f7/src/managers/FeeManager.sol",
+  "fix_ref": "pull/6"
  },
  {
   "protocol": "Mellow Flexible Vaults",
@@ -218,10 +248,12 @@
   "report_url": "https://raw.githubusercontent.com/sherlock-audit/2025-07-mellow-flexible-vaults-judging/4bcbdcfe643761c67d7dd862ca5909168c3ad859/README.md",
   "docs_url": "https://raw.githubusercontent.com/mellow-finance/docs/3905b75a0f5b649b2dc5906f8b9b670f20c57944/core-vaults/core-deployments.mdx",
   "audited_url": "https://raw.githubusercontent.com/sherlock-audit/2025-07-mellow-flexible-vaults/eca8836d68d65bcbfc52c6f04cf6b4b1597555bf/flexible-vaults/src/managers/FeeManager.sol",
-  "fix_url": "https://raw.githubusercontent.com/mellow-finance/flexible-vaults/a41231d9178d153efb4f808d48c68044fb67b686/src/managers/FeeManager.sol",
+  "fix_url": "https://raw.githubusercontent.com/mellow-finance/flexible-vaults/e181487a3db3358203beb219f5ffcc6744ba84ab/src/managers/FeeManager.sol",
   "title": "Issue H-5: Incorrect performance fee calculation in `FeeManager`",
   "offline": "IDENTICAL_TO_FIX",
-  "impl": ""
+  "impl": "",
+  "fix_merge_url": "https://raw.githubusercontent.com/mellow-finance/flexible-vaults/a41231d9178d153efb4f808d48c68044fb67b686/src/managers/FeeManager.sol",
+  "fix_ref": "pull/21"
  },
  {
   "protocol": "Mellow Flexible Vaults",
@@ -232,10 +264,12 @@
   "report_url": "https://raw.githubusercontent.com/sherlock-audit/2025-07-mellow-flexible-vaults-judging/4bcbdcfe643761c67d7dd862ca5909168c3ad859/README.md",
   "docs_url": "https://raw.githubusercontent.com/mellow-finance/docs/3905b75a0f5b649b2dc5906f8b9b670f20c57944/core-vaults/core-deployments.mdx",
   "audited_url": "https://raw.githubusercontent.com/sherlock-audit/2025-07-mellow-flexible-vaults/eca8836d68d65bcbfc52c6f04cf6b4b1597555bf/flexible-vaults/src/managers/ShareManager.sol",
-  "fix_url": "https://raw.githubusercontent.com/mellow-finance/flexible-vaults/2e6c78e033e8744985b9e6f699469e03e50454b5/src/managers/ShareManager.sol",
+  "fix_url": "https://raw.githubusercontent.com/mellow-finance/flexible-vaults/09ed3dbc45db5a8918919a68c53792716b3adc6e/src/managers/ShareManager.sol",
   "title": "Issue M-1: Flawed Logic in `ShareManager` Inverts Transfer Whitelist Behavior",
   "offline": "CHANGED",
-  "impl": ""
+  "impl": "",
+  "fix_merge_url": "https://raw.githubusercontent.com/mellow-finance/flexible-vaults/2e6c78e033e8744985b9e6f699469e03e50454b5/src/managers/ShareManager.sol",
+  "fix_ref": "pull/3"
  },
  {
   "protocol": "Mellow Flexible Vaults",
@@ -246,10 +280,12 @@
   "report_url": "https://raw.githubusercontent.com/sherlock-audit/2025-07-mellow-flexible-vaults-judging/4bcbdcfe643761c67d7dd862ca5909168c3ad859/README.md",
   "docs_url": "https://raw.githubusercontent.com/mellow-finance/docs/3905b75a0f5b649b2dc5906f8b9b670f20c57944/core-vaults/core-deployments.mdx",
   "audited_url": "https://raw.githubusercontent.com/sherlock-audit/2025-07-mellow-flexible-vaults/eca8836d68d65bcbfc52c6f04cf6b4b1597555bf/flexible-vaults/src/modules/ShareModule.sol",
-  "fix_url": "https://raw.githubusercontent.com/mellow-finance/flexible-vaults/01b0a4507a29703a776de79e5e007616d4efe591/src/modules/ShareModule.sol",
+  "fix_url": "https://raw.githubusercontent.com/mellow-finance/flexible-vaults/b828fae29317c071449fdccaf8954ea84201465f/src/modules/ShareModule.sol",
   "title": "Issue M-4: Protocol Fee Exponential Compounding in ShareModule.handleReport",
   "offline": "IDENTICAL_TO_FIX",
-  "impl": ""
+  "impl": "",
+  "fix_merge_url": "https://raw.githubusercontent.com/mellow-finance/flexible-vaults/01b0a4507a29703a776de79e5e007616d4efe591/src/modules/ShareModule.sol",
+  "fix_ref": "pull/28"
  },
  {
   "protocol": "Mellow Flexible Vaults",
@@ -260,10 +296,12 @@
   "report_url": "https://raw.githubusercontent.com/sherlock-audit/2025-07-mellow-flexible-vaults-judging/4bcbdcfe643761c67d7dd862ca5909168c3ad859/README.md",
   "docs_url": "https://raw.githubusercontent.com/mellow-finance/docs/3905b75a0f5b649b2dc5906f8b9b670f20c57944/core-vaults/core-deployments.mdx",
   "audited_url": "https://raw.githubusercontent.com/sherlock-audit/2025-07-mellow-flexible-vaults/eca8836d68d65bcbfc52c6f04cf6b4b1597555bf/flexible-vaults/src/queues/DepositQueue.sol",
-  "fix_url": "https://raw.githubusercontent.com/mellow-finance/flexible-vaults/4478af2870610255abeaa7c1f1b0649345f05c47/src/queues/DepositQueue.sol",
+  "fix_url": "https://raw.githubusercontent.com/mellow-finance/flexible-vaults/18871f519e8600f0e0ff3298011d13b0409be8aa/src/queues/DepositQueue.sol",
   "title": "Issue M-5: cancelDepositRequest() always reverts due to modifying FenwickTree with wrong index",
   "offline": "CHANGED",
-  "impl": ""
+  "impl": "",
+  "fix_merge_url": "https://raw.githubusercontent.com/mellow-finance/flexible-vaults/4478af2870610255abeaa7c1f1b0649345f05c47/src/queues/DepositQueue.sol",
+  "fix_ref": "pull/7"
  },
  {
   "protocol": "Cap",
@@ -274,10 +312,12 @@
   "report_url": "https://raw.githubusercontent.com/sherlock-audit/2025-07-cap-judging/e1c4f01994e830b520238e0c292303b0d7eed1e1/README.md",
   "docs_url": "https://raw.githubusercontent.com/cap-labs-dev/cap-docs/719b6388b8e63ccefc86d17abb5fe3408db8c52d/developers/addresses.md",
   "audited_url": "https://raw.githubusercontent.com/sherlock-audit/2025-07-cap/2bd34fa369d36af8ecc377090d3292ea74ccc669/cap-contracts/contracts/lendingPool/libraries/LiquidationLogic.sol",
-  "fix_url": "https://raw.githubusercontent.com/cap-labs-dev/cap-contracts/1bc019d2ccfeea4aab31f4b8a7ca948a9dd6e705/contracts/lendingPool/libraries/LiquidationLogic.sol",
+  "fix_url": "https://raw.githubusercontent.com/cap-labs-dev/cap-contracts/80ea01e47e7e063fd6d607823ca38ec7e2ff147a/contracts/lendingPool/libraries/LiquidationLogic.sol",
   "title": "Issue M-1: Attacker/partial liquidator can extend Liquidation action by resetting  $.liquidationStart[_agent] to 0.",
   "offline": "CHANGED",
-  "impl": "0x68c4F03b8640C0393a832987147BaE7A0b27aaa7"
+  "impl": "0x68c4F03b8640C0393a832987147BaE7A0b27aaa7",
+  "fix_merge_url": "https://raw.githubusercontent.com/cap-labs-dev/cap-contracts/1bc019d2ccfeea4aab31f4b8a7ca948a9dd6e705/contracts/lendingPool/libraries/LiquidationLogic.sol",
+  "fix_ref": "pull/185"
  },
  {
   "protocol": "Cap",
@@ -288,10 +328,12 @@
   "report_url": "https://raw.githubusercontent.com/sherlock-audit/2025-07-cap-judging/e1c4f01994e830b520238e0c292303b0d7eed1e1/README.md",
   "docs_url": "https://raw.githubusercontent.com/cap-labs-dev/cap-docs/719b6388b8e63ccefc86d17abb5fe3408db8c52d/developers/addresses.md",
   "audited_url": "https://raw.githubusercontent.com/sherlock-audit/2025-07-cap/2bd34fa369d36af8ecc377090d3292ea74ccc669/cap-contracts/contracts/lendingPool/libraries/BorrowLogic.sol",
-  "fix_url": "https://raw.githubusercontent.com/cap-labs-dev/cap-contracts/0e8e7ef8bd27ce77b5bb6ef987563b791671e784/contracts/lendingPool/libraries/BorrowLogic.sol",
+  "fix_url": "https://raw.githubusercontent.com/cap-labs-dev/cap-contracts/1655cf6c58c258fab8a148c41c5e777d8de38b9e/contracts/lendingPool/libraries/BorrowLogic.sol",
   "title": "Issue M-3: Lender DoS if all asset is borrowed or realized",
   "offline": "IDENTICAL_TO_FIX",
-  "impl": "0x68c4F03b8640C0393a832987147BaE7A0b27aaa7"
+  "impl": "0x68c4F03b8640C0393a832987147BaE7A0b27aaa7",
+  "fix_merge_url": "https://raw.githubusercontent.com/cap-labs-dev/cap-contracts/0e8e7ef8bd27ce77b5bb6ef987563b791671e784/contracts/lendingPool/libraries/BorrowLogic.sol",
+  "fix_ref": "pull/189"
  },
  {
   "protocol": "OP Stack fault proofs",
@@ -302,9 +344,11 @@
   "report_url": "https://raw.githubusercontent.com/sherlock-audit/2024-02-optimism-2024-judging/2b7f5d81eeb2755a4de99e6fd5b2fce823177a3c/README.md",
   "docs_url": "https://raw.githubusercontent.com/ethereum-optimism/superchain-registry/95de6f6c8a745bb80412240632f5c93dc8145b4b/superchain/configs/mainnet/op.toml",
   "audited_url": "https://raw.githubusercontent.com/sherlock-audit/2024-02-optimism-2024/f216b0d3ad08c1a0ead557ea74691aaefd5fd489/optimism/packages/contracts-bedrock/src/dispute/DisputeGameFactory.sol",
-  "fix_url": "https://raw.githubusercontent.com/ethereum-optimism/optimism/4a157b4b0aad8eef2ea19320d5ed1a1d50a9807e/packages/contracts-bedrock/src/dispute/DisputeGameFactory.sol",
+  "fix_url": "https://raw.githubusercontent.com/ethereum-optimism/optimism/909d996a6bb73989346d592ddd3a5138c7cc4b77/packages/contracts-bedrock/src/dispute/DisputeGameFactory.sol",
   "title": "Issue M-3: Theft of initial bonds from proposers who are using smart wallets",
   "offline": "CHANGED",
-  "impl": "0x72B971717E088B59F26d4236BE222ADB6ACD393b"
+  "impl": "0x72B971717E088B59F26d4236BE222ADB6ACD393b",
+  "fix_merge_url": "https://raw.githubusercontent.com/ethereum-optimism/optimism/4a157b4b0aad8eef2ea19320d5ed1a1d50a9807e/packages/contracts-bedrock/src/dispute/DisputeGameFactory.sol",
+  "fix_ref": "pull/10149"
  }
 ]

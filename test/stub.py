@@ -310,6 +310,8 @@ class _Web:
         self.log = []
         self.flaky = None       # fn(url, n) -> (status, text) | None, n = call count for url
         self.counts = {}
+        self.rpc = {}           # (url, method, json params) -> result (JSON-RPC)
+        self.rpc_down = set()   # rpc urls that fail
 
     def get(self, url):
         self.log.append(url)
@@ -328,10 +330,21 @@ ETH = WEB
 
 
 def _web_request(url, method="GET", body=None, headers=None, **_k):
-    if method != "GET":
-        raise AssertionError("FixCheck only issues GET requests")
-    status, text = WEB.get(url)
-    return _Response(status, text)
+    if method == "GET":
+        status, text = WEB.get(url)
+        return _Response(status, text)
+    if method != "POST":
+        raise AssertionError("FixCheck only issues GET and JSON-RPC POST requests")
+    WEB.log.append(url)
+    if url in WEB.rpc_down or "*" in WEB.down:
+        raise RuntimeError("connection refused")
+    req = json.loads(body)
+    key = (url, req["method"], json.dumps(req["params"]))
+    if key in WEB.rpc:
+        return _Response(200, json.dumps({"jsonrpc": "2.0", "id": 1, "result": WEB.rpc[key]}))
+    if req["method"] == "eth_getStorageAt":
+        return _Response(200, json.dumps({"jsonrpc": "2.0", "id": 1, "result": "0x" + "0" * 64}))
+    return _Response(200, json.dumps({"jsonrpc": "2.0", "id": 1, "error": {"code": -32000, "message": "not in fixtures"}}))
 
 
 def _web_get(url, **_k):

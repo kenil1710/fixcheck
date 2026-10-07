@@ -8,9 +8,9 @@ export async function ogForCheck(idRaw: string, dep: Deployment) {
   const id = Number(idRaw);
   const r = Number.isInteger(id) && id > 0 ? await getCheck(id, dep) : null;
   const c = r?.ok ? r.data : null;
-  const v = !c ? null : c.state === "OPEN" ? "OPEN" : c.verdict === "FIXED" ? "FIXED" : c.verdict === "NOT_FIXED" ? "NOT_FIXED" : "INCONCLUSIVE";
+  const v = !c ? null : c.state === "OPEN" ? "OPEN" : c.verdict === "FIXED" ? "FIXED" : c.verdict === "NOT_FIXED" ? "NOT_FIXED" : c.verdict === "PREDATES_AUDIT" ? "PREDATES" : "INCONCLUSIVE";
   const look = v === "FIXED" ? { fg: C.fixed, bg: C.fixedBg, word: "Fixed in deployed code" } : v === "NOT_FIXED" ? { fg: C.bad, bg: C.badBg, word: "Not in deployed code" }
-    : v === "OPEN" ? { fg: C.ink2, bg: C.sheet, word: "Being checked" } : { fg: C.unsure, bg: C.unsureBg, word: "Inconclusive" };
+    : v === "OPEN" ? { fg: C.ink2, bg: C.sheet, word: "Being checked" } : v === "PREDATES" ? { fg: C.ink2, bg: C.sheet, word: "Deployed before the audit" } : { fg: C.unsure, bg: C.unsureBg, word: "Inconclusive" };
   const title = c ? c.title.replace(/^Issue [A-Z]-\d+:\s*/, "").replace(/`/g, "") : "FixCheck";
   const t = title.length > 120 ? title.slice(0, 117).replace(/\s+\S*$/, "") + "…" : title;
   return render(

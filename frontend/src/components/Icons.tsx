@@ -11,6 +11,9 @@ export const IconUnsure = ({ className = "", size = 14 }: P) => (
 export const IconOpen = ({ className = "", size = 14 }: P) => (
   <svg width={size} height={size} viewBox="0 0 16 16" aria-hidden="true" className={className}><circle cx="8" cy="8" r="7" fill="none" stroke="currentColor" strokeWidth="1.6" /><path d="M8 4.2V8l2.6 1.6" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" /></svg>
 );
+export const IconPredates = ({ className = "", size = 14 }: P) => (
+  <svg width={size} height={size} viewBox="0 0 16 16" aria-hidden="true" className={className}><rect x="2" y="3" width="12" height="11" rx="1.5" fill="none" stroke="currentColor" strokeWidth="1.5" /><path d="M2 6.5h12M5.5 1.8v2.6M10.5 1.8v2.6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
+);
 export const IconCopy = ({ className = "", size = 14 }: P) => (
   <svg width={size} height={size} viewBox="0 0 16 16" aria-hidden="true" className={className}><rect x="5" y="5" width="9" height="9" rx="1.5" fill="none" stroke="currentColor" strokeWidth="1.4" /><path d="M11 3.5V3a1.5 1.5 0 0 0-1.5-1.5h-6A1.5 1.5 0 0 0 2 3v6.5A1.5 1.5 0 0 0 3.5 11H4" fill="none" stroke="currentColor" strokeWidth="1.4" /></svg>
 );

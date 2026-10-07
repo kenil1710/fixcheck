@@ -184,9 +184,26 @@ export function findingSection(report: string, fid: string): Section {
   return { ok: true, title: lines[start].slice(level).trim(), text, status };
 }
 
+/** Same rules as contracts/FixCheck.py norm_url (fix 8). */
+export function normUrl(url: string): string {
+  let t = url.trim();
+  const h = t.indexOf("#"); if (h >= 0) t = t.slice(0, h);
+  const q = t.indexOf("?"); if (q >= 0) t = t.slice(0, q);
+  while (t.endsWith("/")) t = t.slice(0, -1);
+  if (!t.toLowerCase().startsWith("https://")) return "";
+  const rest = t.slice(8); const j = rest.indexOf("/");
+  t = "https://" + (j < 0 ? rest : rest.slice(0, j)).toLowerCase() + (j < 0 ? "" : rest.slice(j));
+  if (t.startsWith("https://raw.githubusercontent.com/")) {
+    const parts = t.slice(34).split("/");
+    if (parts.length >= 2) { parts[0] = parts[0].toLowerCase(); parts[1] = parts[1].toLowerCase(); }
+    t = "https://raw.githubusercontent.com/" + parts.join("/");
+  }
+  return t;
+}
+
 /** Same rules as contracts/FixCheck.py github_pin / archive_pin. */
 export function githubPin(url: string): { owner: string; repo: string; sha: string; path: string } | null {
-  const t = url.trim();
+  const t = normUrl(url);
   if (!t.startsWith("https://raw.githubusercontent.com/") || /[?#\s]/.test(t) || t.length > 300) return null;
   const parts = t.slice(34).split("/");
   if (parts.length < 4) return null;
@@ -196,7 +213,7 @@ export function githubPin(url: string): { owner: string; repo: string; sha: stri
   return { owner: owner.toLowerCase(), repo: repo.toLowerCase(), sha, path: parts.slice(3).join("/") };
 }
 export function archivePin(url: string): { ts: string; target: string; host: string } | null {
-  const t = url.trim();
+  const t = normUrl(url);
   if (!t.startsWith("https://web.archive.org/web/") || /[?#\s]/.test(t)) return null;
   const rest = t.slice(28);
   const k = rest.indexOf("/");
@@ -213,27 +230,61 @@ export const isPinned = (u: string) => Boolean(githubPin(u) || archivePin(u));
 /** Lines of the stored (comment-free) function, as the contract indexes them. */
 export const codeLines = (code: string) => stripComments(code).split("\n");
 
-/** Port of fix_change / contains_fix (contracts/FixCheck.py), for the preview. */
-const canonLines = (code: string) => codeLines(code).map(canon).filter(Boolean);
+/** Port of the v1.2 decision helpers (contracts/FixCheck.py), for the preview. */
+export function blankStrings(code: string): string {
+  let out = ""; let i = 0;
+  while (i < code.length) {
+    const c = code[i];
+    if (c === '"' || c === "'") {
+      let j = i + 1;
+      while (j < code.length && code[j] !== c && code[j] !== "\n") { if (code[j] === "\\") j++; j++; }
+      out += c + c; i = j < code.length && code[j] === c ? j + 1 : j; continue;
+    }
+    out += c; i++;
+  }
+  return out;
+}
+const blankedLines = (code: string) => blankStrings(stripComments(code)).split("\n");
+const canonLines = (code: string) => blankedLines(code).map(canon).filter(Boolean);
 const substantive = (l: string) => l.trim().length >= 8 && /[\p{L}\p{N}_$]/u.test(l);
-export function fixChange(aud: string, fix: string): { removed: string[]; added: string[] } {
-  const a = canonLines(aud), f = canonLines(fix), n = a.length, m = f.length;
+const depths = (lines: string[]) => { const out: number[] = []; let d = 0; for (const l of lines) { out.push(d); for (const ch of l) { if (ch === "{") d++; else if (ch === "}") d--; } } return out; };
+function lcsOps(a: string[], f: string[]): [string, number, number][] {
+  const n = a.length, m = f.length;
   const dp = Array.from({ length: n + 1 }, () => new Array<number>(m + 1).fill(0));
   for (let i = n - 1; i >= 0; i--) for (let j = m - 1; j >= 0; j--) dp[i][j] = a[i] === f[j] ? dp[i + 1][j + 1] + 1 : Math.max(dp[i + 1][j], dp[i][j + 1]);
-  const removed: string[] = [], added: string[] = [];
-  let i = 0, j = 0;
+  const ops: [string, number, number][] = []; let i = 0, j = 0;
   while (i < n || j < m) {
-    if (i < n && j < m && a[i] === f[j]) { i++; j++; }
-    else if (j < m && (i >= n || dp[i][j + 1] >= dp[i + 1][j])) added.push(f[j++]);
-    else removed.push(a[i++]);
+    if (i < n && j < m && a[i] === f[j]) { ops.push(["=", i++, j++]); }
+    else if (j < m && (i >= n || dp[i][j + 1] >= dp[i + 1][j])) ops.push(["+", -1, j++]);
+    else ops.push(["-", i++, -1]);
   }
+  return ops;
+}
+export function fixChange(aud: string, fix: string): { removed: string[]; added: string[] } {
+  const a = canonLines(aud), f = canonLines(fix); const removed: string[] = [], added: string[] = [];
+  for (const [op, i, j] of lcsOps(a, f)) { if (op === "-") removed.push(a[i]); else if (op === "+") added.push(f[j]); }
   return { removed, added };
 }
 export function containsFix(dep: string, aud: string, fix: string): boolean {
   if (!fix) return false;
   const ch = fixChange(aud, fix);
-  const added = ch.added.filter(substantive), removed = ch.removed.filter(substantive);
-  if (!added.length) return false;
-  const d = canonLines(dep);
-  return added.every((x) => d.includes(x)) && !removed.some((x) => d.includes(x));
+  if (!ch.added.some(substantive)) return false;
+  const d = canonLines(dep), dd = depths(d);
+  if (ch.removed.some((x) => !ch.added.includes(x) && substantive(x) && d.includes(x))) return false;
+  const a = canonLines(aud), f = canonLines(fix), df = depths(f);
+  const addedJ = lcsOps(a, f).filter(([op]) => op === "+").map(([, , j]) => j);
+  let pos = 0;
+  for (let k = 0; k < addedJ.length; k++) {
+    const start = addedJ[k]; let end = start;
+    while (k + 1 < addedJ.length && addedJ[k + 1] === end + 1) end = addedJ[++k];
+    const lo = start > 0 ? start - 1 : start, hi = end + 1 < f.length ? end + 1 : end;
+    const lines = f.slice(lo, hi + 1), ds = df.slice(lo, hi + 1).map((x) => x - df[lo]);
+    let found = -1;
+    for (let s = pos; s + lines.length <= d.length; s++) {
+      if (lines.every((l, t) => d[s + t] === l && dd[s + t] - dd[s] === ds[t])) { found = s; break; }
+    }
+    if (found < 0) return false;
+    pos = found + lines.length - 1;
+  }
+  return true;
 }

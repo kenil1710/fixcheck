@@ -3,9 +3,10 @@ import type { Score } from "@/lib/types";
 /** Scorecard ring: share of decided findings confirmed in deployed code. */
 export function Ring({ s, size = 132 }: { s: Score; size?: number }) {
   const unsure = s.inconclusive + s.expired;
-  const decided = s.fixed + s.not_fixed + unsure;
+  const pre = s.predates_audit ?? 0;
+  const decided = s.fixed + s.not_fixed + pre + unsure;
   const r = 52, c = 2 * Math.PI * r;
-  const parts: [number, string][] = [[s.fixed, "var(--fixed)"], [s.not_fixed, "var(--bad)"], [unsure, "var(--unsure)"]];
+  const parts: [number, string][] = [[s.fixed, "var(--fixed)"], [s.not_fixed, "var(--bad)"], [pre, "var(--ink-3)"], [unsure, "var(--unsure)"]];
   let off = 0;
   return (
     <figure className="flex items-center gap-5">
@@ -23,6 +24,7 @@ export function Ring({ s, size = 132 }: { s: Score; size?: number }) {
       <figcaption className="t-small grid gap-1">
         <span className="flex items-center gap-2"><i className="inline-block h-2.5 w-2.5 rounded-sm" style={{ background: "var(--fixed)" }} />{s.fixed} fixed in deployed code</span>
         <span className="flex items-center gap-2"><i className="inline-block h-2.5 w-2.5 rounded-sm" style={{ background: "var(--bad)" }} />{s.not_fixed} not in deployed code</span>
+        {pre > 0 && <span className="flex items-center gap-2"><i className="inline-block h-2.5 w-2.5 rounded-sm" style={{ background: "var(--ink-3)" }} />{pre} deployed before the audit</span>}
         <span className="flex items-center gap-2"><i className="inline-block h-2.5 w-2.5 rounded-sm" style={{ background: "var(--unsure)" }} />{unsure} inconclusive</span>
         {s.open > 0 && <span className="flex items-center gap-2"><i className="inline-block h-2.5 w-2.5 rounded-sm border border-dashed" style={{ borderColor: "var(--ink-3)" }} />{s.open} being checked</span>}
       </figcaption>

@@ -10,7 +10,7 @@ type Props = {
   fix: string;
   deployed: string;
   quoted: number[];              // indices into the deployed function's lines
-  tone: "fixed" | "bad" | "unsure" | "open";
+  tone: "fixed" | "bad" | "unsure" | "open" | "predates";
   fn: string;
   auditedCommit: string;
   fixCommit: string;
@@ -29,7 +29,7 @@ export function DiffViewer(p: Props) {
   const rows = useMemo(() => squeeze(diffLines(left, right)), [left, right]);
   const changed = rows.filter((r) => r.kind !== "same").length;
   const quoted = new Set(p.quoted);
-  const qCls = p.tone === "fixed" ? "q-fixed" : p.tone === "bad" ? "q-bad" : "q-unsure";
+  const qCls = p.tone === "fixed" ? "q-fixed" : p.tone === "bad" ? "q-bad" : p.tone === "predates" ? "q-predates" : "q-unsure";
   const leftLabel = against === "audited" ? `Audited · ${commit7(p.auditedCommit)}` : `Fix commit · ${commit7(p.fixCommit)}`;
   const rightLabel = `Deployed · ${CHAIN_NAMES[p.chain] ?? p.chain} ${short(p.address)}`;
 
@@ -54,7 +54,7 @@ export function DiffViewer(p: Props) {
         <span className="ln shrink-0">{s ? s.n + 1 : ""}</span>
         <span className="pr-4">{s ? s.text || " " : " "}</span>
         {isQ && s && !quoted.has(s.n - 1) && (
-          <span className="qnote sticky right-0 ml-auto shrink-0 self-stretch pl-6 pr-2 font-sans text-[0.72rem] italic flex items-center leading-none" style={{ color: `var(--${p.tone === "open" ? "ink-2" : p.tone})` }}>quoted by validators</span>
+          <span className="qnote sticky right-0 ml-auto shrink-0 self-stretch pl-6 pr-2 font-sans text-[0.72rem] italic flex items-center leading-none" style={{ color: `var(--${p.tone === "open" || p.tone === "predates" ? "ink-2" : p.tone})` }}>quoted by validators</span>
         )}
       </div>
     );

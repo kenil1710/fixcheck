@@ -81,6 +81,21 @@ class Probe(gl.contract.Contract):
 
         self.last = gl.vm.run_nondet(run, lambda r: isinstance(r, gl.vm.Return))
 
+    @gl.public.write
+    def probe_rpc(self, calls: str) -> None:
+        def run() -> str:
+            out = {}
+            for line in calls.split("|"):
+                url, body = line.split(" ", 1)
+                try:
+                    r = gl.nondet.web.request(url, method="POST", body=body, headers={"Content-Type": "application/json"})
+                    out[url + " " + body[:60]] = str(_status(r)) + " " + _raw(r)[:160].decode("utf-8", errors="ignore")
+                except Exception as e:
+                    out[url] = "err " + str(e)[:120]
+            return json.dumps(out, sort_keys=True)
+
+        self.last = gl.vm.run_nondet(run, lambda r: isinstance(r, gl.vm.Return))
+
     @gl.public.view
     def get_last(self) -> str:
         return self.last
