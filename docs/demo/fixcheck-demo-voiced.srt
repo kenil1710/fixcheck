@@ -11,109 +11,109 @@ Users trust it.
 Nobody checks the code that's actually deployed.
 
 4
-00:00:06,100 --> 00:00:06,900
+00:00:06,100 --> 00:00:06,910
 FixCheck does.
 
 5
-00:00:06,900 --> 00:00:13,670
-It read 22 checks of 21 findings marked fixed, against the code at each protocol's listed address:
+00:00:06,910 --> 00:00:11,330
+It read 22 checks of 21 findings marked fixed: 7 fixed,
 
 6
-00:00:13,670 --> 00:00:18,620
-7 fixed, 2 not fixed, and 6 deployed before the audit.
+00:00:11,330 --> 00:00:17,550
+1 not fixed, 6 deployed before the audit, and 1 before its fix existed.
 
 7
-00:00:18,667 --> 00:00:24,187
+00:00:17,600 --> 00:00:23,120
 This is PoolTogether: one row per finding, its status, and how it was decided.
 
 8
-00:00:24,233 --> 00:00:25,883
+00:00:23,167 --> 00:00:24,887
 This finding was marked fixed.
 
 9
-00:00:25,883 --> 00:00:28,843
-On the left is the function the auditors reviewed;
+00:00:24,887 --> 00:00:28,657
+On the left, the function the auditors reviewed; on the right,
 
 10
-00:00:28,843 --> 00:00:32,463
-on the right, the one deployed on Arbitrum after the audit.
+00:00:28,657 --> 00:00:32,087
+the one deployed on Ethereum after the fix was merged.
 
 11
-00:00:32,463 --> 00:00:34,683
-They're identical, line for line.
+00:00:32,087 --> 00:00:33,347
+They're identical.
 
 12
-00:00:34,733 --> 00:00:38,283
+00:00:33,400 --> 00:00:36,950
 Against the fix commit, the fixed line simply isn't there.
 
 13
-00:00:38,283 --> 00:00:40,983
+00:00:36,950 --> 00:00:39,650
 So code alone says: not fixed.
 
 14
-00:00:41,033 --> 00:00:43,573
+00:00:39,700 --> 00:00:42,240
 When code can't decide, validators ask a model,
 
 15
-00:00:43,573 --> 00:00:46,433
+00:00:42,240 --> 00:00:45,100
 but it must quote a line the fix added.
 
 16
-00:00:46,433 --> 00:00:50,813
+00:00:45,100 --> 00:00:49,480
 Here it couldn't, so the check is inconclusive and everyone is refunded.
 
 17
-00:00:50,867 --> 00:00:55,467
+00:00:49,533 --> 00:00:54,133
 To check a finding yourself, pick the report, the finding and the deployed address.
 
 18
-00:00:55,467 --> 00:00:59,987
+00:00:54,133 --> 00:00:58,653
 Before you pay, the app runs the same checks the contract will.
 
 19
-00:01:00,033 --> 00:01:02,433
+00:00:58,700 --> 00:01:00,880
 Then you stake that it isn't fixed.
 
 20
-00:01:02,433 --> 00:01:07,783
-Every validator reads the report, both commits, the verified source and the deployment date.
+00:01:00,880 --> 00:01:04,010
+Every validator reads the report, both commits, the verified source,
 
 21
-00:01:07,833 --> 00:01:10,833
-This vault was deployed the day before the audit,
+00:01:04,010 --> 00:01:07,380
+and when the code and the fix were made.
 
 22
-00:01:10,833 --> 00:01:13,713
-so code already says: predates the audit.
+00:01:07,433 --> 00:01:10,433
+This vault was deployed the day before the audit,
 
 23
-00:01:13,767 --> 00:01:15,497
-Code decides everything it can.
+00:01:10,433 --> 00:01:13,313
+so code already says: predates the audit.
 
 24
-00:01:15,497 --> 00:01:20,587
-The model never decides what counts as evidence, the dates, or the money.
+00:01:13,367 --> 00:01:15,097
+Code decides everything it can.
 
 25
-00:01:20,633 --> 00:01:23,643
-The real result: six PoolTogether contracts run the audited
+00:01:15,097 --> 00:01:20,187
+The model never decides what counts as evidence, the dates, or the money.
 
 26
-00:01:23,643 --> 00:01:26,643
-code but predate the audit and can't be upgraded.
+00:01:20,233 --> 00:01:25,283
+The real result: six PoolTogether contracts predate the audit, one vault predates its fix,
 
 27
-00:01:26,643 --> 00:01:29,883
-Two vaults deployed after it are not fixed.
+00:01:25,283 --> 00:01:29,453
+and one vault deployed after the fix is not fixed.
 
 28
-00:01:29,933 --> 00:01:31,473
+00:01:29,500 --> 00:01:31,040
 Code compares the functions.
 
 29
-00:01:31,473 --> 00:01:36,483
+00:01:31,040 --> 00:01:36,050
 GenLayer validators only judge the middle cases, and must quote the exact lines.
 
 30
-00:01:36,483 --> 00:01:39,583
+00:01:36,050 --> 00:01:39,150
 fixcheck-ledger dot vercel dot app.

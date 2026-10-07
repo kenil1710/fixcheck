@@ -11,49 +11,45 @@ Users trust it.
 Nobody checks the code that's actually deployed.
 
 4
-00:00:06,100 --> 00:00:07,750
+00:00:06,100 --> 00:00:07,820
 This finding was marked fixed.
 
 5
-00:00:07,750 --> 00:00:10,710
-On the left is the function the auditors reviewed;
+00:00:07,820 --> 00:00:11,590
+On the left, the function the auditors reviewed; on the right,
 
 6
-00:00:10,710 --> 00:00:14,330
-on the right, the one deployed on Arbitrum after the audit.
+00:00:11,590 --> 00:00:15,020
+the one deployed on Ethereum after the fix was merged.
 
 7
-00:00:14,330 --> 00:00:16,550
-They're identical, line for line.
+00:00:15,020 --> 00:00:16,280
+They're identical.
 
 8
-00:00:16,600 --> 00:00:20,150
+00:00:16,333 --> 00:00:19,883
 Against the fix commit, the fixed line simply isn't there.
 
 9
-00:00:20,150 --> 00:00:22,850
+00:00:19,883 --> 00:00:22,583
 So code alone says: not fixed.
 
 10
-00:00:22,900 --> 00:00:25,910
-The real result: six PoolTogether contracts run the audited
+00:00:22,633 --> 00:00:27,683
+The real result: six PoolTogether contracts predate the audit, one vault predates its fix,
 
 11
-00:00:25,910 --> 00:00:28,910
-code but predate the audit and can't be upgraded.
+00:00:27,683 --> 00:00:31,853
+and one vault deployed after the fix is not fixed.
 
 12
-00:00:28,910 --> 00:00:32,150
-Two vaults deployed after it are not fixed.
-
-13
-00:00:32,200 --> 00:00:33,740
+00:00:31,900 --> 00:00:33,440
 Code compares the functions.
 
-14
-00:00:33,740 --> 00:00:38,750
+13
+00:00:33,440 --> 00:00:38,450
 GenLayer validators only judge the middle cases, and must quote the exact lines.
 
-15
-00:00:38,750 --> 00:00:41,850
+14
+00:00:38,450 --> 00:00:41,550
 fixcheck-ledger dot vercel dot app.
