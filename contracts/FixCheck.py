@@ -182,11 +182,26 @@ B_BEACON_PROXY = "BEACON_PROXY"
 # Sourcify chains, for the creation block's timestamp (fix 7). Each RPC
 # serves recent state at a past block number (docs/research/probe_web2.json).
 CHAINS = {
-    "ethereum": ("blockscout", "https://eth.blockscout.com", 1, "https://ethereum-rpc.publicnode.com"),
+    "ethereum": ("blockscout", "https://eth.blockscout.com", 1, "https://eth.drpc.org"),
     "optimism": ("blockscout", "https://explorer.optimism.io", 10, "https://mainnet.optimism.io"),
     "base": ("sourcify", "https://sourcify.dev", 8453, "https://mainnet.base.org"),
-    "arbitrum": ("sourcify", "https://sourcify.dev", 42161, "https://arb1.arbitrum.io/rpc"),
+    "arbitrum": ("sourcify", "https://sourcify.dev", 42161, "https://arb-pokt.nodies.app"),
     "polygon": ("sourcify", "https://sourcify.dev", 137, "https://polygon.drpc.org"),
+}
+
+# Round-4 fix 5: every verdict-relevant chain fact (the implementation and
+# beacon slots, the creation block's time and code, the code at the slot
+# block, the switch's Upgraded event and its time, and the Upgraded logs
+# between the slot block and the head) is read from BOTH the chain's RPC above
+# and this one, run by another operator, and must agree exactly; otherwise the
+# fact is unknown. Both serve archive state and logs from GenVM
+# (docs/research/probe_rpc_r4.json).
+RPC_B = {
+    "ethereum": "https://mainnet.gateway.tenderly.co",
+    "optimism": "https://optimism.gateway.tenderly.co",
+    "base": "https://base.gateway.tenderly.co",
+    "arbitrum": "https://arbitrum.gateway.tenderly.co",
+    "polygon": "https://polygon.gateway.tenderly.co",
 }
 
 # Round-2 fix 11: the leader reads the EIP-1967 slot at (head - margin) and
@@ -223,8 +238,11 @@ ALLOWED_PREFIXES = (
     GITHUB_RAW, PATCH_BASE, ARCHIVE,
     "https://eth.blockscout.com/api/v2/", "https://explorer.optimism.io/api/v2/",
     "https://sourcify.dev/server/v2/contract/",
-    "https://ethereum-rpc.publicnode.com", "https://mainnet.optimism.io",
-    "https://mainnet.base.org", "https://arb1.arbitrum.io/rpc", "https://polygon.drpc.org",
+    "https://eth.drpc.org", "https://mainnet.optimism.io", "https://mainnet.base.org",
+    "https://arb-pokt.nodies.app", "https://polygon.drpc.org",
+    "https://mainnet.gateway.tenderly.co", "https://optimism.gateway.tenderly.co",
+    "https://base.gateway.tenderly.co", "https://arbitrum.gateway.tenderly.co",
+    "https://polygon.gateway.tenderly.co",
 )
 
 MAX_PULLS = 4                       # fix PR links followed per finding
@@ -1549,6 +1567,7 @@ DEP_STATUS_BASIS = {
     "PARENT_UNRESOLVED": "PARENT_UNRESOLVED",
     "HELPER_OVERRIDDEN": "HELPER_OVERRIDDEN",
     "BEACON_PROXY": B_BEACON_PROXY,
+    "CHAIN_SOURCES_DISAGREE": "CHAIN_SOURCES_DISAGREE",
 }
 
 
@@ -2080,9 +2099,10 @@ def fetch(url: str) -> dict:
             "text": body.decode("utf-8", errors="replace"), "memento": memento(res)}
 
 
-def rpc(chain: str, method: str, params: list) -> typing.Any:
-    """One JSON-RPC call to the chain's frozen endpoint; None on any failure."""
-    url = CHAINS[chain][3]
+def rpc(chain: str, method: str, params: list, second: bool = False) -> typing.Any:
+    """One JSON-RPC call to one of the chain's two frozen endpoints; None on
+    any failure."""
+    url = RPC_B[chain] if second else CHAINS[chain][3]
     if not allowed_url(url):
         return None
     body = json.dumps({"jsonrpc": "2.0", "id": 1, "method": method, "params": params})
@@ -2100,6 +2120,61 @@ def rpc(chain: str, method: str, params: list) -> typing.Any:
     if not isinstance(doc, dict) or "error" in doc:
         return None
     return doc.get("result")
+
+
+DISAGREE = "!"
+
+
+def both(chain: str, method: str, params: list, read: typing.Any) -> typing.Any:
+    """Round-4 fix 5: the same call to both RPCs, each answer reduced by
+    `read` (None = unusable). None if either is unusable, DISAGREE if they
+    differ, else the agreed value."""
+    a = rpc(chain, method, params)
+    a = None if a is None else read(a)
+    if a is None:
+        return None
+    b = rpc(chain, method, params, True)
+    b = None if b is None else read(b)
+    if b is None:
+        return None
+    return a if json.dumps(a, sort_keys=True) == json.dumps(b, sort_keys=True) else DISAGREE
+
+
+def _hex_int(v: typing.Any) -> typing.Any:
+    if not isinstance(v, str) or not v.startswith("0x") or len(v) < 3 or len(v) > 18 or not _is_hex(v[2:].lower(), len(v) - 2):
+        return None
+    return int(v[2:], 16)
+
+
+def block_time(chain: str, block: int) -> typing.Any:
+    """A block's timestamp, agreed by both RPCs (None / DISAGREE)."""
+    def read(b: typing.Any) -> typing.Any:
+        return _hex_int(b.get("timestamp")) if isinstance(b, dict) else None
+    return both(chain, "eth_getBlockByNumber", [hex(block), False], read)
+
+
+def upgraded_logs(chain: str, proxy: str, lo: int, hi: int) -> typing.Any:
+    """The proxy's Upgraded logs in blocks lo..hi as [block, index, impl],
+    agreed by both RPCs (None / DISAGREE)."""
+    def read(v: typing.Any) -> typing.Any:
+        if not isinstance(v, list):
+            return None
+        out = []
+        for it in v:
+            if not isinstance(it, dict) or _addr(it.get("address")) != proxy:
+                return None
+            tops = it.get("topics")
+            if not isinstance(tops, list) or len(tops) < 2 or str(tops[0]).lower() != UPGRADED_TOPIC:
+                return None
+            t1 = str(tops[1]).lower()
+            blk = _hex_int(it.get("blockNumber"))
+            idx = _hex_int(it.get("logIndex"))
+            if len(t1) != 66 or not _is_hex(t1[2:], 64) or blk is None or idx is None or it.get("removed") is True:
+                return None
+            out.append([blk, idx, "0x" + t1[26:]])
+        return sorted(out)
+    flt = {"address": proxy, "topics": [UPGRADED_TOPIC], "fromBlock": hex(lo), "toBlock": hex(hi)}
+    return both(chain, "eth_getLogs", [flt], read)
 
 
 def source_url(chain: str, address: str) -> str:
@@ -2175,26 +2250,29 @@ def parse_source(chain: str, got: dict) -> dict:
 
 
 def head_block(chain: str) -> int:
-    """The RPC's latest block number; -1 if it did not answer."""
-    v = rpc(chain, "eth_blockNumber", [])
-    if not isinstance(v, str) or not v.startswith("0x") or len(v) < 3 or len(v) > 18 or not _is_hex(v[2:].lower(), len(v) - 2):
+    """The lower of the two RPCs' latest block numbers (round-4 fix 5: a
+    block both have); -1 if either did not answer."""
+    a = _hex_int(rpc(chain, "eth_blockNumber", []))
+    b = _hex_int(rpc(chain, "eth_blockNumber", [], True))
+    if a is None or b is None:
         return -1
-    return int(v[2:], 16)
+    return a if a < b else b
 
 
 def eip1967_impl(chain: str, address: str, block: int, slot: str = EIP1967_IMPL_SLOT) -> typing.Any:
     """The EIP-1967 implementation slot (or another address slot) read over
     RPC at `block` (round-2 fix 11): an address, "" for an empty slot, None if
-    the RPC did not answer."""
-    v = rpc(chain, "eth_getStorageAt", [address, slot, hex(block)])
-    if not isinstance(v, str) or not v.startswith("0x"):
-        return None
-    h = v[2:].lower()
-    if len(h) != 64 or not _is_hex(h, 64):
-        return None
-    if h == "0" * 64:
-        return ""
-    return "0x" + h[24:]
+    an RPC did not answer, DISAGREE if the two RPCs differ (round-4 fix 5)."""
+    def read(v: typing.Any) -> typing.Any:
+        if not isinstance(v, str) or not v.startswith("0x"):
+            return None
+        h = v[2:].lower()
+        if len(h) != 64 or not _is_hex(h, 64):
+            return None
+        if h == "0" * 64:
+            return ""
+        return "0x" + h[24:]
+    return both(chain, "eth_getStorageAt", [address, slot, hex(block)], read)
 
 
 def creation_time(chain: str, address: str) -> dict:
@@ -2249,33 +2327,40 @@ def creation_time(chain: str, address: str) -> dict:
 
 
 def code_hex(chain: str, address: str, block: int) -> typing.Any:
-    """eth_getCode at `block`: lowercase hex ("0x" = no code), None if the RPC
-    did not answer."""
-    v = rpc(chain, "eth_getCode", [address, hex(block)])
-    if not isinstance(v, str) or not v.startswith("0x") or not _is_hex(v[2:].lower(), len(v) - 2):
-        return None
-    return v.lower()
+    """eth_getCode at `block` from both RPCs: the sha256 of the lowercase hex
+    ("" = no code), None if an RPC did not answer, DISAGREE if they differ."""
+    def read(v: typing.Any) -> typing.Any:
+        if not isinstance(v, str) or not v.startswith("0x") or not _is_hex(v[2:].lower(), len(v) - 2):
+            return None
+        return "" if v == "0x" else _sha(v.lower())
+    return both(chain, "eth_getCode", [address, hex(block)], read)
 
 
-def code_status(chain: str, address: str, born: int, block: int) -> str:
+def code_status(chain: str, address: str, born: int, block: int, at: int = -1) -> str:
     """Round-4 fix 4: is the code that runs at `block` the code created at
     `born` (the block of the explorer's creation tx)? Before EIP-6780 a
     contract could SELFDESTRUCT and other code be created at the same address
     (CREATE2), and the explorer's creation tx then dates the FIRST code.
-    "OK": no code at born - 1, code at born, the same code at `block`.
-    "CODE_CHANGED": other code runs now. "NOT_CREATED_THERE": the address had
-    code before born, or none at born. "UNREADABLE": the block is unknown or
-    an RPC did not answer. Only OK lets the creation date count."""
+    "OK": no code at born - 1, code at born, the same code at `block`, and
+    (round-4 fix 5) both RPCs agree on all of it and date block `born` at
+    exactly `at`, the explorer's creation time. "CODE_CHANGED": other code
+    runs now. "NOT_CREATED_THERE": the address had code before born, or none
+    at born. "SOURCES_DISAGREE": the RPCs (or the RPCs and the explorer)
+    differ. "UNREADABLE": the block is unknown or an RPC did not answer. Only
+    OK lets the creation date count."""
     if born <= 0:
         return "UNREADABLE"
     before = code_hex(chain, address, born - 1)
     then = code_hex(chain, address, born)
     now = code_hex(chain, address, block)
-    if before is None or then is None or now is None:
+    ts = block_time(chain, born)
+    if before is None or then is None or now is None or ts is None:
         return "UNREADABLE"
-    if before != "0x" or then == "0x":
+    if DISAGREE in (before, then, now, ts) or (at >= 0 and ts != at):
+        return "SOURCES_DISAGREE"
+    if before != "" or then == "":
         return "NOT_CREATED_THERE"
-    if _sha(then) != _sha(now):
+    if then != now:
         return "CODE_CHANGED"
     return "OK"
 
@@ -2338,7 +2423,7 @@ def last_upgrade(text: str, proxy: str, block: int) -> dict:
     return best
 
 
-def switch_time(chain: str, proxy: str, impl: str, block: int) -> dict:
+def switch_time(chain: str, proxy: str, impl: str, block: int, head: int = -1) -> dict:
     """When the proxy switched to the implementation its EIP-1967 slot holds
     at `block`: {"status", "block", "at"}. status EVENT (dated), NO_LOG_SOURCE,
     UNREADABLE, NO_EVENT, or EVENT_MISMATCH (the last event names another
@@ -2359,6 +2444,21 @@ def switch_time(chain: str, proxy: str, impl: str, block: int) -> dict:
         return {"status": "NO_EVENT", "block": 0, "at": 0}
     if last["impl"] != impl:
         return {"status": "EVENT_MISMATCH", "block": last["block"], "at": 0}
+    # round-4 fix 5: the explorer is one source. Both RPCs must show no
+    # Upgraded log between the slot block and their head, the same log at
+    # the event's block, and the same time for that block.
+    if head > block:
+        later = upgraded_logs(chain, proxy, block + 1, head)
+        if isinstance(later, list) and len(later) > 0:
+            return {"refused": "UPGRADED_AFTER_SLOT_BLOCK"}
+        if later is None or later == DISAGREE:
+            return {"status": "UNCONFIRMED", "block": last["block"], "at": 0}
+    there = upgraded_logs(chain, proxy, last["block"], last["block"])
+    if there is None or there == DISAGREE or [last["block"], last["index"], impl] not in there \
+            or there[-1] != [last["block"], last["index"], impl]:
+        return {"status": "UNCONFIRMED", "block": last["block"], "at": 0}
+    if block_time(chain, last["block"]) != last["at"]:
+        return {"status": "UNCONFIRMED", "block": last["block"], "at": 0}
     return {"status": "EVENT", "block": last["block"], "at": last["at"]}
 
 
@@ -2396,6 +2496,7 @@ def deployed_function(chain: str, address: str, base: str, fn: str, slot_block: 
     slot = eip1967_impl(chain, address, block)
     if slot is None:
         return {"refused": "RPC_UNREADABLE"}
+    disagree = slot == DISAGREE
     # round-4 fix 2 (R3 item 4): the named block must still hold the current
     # implementation. A validator also reads the slot at its own (head -
     # margin); a block from before an upgrade is refused, so the leader cannot
@@ -2405,15 +2506,21 @@ def deployed_function(chain: str, address: str, base: str, fn: str, slot_block: 
         now_slot = eip1967_impl(chain, address, latest)
         if now_slot is None:
             return {"refused": "RPC_UNREADABLE"}
-        if now_slot != slot:
+        disagree = disagree or now_slot == DISAGREE
+        if not disagree and now_slot != slot:
             return {"refused": "SLOT_CHANGED_SINCE_SLOT_BLOCK"}
     out = {"impl": "", "source_sha256": got["sha256"], "impl_source_sha256": "", "slot_block": block,
-           "compiled": src["target"], "dep_status": "OK", "dep": {"ok": False, "code": "", "canon": ""}}
+           "compiled": src["target"], "dep_status": "OK", "dep": {"ok": False, "code": "", "canon": ""},
+           "head": head}
     # round-4 fix 4: a beacon proxy runs whatever its beacon names; neither
     # the address's own source nor its dates say what runs
     beacon = eip1967_impl(chain, address, block, EIP1967_BEACON_SLOT)
     if beacon is None:
         return {"refused": "RPC_UNREADABLE"}
+    if disagree or beacon == DISAGREE:
+        # round-4 fix 5: the two RPCs name different code: nothing is judged
+        out["dep_status"] = "CHAIN_SOURCES_DISAGREE"
+        return out
     if beacon != "":
         out["dep_status"] = "BEACON_PROXY"
         return out
@@ -2632,17 +2739,17 @@ def gather(p: dict, slot_block: int = -1) -> dict:
     impl_at = 0
     sw = {"status": "", "block": 0, "at": 0}
     # round-4 fix 4: a creation date counts only for the code created then
-    code_st = code_status(p["chain"], p["address"], born["block"], d["slot_block"])
+    code_st = code_status(p["chain"], p["address"], born["block"], d["slot_block"], born["at"])
     impl_code_st = ""
     if d["impl"] != "":
         ib = creation_time(p["chain"], d["impl"])
         if not ib:
             return {"refused": "CREATION_DATE_UNREADABLE"}
         impl_at = ib["at"]
-        impl_code_st = code_status(p["chain"], d["impl"], ib["block"], d["slot_block"])
+        impl_code_st = code_status(p["chain"], d["impl"], ib["block"], d["slot_block"], ib["at"])
         # round-3 fix 2: when the proxy switched to this implementation, read
         # at the same leader-named block as the slot
-        sw = switch_time(p["chain"], p["address"], d["impl"], d["slot_block"])
+        sw = switch_time(p["chain"], p["address"], d["impl"], d["slot_block"], d["head"])
         if "refused" in sw:
             return sw
     dep = d["dep"]

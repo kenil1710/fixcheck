@@ -506,5 +506,142 @@ class R4_P5_SlotReadBeforeTheLastUpgrade(unittest.TestCase):
         w.at(T0 + 3600)
         self.assertEqual(w.call(B.ANYONE, "decide", out["check_id"])["verdict"], "NOT_FIXED")
 
+
+# =============================================================================
+# Step 4. Every verdict-relevant chain fact from two independent RPCs
+# =============================================================================
+
+def rpcs(chain):
+    """The chain's two RPC endpoints (the second is '' on code without one)."""
+    return MOD.CHAINS[chain][3], getattr(MOD, "RPC_B", {}).get(chain, "https://second-rpc.invalid")
+
+
+def answer(url, method, params, result):
+    WEB.rpc[(url, method, json.dumps(params))] = result
+
+
+class R4_C1_TwoIndependentRpcs(unittest.TestCase):
+    """The implementation slot, the creation block's time and code, and the
+    switch's Upgraded event each came from ONE RPC endpoint (or one
+    explorer). One lying or broken endpoint could move a verdict. Each is
+    now read from two RPCs run by different operators, and anything but exact
+    agreement leaves that fact unknown - INCONCLUSIVE, never a guess."""
+
+    def test_two_operators_per_chain(self):
+        for chain in MOD.CHAINS:
+            a, b = rpcs(chain)
+            host = lambda u: u.split("/")[2]
+            self.assertNotEqual(host(a), host(b), chain)
+            self.assertTrue(MOD.allowed_url(a) and MOD.allowed_url(b), chain)
+
+    def test_slot_disagreement_is_inconclusive(self):
+        w = B.World()
+        case = B.VAULT_ETH
+        R3.as_proxy(case, LONG_AGO, LONG_AGO, [(19000000, 3, IMPL, LONG_AGO)])
+        a, b = rpcs("ethereum")
+        answer(b, "eth_getStorageAt", [case["address"].lower(), MOD.EIP1967_IMPL_SLOT, hex(B.stub.HEAD - 2)],
+               slot_word(OTHER))
+        out = w.file(case)
+        self.assertEqual((out.get("status"), out.get("dep_status")), ("OK", "CHAIN_SOURCES_DISAGREE"),
+                         "the second RPC names another implementation: " + json.dumps(out)[:200])
+        w.at(T0 + 3600)
+        d = w.call(B.ANYONE, "decide", out["check_id"])
+        self.assertEqual((d["verdict"], d["basis"]), ("INCONCLUSIVE", "CHAIN_SOURCES_DISAGREE"))
+
+    def test_creation_time_disagreement_is_unknown(self):
+        # PREDATES_AUDIT on the real OP vault, unless the second RPC dates its
+        # creation block differently
+        w = B.World()
+        case = B.VAULT_OP
+        blk = B.stub.born_block(case["address"])
+        a, b = rpcs("optimism")
+        answer(b, "eth_getBlockByNumber", [hex(blk), False], {"number": hex(blk), "timestamp": hex(R3.AFTER_FIX)})
+        out = w.file(case)
+        w.at(T0 + 3600)
+        d = w.call(B.ANYONE, "decide", out["check_id"])
+        self.assertEqual((d["verdict"], d["basis"]), ("INCONCLUSIVE", "DEPLOY_TIME_UNKNOWN"),
+                         "one RPC's creation time decided the verdict")
+        self.assertEqual(w.c.get_check(out["check_id"])["code_status"], "SOURCES_DISAGREE")
+
+    def test_explorer_time_must_match_both_rpcs(self):
+        # Blockscout says one time for the creation tx, both RPCs another
+        w = B.World()
+        case = B.VAULT_ETH
+        R3.as_proxy(case, LONG_AGO, LONG_AGO, [(19000000, 3, IMPL, LONG_AGO)])
+        blk = R3.block_of(LONG_AGO)
+        for u in rpcs("ethereum"):
+            answer(u, "eth_getBlockByNumber", [hex(blk), False], {"number": hex(blk), "timestamp": hex(LONG_AGO + 7)})
+        out = w.file(case)
+        ch = w.c.get_check(out["check_id"])
+        self.assertEqual((ch["code_status"], ch["impl_code_status"]), ("SOURCES_DISAGREE", "SOURCES_DISAGREE"))
+        self.assertEqual(out["code_says"], "INCONCLUSIVE")
+
+    def test_code_disagreement_is_unknown(self):
+        w = B.World()
+        case = B.VAULT_OP
+        addr = case["address"].lower()
+        blk = B.stub.born_block(addr)
+        a, b = rpcs("optimism")
+        answer(b, "eth_getCode", [addr, hex(blk)], "0x60ff")
+        out = w.file(case)
+        self.assertEqual(w.c.get_check(out["check_id"])["code_status"], "SOURCES_DISAGREE")
+        self.assertEqual(out["code_says"], "INCONCLUSIVE")
+
+    def test_upgraded_event_must_be_confirmed_by_both_rpcs(self):
+        # the explorer lists a switch before the fix; the second RPC has no
+        # such log in that block
+        w = B.World()
+        case = B.VAULT_ETH
+        R3.as_proxy(case, LONG_AGO, LONG_AGO, [(19000000, 3, IMPL, LONG_AGO)])
+        a, b = rpcs("ethereum")
+        flt = {"address": case["address"].lower(), "topics": [MOD.UPGRADED_TOPIC],
+               "fromBlock": hex(19000000), "toBlock": hex(19000000)}
+        answer(b, "eth_getLogs", [flt], [])
+        out = w.file(case)
+        ch = w.c.get_check(out["check_id"])
+        self.assertEqual(ch["switch_status"], "UNCONFIRMED", "the explorer alone dated the switch")
+        w.at(T0 + 3600)
+        d = w.call(B.ANYONE, "decide", out["check_id"])
+        self.assertEqual((d["verdict"], d["basis"]), ("INCONCLUSIVE", "UPGRADE_TIME_UNKNOWN"))
+
+    def test_upgraded_event_time_must_match(self):
+        w = B.World()
+        case = B.VAULT_ETH
+        R3.as_proxy(case, LONG_AGO, LONG_AGO, [(19000000, 3, IMPL, LONG_AGO)])
+        for u in rpcs("ethereum"):
+            answer(u, "eth_getBlockByNumber", [hex(19000000), False], {"number": hex(19000000), "timestamp": hex(AFTER_FIX)})
+        out = w.file(case)
+        self.assertEqual(w.c.get_check(out["check_id"])["switch_status"], "UNCONFIRMED")
+
+    def test_upgrade_in_the_window_seen_only_by_the_rpcs(self):
+        # the explorer has not indexed it yet; both RPCs have it above the slot block
+        w = B.World()
+        case = B.VAULT_ETH
+        R3.as_proxy(case, LONG_AGO, LONG_AGO, [(19000000, 3, IMPL, LONG_AGO)])
+        head = B.stub.HEAD
+        log = [{"address": case["address"].lower(), "topics": [MOD.UPGRADED_TOPIC, slot_word(IMPL)],
+                "blockNumber": hex(head - 1), "logIndex": "0x1", "removed": False}]
+        flt = {"address": case["address"].lower(), "topics": [MOD.UPGRADED_TOPIC],
+               "fromBlock": hex(head - 1), "toBlock": hex(head)}
+        for u in rpcs("ethereum"):
+            answer(u, "eth_getLogs", [flt], log)
+        out = w.file(case)
+        self.assertEqual((out["status"], out.get("reason")), ("REFUSED", "UPGRADED_AFTER_SLOT_BLOCK"))
+
+    def test_one_rpc_down_refuses_and_writes_nothing(self):
+        for chain_case in (B.VAULT_ETH, B.VAULT_OP):
+            w = B.World()
+            WEB.rpc_down.add(rpcs(chain_case["chain"])[1])
+            out = w.file(chain_case)
+            self.assertEqual((out["status"], out["reason"]), ("REFUSED", "RPC_UNREADABLE"))
+            self.assertEqual(int(w.c.checks_n), 0)
+
+    def test_both_endpoints_are_read(self):
+        w = B.World()
+        self.assertEqual(w.file(B.VAULT_OP)["status"], "OK")
+        a, b = rpcs("optimism")
+        self.assertIn(a, WEB.log)
+        self.assertIn(b, WEB.log)
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

@@ -392,9 +392,9 @@ class R2_10_SlotReadAtLatest(unittest.TestCase):
         seen = []
         real = MOD.rpc
 
-        def spy(chain, method, params):
+        def spy(chain, method, params, second=False):
             seen.append((method, params))
-            return real(chain, method, params)
+            return real(chain, method, params, second)
         MOD.rpc = spy
         try:
             w = B.World()

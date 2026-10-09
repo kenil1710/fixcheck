@@ -101,3 +101,63 @@ Changes to round-3 tests forced by this fix (no assertion about a vulnerability 
 - `as_proxy` gives each creation tx a `block_number`, as Blockscout's real answer does (the creation-block code check needs it).
 
 After the fix: 31 tests in `test_attacks_r4.py`, OK; all earlier suites OK.
+
+## Step 4. Two independent RPCs for every verdict-relevant chain fact (round-4 fix 5)
+
+On the round-3 code each chain fact came from ONE source: the implementation slot from one RPC endpoint, a Blockscout chain's creation time from Blockscout alone, a Sourcify chain's from Sourcify plus one RPC, and the switch from Blockscout's log list alone. One lying or broken endpoint could move a verdict.
+
+**Pairs** (different operators; all ten answer archive reads and logs from inside GenVM on Studio Dev, probe tx `0xe72ca8d4a95649c0c05b77f449d1f0889452dd92e15715c80f320ad57eab6851`, raw answers in [`research/probe_rpc_r4.json`](research/probe_rpc_r4.json)):
+
+| Chain | RPC A | RPC B |
+|---|---|---|
+| ethereum | `eth.drpc.org` (dRPC) | `mainnet.gateway.tenderly.co` (Tenderly) |
+| optimism | `mainnet.optimism.io` (OP Labs) | `optimism.gateway.tenderly.co` |
+| base | `mainnet.base.org` (Base) | `base.gateway.tenderly.co` |
+| arbitrum | `arb-pokt.nodies.app` (Nodies / Pocket) | `arbitrum.gateway.tenderly.co` |
+| polygon | `polygon.drpc.org` (dRPC) | `polygon.gateway.tenderly.co` |
+
+The round-3 endpoints `ethereum-rpc.publicnode.com` and `arb1.arbitrum.io/rpc` were replaced: neither serves archive state without a token, which the creation-block code check (step 3) needs. Probed from a laptop, the other free endpoints either refuse archive reads (publicnode, Flashbots, blockpi, meowrpc) or are gone (1rpc for OP/Base, Blast, polygon-rpc.com).
+
+**Rule.** `both()` sends the same call to A and B and reduces each answer to the fact it carries. Either answer missing: the filing is refused (`RPC_UNREADABLE`) and nothing is written. The two differ: the fact is unknown. Facts read this way:
+
+| Fact | Used for | When A and B (or they and the explorer) differ |
+|---|---|---|
+| head block | slot-block range | the lower of the two heads is used |
+| EIP-1967 implementation and beacon slots, at the slot block and at the head | which code runs | `dep_status` `CHAIN_SOURCES_DISAGREE` → INCONCLUSIVE |
+| code at creation block − 1, at the creation block and at the slot block (sha256) | step 3 | `code_status` `SOURCES_DISAGREE` → the creation date does not count |
+| the creation block's timestamp, which must also equal the explorer's creation time | PREDATES dates | same |
+| the switch's `Upgraded` log at its block (same index, same implementation, and the last one in that block) and that block's timestamp, which must equal Blockscout's | the switch date | `switch_status` `UNCONFIRMED` → the switch is undated (INCONCLUSIVE `UPGRADE_TIME_UNKNOWN` unless another date is after the fix) |
+| `Upgraded` logs from the slot block + 1 to the head | stale slot block | any log: refused `UPGRADED_AFTER_SLOT_BLOCK`; unreadable or differing: `UNCONFIRMED` |
+
+What stays single-source, by design: verified source and the creation tx hash come from one explorer per chain (Blockscout or Sourcify; a second explorer is not reachable from GenVM for most chains, round-1 research); completeness of Blockscout's Upgraded list before the slot block (both RPCs refuse `eth_getLogs` over a proxy's lifetime). Both are cross-checked where the RPCs can: the creation tx's block must hold the first code and the explorer's timestamp; the last listed event must be in both RPCs' logs with the slot's implementation.
+
+Run before this fix (all 10 failed):
+
+```
+ERROR: test_one_rpc_down_refuses_and_writes_nothing (__main__.R4_C1_TwoIndependentRpcs.test_one_rpc_down_refuses_and_writes_nothing)
+KeyError: 'reason'
+FAIL: test_both_endpoints_are_read (__main__.R4_C1_TwoIndependentRpcs.test_both_endpoints_are_read)
+AssertionError: 'https://second-rpc.invalid' not found in ['https://github.com/sherlock-audit/2024-05-pooltogether-judging/branch_commits/88298eacec6f178fd0b5f9f13e4605c58aa58072', 'https://github.com
+FAIL: test_code_disagreement_is_unknown (__main__.R4_C1_TwoIndependentRpcs.test_code_disagreement_is_unknown)
+AssertionError: 'OK' != 'SOURCES_DISAGREE'
+FAIL: test_creation_time_disagreement_is_unknown (__main__.R4_C1_TwoIndependentRpcs.test_creation_time_disagreement_is_unknown)
+AssertionError: Tuples differ: ('PREDATES_AUDIT', 'DEPLOYED_BEFORE_AUDIT') != ('INCONCLUSIVE', 'DEPLOY_TIME_UNKNOWN')
+FAIL: test_explorer_time_must_match_both_rpcs (__main__.R4_C1_TwoIndependentRpcs.test_explorer_time_must_match_both_rpcs)
+AssertionError: Tuples differ: ('OK', 'OK') != ('SOURCES_DISAGREE', 'SOURCES_DISAGREE')
+FAIL: test_slot_disagreement_is_inconclusive (__main__.R4_C1_TwoIndependentRpcs.test_slot_disagreement_is_inconclusive)
+AssertionError: Tuples differ: ('OK', 'OK') != ('OK', 'CHAIN_SOURCES_DISAGREE')
+FAIL: test_two_operators_per_chain (__main__.R4_C1_TwoIndependentRpcs.test_two_operators_per_chain)
+AssertionError: False is not true : ethereum
+FAIL: test_upgrade_in_the_window_seen_only_by_the_rpcs (__main__.R4_C1_TwoIndependentRpcs.test_upgrade_in_the_window_seen_only_by_the_rpcs)
+AssertionError: Tuples differ: ('OK', None) != ('REFUSED', 'UPGRADED_AFTER_SLOT_BLOCK')
+FAIL: test_upgraded_event_must_be_confirmed_by_both_rpcs (__main__.R4_C1_TwoIndependentRpcs.test_upgraded_event_must_be_confirmed_by_both_rpcs)
+AssertionError: 'EVENT' != 'UNCONFIRMED'
+FAIL: test_upgraded_event_time_must_match (__main__.R4_C1_TwoIndependentRpcs.test_upgraded_event_time_must_match)
+AssertionError: 'EVENT' != 'UNCONFIRMED'
+Ran 41 tests in 5.592s
+FAILED (failures=9, errors=1)
+```
+
+Changes to earlier tests forced by this fix: `test/fixtures/rpc.json` keys move from the two replaced endpoints to their successors (same chain answers); the stub's second RPC answers what the first does unless a test gives it its own answer; the two `rpc()` spies (`S11`, `R2_10`) accept the new `second` argument. Assertions unchanged.
+
+After the fix: 41 tests in `test_attacks_r4.py`, OK; all earlier suites OK.

@@ -336,6 +336,9 @@ class _Web:
 
 HEAD = 0x10000000
 WEB = _Web()
+# a chain's second RPC answers what its first answers, unless a test sets an
+# answer for the second URL itself (test_fixcheck fills this from the contract)
+RPC_ALIAS = {}
 ETH = WEB
 
 
@@ -349,17 +352,28 @@ def _web_request(url, method="GET", body=None, headers=None, **_k):
     if url in WEB.rpc_down or "*" in WEB.down:
         raise RuntimeError("connection refused")
     req = json.loads(body)
-    key = (url, req["method"], json.dumps(req["params"]))
-    if key in WEB.rpc:
-        return _Response(200, json.dumps({"jsonrpc": "2.0", "id": 1, "result": WEB.rpc[key]}))
+    ok = lambda r: _Response(200, json.dumps({"jsonrpc": "2.0", "id": 1, "result": r}))
+    for u in (url, RPC_ALIAS.get(url)):
+        if u is None:
+            continue
+        key = (u, req["method"], json.dumps(req["params"]))
+        if key in WEB.rpc:
+            return ok(WEB.rpc[key])
+        if req["method"] == "eth_getStorageAt":
+            # fixtures hold one answer per slot; any recent block reads the same
+            latest = (u, req["method"], json.dumps(req["params"][:2] + ["latest"]))
+            if latest in WEB.rpc:
+                return ok(WEB.rpc[latest])
     if req["method"] == "eth_blockNumber":
-        return _Response(200, json.dumps({"jsonrpc": "2.0", "id": 1, "result": hex(WEB.head.get(url, HEAD))}))
+        return ok(hex(WEB.head.get(url, WEB.head.get(RPC_ALIAS.get(url), HEAD))))
     if req["method"] == "eth_getStorageAt":
-        # fixtures hold one answer per slot; any recent block reads the same
-        latest = (url, req["method"], json.dumps(req["params"][:2] + ["latest"]))
-        if latest in WEB.rpc:
-            return _Response(200, json.dumps({"jsonrpc": "2.0", "id": 1, "result": WEB.rpc[latest]}))
-        return _Response(200, json.dumps({"jsonrpc": "2.0", "id": 1, "result": "0x" + "0" * 64}))
+        return ok("0x" + "0" * 64)
+    if req["method"] == "eth_getBlockByNumber":
+        t = block_time(int(req["params"][0], 16))
+        if t is not None:
+            return ok({"number": req["params"][0], "timestamp": hex(t)})
+    if req["method"] == "eth_getLogs":
+        return ok(logs_between(req["params"][0]))
     if req["method"] == "eth_getCode":
         return _Response(200, json.dumps({"jsonrpc": "2.0", "id": 1,
                                           "result": code_at(req["params"][0], int(req["params"][1], 16))}))
@@ -455,6 +469,48 @@ def born_block(address):
             if str(dep.get("blockNumber") or "").isdigit():
                 return int(dep["blockNumber"])
     return None
+
+
+def _iso_epoch(v):
+    from datetime import datetime, timezone
+    try:
+        return int(datetime.strptime(str(v)[:19], "%Y-%m-%dT%H:%M:%S").replace(tzinfo=timezone.utc).timestamp())
+    except Exception:
+        return None
+
+
+def block_time(block):
+    """eth_getBlockByNumber's timestamp, as the explorer fixtures state it: a
+    creation tx's (block_number, timestamp), or an Upgraded log's
+    (block_number, block_timestamp)."""
+    for url in list(WEB.pages):
+        if url.find("/api/v2/transactions/") >= 0:
+            t = _page_json(url) or {}
+            if t.get("block_number") == block:
+                return _iso_epoch(t.get("timestamp"))
+        elif url.find("/logs?topic=") >= 0:
+            for it in (_page_json(url) or {}).get("items") or []:
+                if isinstance(it, dict) and it.get("block_number") == block:
+                    return _iso_epoch(it.get("block_timestamp"))
+    return None
+
+
+def logs_between(flt):
+    """eth_getLogs for one address and topic, as the explorer's log list
+    fixture for that address states them."""
+    addr = str(flt.get("address", "")).lower()
+    lo, hi = int(flt["fromBlock"], 16), int(flt["toBlock"], 16)
+    topic = (flt.get("topics") or [None])[0]
+    out = []
+    for url in list(WEB.pages):
+        if url.lower().find("/addresses/" + addr + "/logs?topic=") < 0:
+            continue
+        for it in (_page_json(url) or {}).get("items") or []:
+            tops = it.get("topics") or []
+            if lo <= int(it.get("block_number", -1)) <= hi and (topic is None or (tops and tops[0] == topic)):
+                out.append({"address": addr, "topics": [t for t in tops if t is not None],
+                            "blockNumber": hex(it["block_number"]), "logIndex": hex(it["index"]), "removed": False})
+    return sorted(out, key=lambda x: (int(x["blockNumber"], 16), int(x["logIndex"], 16)))
 
 
 def fake_code(address):

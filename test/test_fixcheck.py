@@ -36,6 +36,9 @@ import solfn  # noqa: E402
 
 PAGES = json.loads((HERE / "fixtures" / "pages.json").read_text())
 RPCS = json.loads((HERE / "fixtures" / "rpc.json").read_text())
+# round-4 fix 5: each chain's second RPC answers what its first does unless a
+# test gives the second URL an answer of its own
+stub.RPC_ALIAS.update({MOD.RPC_B[_c]: MOD.CHAINS[_c][3] for _c in MOD.CHAINS})
 CASES = {(c["protocol"], c["id"]): c for c in json.loads((HERE / "fixtures" / "cases.json").read_text())}
 # pages are keyed by the URL the contract fetches (normalised, fix 8); tests may
 # also look a case's URL up as written
@@ -1742,9 +1745,9 @@ class S11_SlotReadAtANamedBlock(unittest.TestCase):
         seen = []
         real = MOD.rpc
 
-        def spy(chain, method, params):
+        def spy(chain, method, params, second=False):
             seen.append((method, params))
-            return real(chain, method, params)
+            return real(chain, method, params, second)
         MOD.rpc = spy
         try:
             World().file(CLAIMER)
