@@ -1,0 +1,106 @@
+{
+  "contract": "0x19bc7Cb16Ce1B4F328f33d0FDfeA61297dA04f68",
+  "cases": {
+    "V1_report_fork_commit": {
+      "tx": "0xcef6dd4c620f623d75b3dd52128c6043ce9f8f676814e47699e61a635596620b",
+      "tx_status": "ACCEPTED",
+      "args": [
+        "https://raw.githubusercontent.com/sherlock-audit/2024-05-pooltogether-judging/6035289fa29efbada06e35f963ffd2f981ef4bfb/README.md",
+        "M-17",
+        "_convertToShares",
+        "https://raw.githubusercontent.com/sherlock-audit/2024-05-pooltogether/1aa1b8c028b659585e4c7a6b9b652fb075f86db3/pt-v5-vault/src/PrizeVault.sol",
+        "https://raw.githubusercontent.com/GenerationSoftware/pt-v5-vault/a812f8957e4563b0bcaa01ed8c2ac767b2f3e996/src/PrizeVault.sol",
+        "ethereum",
+        "0x9eE31E845fF1358Bf6B1F914d3918c6223c75573",
+        "https://raw.githubusercontent.com/GenerationSoftware/pt-dev-docs/9f3322e7280f2e91346cabfc2512046c6cfcd2a8/docs/deployments/ethereum.md"
+      ],
+      "result": {
+        "reason": "REPORT_COMMIT_NOT_ON_BRANCH",
+        "status": "REFUSED",
+        "value_withdrawable": "1000000000000000000"
+      }
+    },
+    "V2_docs_fork_commit": {
+      "tx": "0x564a20d120126cd1dec209c44e691a5e3c6a01fbcbac88e01ffaba38417d68b4",
+      "tx_status": "ACCEPTED",
+      "args": [
+        "https://raw.githubusercontent.com/sherlock-audit/2024-02-optimism-2024-judging/2b7f5d81eeb2755a4de99e6fd5b2fce823177a3c/README.md",
+        "M-3",
+        "create",
+        "https://raw.githubusercontent.com/sherlock-audit/2024-02-optimism-2024/f216b0d3ad08c1a0ead557ea74691aaefd5fd489/optimism/packages/contracts-bedrock/src/dispute/DisputeGameFactory.sol",
+        "https://raw.githubusercontent.com/ethereum-optimism/optimism/909d996a6bb73989346d592ddd3a5138c7cc4b77/packages/contracts-bedrock/src/dispute/DisputeGameFactory.sol",
+        "ethereum",
+        "0xe5965Ab5962eDc7477C8520243A95517CD252fA9",
+        "https://raw.githubusercontent.com/ethereum-optimism/superchain-registry/17d2cfde1b2c3742031c56f08f1bebd5ec422670/superchain/configs/mainnet/op.toml"
+      ],
+      "result": {
+        "reason": "DOCS_COMMIT_NOT_ON_BRANCH",
+        "status": "REFUSED",
+        "value_withdrawable": "1000000000000000000"
+      }
+    },
+    "V3_proxy_switched_after_fix": {
+      "tx": "0xc36e8aa7846d978f137276303c24c64858bbf2efcd40fcbaa38eb1d7c053ee95",
+      "tx_status": "ACCEPTED",
+      "args": [
+        "https://raw.githubusercontent.com/sherlock-audit/2025-07-cap-judging/e1c4f01994e830b520238e0c292303b0d7eed1e1/README.md",
+        "M-3",
+        "realizeRestakerInterest",
+        "https://raw.githubusercontent.com/sherlock-audit/2025-07-cap/2bd34fa369d36af8ecc377090d3292ea74ccc669/cap-contracts/contracts/lendingPool/libraries/BorrowLogic.sol",
+        "https://raw.githubusercontent.com/cap-labs-dev/cap-contracts/1655cf6c58c258fab8a148c41c5e777d8de38b9e/contracts/lendingPool/libraries/BorrowLogic.sol",
+        "ethereum",
+        "0x15622c3dbbc5614E6DFa9446603c1779647f01FC",
+        "https://raw.githubusercontent.com/cap-labs-dev/cap-docs/719b6388b8e63ccefc86d17abb5fe3408db8c52d/developers/addresses.md"
+      ],
+      "result": {
+        "check_id": 1,
+        "code_says": "INCONCLUSIVE",
+        "counter_deadline": 1791561422,
+        "dep_status": "PARTIAL_MATCH",
+        "protocol": "github:cap-labs-dev/cap-docs",
+        "status": "OK"
+      },
+      "decide_tx": "0xc528fa2fb0431c5c257311ae5a142ccbb0982a6ab49662530dc03b015a7bebfa",
+      "check": {
+        "check_id": 1,
+        "implementation": "0x68c4f03b8640c0393a832987147bae7a0b27aaa7",
+        "created_at": 1751892887,
+        "impl_created_at": 1757094443,
+        "switch_status": "EVENT",
+        "switch_block": 23318705,
+        "switched_at": 1757338499,
+        "code_born": 1757338499,
+        "fix_at": 1755278193,
+        "audited_at": 1752323748,
+        "slot_block": 26155885,
+        "dep_status": "PARTIAL_MATCH",
+        "verdict": "INCONCLUSIVE",
+        "basis": "PARTIAL_MATCH",
+        "report_reach": "default:main",
+        "docs_reach": "default:main",
+        "code_status": "OK",
+        "impl_code_status": "OK",
+        "status_issue": "150"
+      }
+    },
+    "V4_docs_pull_request_commit": {
+      "tx": "0xba9c9fab4f5fea67faaf0ace19c7e190de085cd0429aa5cbe4b2b016e26d586a",
+      "tx_status": "ACCEPTED",
+      "args": [
+        "https://raw.githubusercontent.com/sherlock-audit/2024-02-optimism-2024-judging/2b7f5d81eeb2755a4de99e6fd5b2fce823177a3c/README.md",
+        "M-3",
+        "create",
+        "https://raw.githubusercontent.com/sherlock-audit/2024-02-optimism-2024/f216b0d3ad08c1a0ead557ea74691aaefd5fd489/optimism/packages/contracts-bedrock/src/dispute/DisputeGameFactory.sol",
+        "https://raw.githubusercontent.com/ethereum-optimism/optimism/909d996a6bb73989346d592ddd3a5138c7cc4b77/packages/contracts-bedrock/src/dispute/DisputeGameFactory.sol",
+        "ethereum",
+        "0xe5965Ab5962eDc7477C8520243A95517CD252fA9",
+        "https://raw.githubusercontent.com/ethereum-optimism/superchain-registry/6be72121777d061d6ca7256f51ad1225235f6f93/superchain/configs/mainnet/op.toml"
+      ],
+      "result": {
+        "reason": "DOCS_COMMIT_NOT_ON_BRANCH",
+        "status": "REFUSED",
+        "value_withdrawable": "1000000000000000000"
+      }
+    }
+  }
+}
