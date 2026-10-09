@@ -26,6 +26,8 @@ Eleven issues, all fixed and each with a test that failed on the round-3 code:
 | R4-07 | Medium | A status block typed into a participant's comment counted as Sherlock's (README limitation) | 6 |
 | R4-08 | Medium | Modifiers were not followed: an overridden modifier still gave a code verdict (README limitation) | 6 |
 
+Tests: `python3 -m unittest discover -s test -p "test_*.py"` → **254 tests, OK, 0 expected failures** (`test_fixcheck.py` 157, `test_attacks.py` 12, `test_attacks_r2.py` 14, `test_attacks_r3.py` 22, `test_attacks_r4.py` 49).
+
 Already held, now regression tests: commits only on a pull request's head, deleted or force-pushed branches, case/whitespace/%-escapes, renamed repos, beacon proxies the explorer resolves, UUPS, A → B → A rollbacks.
 
 ## Step 1. Lows left open in round 3 (round-4 fixes 1 and 2)

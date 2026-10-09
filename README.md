@@ -121,7 +121,7 @@ Full table with links, stakes, dates and the demo paths: [`docs/SEEDS.md`](docs/
 |---|---|
 | `contracts/FixCheck.py` | the contract (GenVM v0.6 format) |
 | `contracts/FixRegistry.py` | read-only consumer |
-| `test/test_fixcheck.py`, `test/test_attacks*.py` | offline suites on real fetched evidence, 205 tests, no expected failures — `python3 -m unittest discover -s test -p "test_*.py"` |
+| `test/test_fixcheck.py`, `test/test_attacks*.py` | offline suites on real fetched evidence, 254 tests, no expected failures — `python3 -m unittest discover -s test -p "test_*.py"` |
 | `tools/scan_writes.py` | static check: no state written before any revert |
 | `test/deploy.mjs`, `test/seed_*.mjs` | HEAD-only deploy, resumable seeding |
 | `tools/` | research pipeline, source verification, docs generators, screenshots, video |
