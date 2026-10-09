@@ -1,9 +1,9 @@
 /** Generated from deployments.json (tools/addresses_md.mjs). */
 export const DEPLOYMENTS = {
-  canonical: { address: "0x65Fe440d63437e14fB9e990D1D0Dc283EE40bb56" as `0x${string}`, counterWindowS: 3600, decideWindowS: 86400, label: "Canonical" },
-  demo: { address: "0x66E008fc08414ecF423e59482c20A046FAd7A01c" as `0x${string}`, counterWindowS: 90, decideWindowS: 300, label: "Demo" },
+  canonical: { address: "0x263C6a42B98E9133CF85A00A436b05C3573B88fe" as `0x${string}`, counterWindowS: 3600, decideWindowS: 86400, label: "Canonical" },
+  demo: { address: "0x19bc7Cb16Ce1B4F328f33d0FDfeA61297dA04f68" as `0x${string}`, counterWindowS: 90, decideWindowS: 300, label: "Demo" },
 } as const;
-export const REGISTRY_ADDRESS = "0x90f8c37976D166364BD563f71156aEd187CAc9d2" as `0x${string}`;
-export const COMMIT = "93de7be2deb171cbb0a19b7b47fc280938da520b";
+export const REGISTRY_ADDRESS = "0xA37F98977f023D8C0bd17aCF1A7983E5d328d9A4" as `0x${string}`;
+export const COMMIT = "8519168641d560b7528f3a23640c7722598c16fe";
 export const EXPLORER = "https://explorer-studio-dev.genlayer.com";
 export type Deployment = keyof typeof DEPLOYMENTS;

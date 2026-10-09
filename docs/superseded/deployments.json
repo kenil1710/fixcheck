@@ -295,6 +295,65 @@
       "reads": "0x893f96A5c72771D40F0bB55035A013a77159cc33",
       "superseded_by": "0x90f8c37976D166364BD563f71156aEd187CAc9d2",
       "why": "round-3 findings (docs/ATTACK_REPORT_R3.md): fork-only report/docs commits accepted; proxy dated by implementation creation only"
+    },
+    {
+      "name": "FixCheck",
+      "address": "0x65Fe440d63437e14fB9e990D1D0Dc283EE40bb56",
+      "deploy_tx": "0xab068c6f505cd4b430031d6ba1759cb0de1d495fb6708498314591bd0274a6c7",
+      "file": "contracts/FixCheck.py",
+      "commit": "93de7be2deb171cbb0a19b7b47fc280938da520b",
+      "bytes": 135096,
+      "sha256": "e66fb8a621cfde3d2e2dff5d819d3240cf97a0440cef5622e6e47155abc23078",
+      "constructor_args": [
+        "CANONICAL",
+        3600,
+        86400,
+        200,
+        "0x8bfB2761bA064D3F829F382f444867EE10294b1C"
+      ],
+      "deployer": "0x8bfB2761bA064D3F829F382f444867EE10294b1C",
+      "deployed_at": "2026-10-09T13:11:53.690Z",
+      "mode": "CANONICAL",
+      "superseded_by": "0x263C6a42B98E9133CF85A00A436b05C3573B88fe",
+      "why": "round-4 findings (docs/ATTACK_REPORT_R4.md): leader-chosen slot block, single-source chain facts, metamorphic redeploys, beacon proxies, Upgraded above the slot block, pull-request refs as branches, status block author taken from README text, modifiers not followed"
+    },
+    {
+      "name": "FixCheckDemo",
+      "address": "0x66E008fc08414ecF423e59482c20A046FAd7A01c",
+      "deploy_tx": "0x35a507b7695ec9f52ec10b6370dcb6790fa4dfa850cb9980cf19ca969da80fd7",
+      "file": "contracts/FixCheck.py",
+      "commit": "93de7be2deb171cbb0a19b7b47fc280938da520b",
+      "bytes": 135096,
+      "sha256": "e66fb8a621cfde3d2e2dff5d819d3240cf97a0440cef5622e6e47155abc23078",
+      "constructor_args": [
+        "DEMO",
+        90,
+        300,
+        200,
+        "0x8bfB2761bA064D3F829F382f444867EE10294b1C"
+      ],
+      "deployer": "0x8bfB2761bA064D3F829F382f444867EE10294b1C",
+      "deployed_at": "2026-10-09T13:12:05.115Z",
+      "mode": "DEMO",
+      "superseded_by": "0x19bc7Cb16Ce1B4F328f33d0FDfeA61297dA04f68",
+      "why": "round-4 findings (docs/ATTACK_REPORT_R4.md): leader-chosen slot block, single-source chain facts, metamorphic redeploys, beacon proxies, Upgraded above the slot block, pull-request refs as branches, status block author taken from README text, modifiers not followed"
+    },
+    {
+      "name": "FixRegistry",
+      "address": "0x90f8c37976D166364BD563f71156aEd187CAc9d2",
+      "deploy_tx": "0xf7a7e8c1f15cdb346985fbe759c8cae388bfbc94a80eab048b23e2153c95beea",
+      "file": "contracts/FixRegistry.py",
+      "commit": "93de7be2deb171cbb0a19b7b47fc280938da520b",
+      "bytes": 3229,
+      "sha256": "6d99a876d5dadfd4bc4f9e6864dd2ade203af9a49839d100adb793cb7b97330a",
+      "constructor_args": [
+        "0x65Fe440d63437e14fB9e990D1D0Dc283EE40bb56"
+      ],
+      "deployer": "0x8bfB2761bA064D3F829F382f444867EE10294b1C",
+      "deployed_at": "2026-10-09T13:12:10.543Z",
+      "reads": "0x65Fe440d63437e14fB9e990D1D0Dc283EE40bb56",
+      "superseded_by": "0xA37F98977f023D8C0bd17aCF1A7983E5d328d9A4",
+      "why": "round-4 findings (docs/ATTACK_REPORT_R4.md): leader-chosen slot block, single-source chain facts, metamorphic redeploys, beacon proxies, Upgraded above the slot block, pull-request refs as branches, status block author taken from README text, modifiers not followed"
     }
   ]
 }
