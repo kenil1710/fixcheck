@@ -22,7 +22,9 @@ import typing
 # accepted only if they all extract identical canonical fields (and identical
 # sha256 of every immutable body). Code checks, all before anything is stored:
 #   - the finding id heads a section of the report with a "fixed" status
-#     phrase, and the section names the function;
+#     phrase, and the section names the function; the status comment that
+#     links the fix is one GitHub's own issue page attributes to a Sherlock
+#     account (round-4 fix 7);
 #   - the audited file is the finding's own audited commit (a code link to
 #     owner/repo/blob/<sha>/ in the section, else elsewhere in the same pinned
 #     report) and the fix file is the head of a PR - or a commit - that
@@ -32,17 +34,23 @@ import typing
 #   - an archived capture is exactly the requested one, taken no later than
 #     the filing, and no URL path carries %-escapes;
 #   - the report's and the docs' pinned GitHub commits are on a branch of the
-#     repository each URL names (not only in a fork: GitHub serves a fork's
-#     commit under the upstream path); the branch is stored as proof;
+#     repository each URL names (not only in a fork, a pull request's head or
+#     a tag: GitHub serves those under the upstream path); the branch is
+#     stored as proof; docs may be raw GitHub or a capture of it at a full SHA;
 #   - the docs page lists the address; the deployed contract is verified;
 #   - a proxy is resolved by its EIP-1967 slot, read over RPC at a block the
-#     leader names, cross-checked with the explorer; only the implementation's
-#     sources are judged; the block of the proxy's last Upgraded event at or
-#     below that block dates the switch to the current implementation;
+#     leader names (still current, no Upgraded event above it), cross-checked
+#     with the explorer; only the implementation's sources are judged; the
+#     block of the proxy's last Upgraded event at or below that block dates
+#     the switch to the current implementation; a beacon proxy is not judged;
+#   - every chain fact (slots, creation block time and code, the switch's
+#     event and time) is read from two RPCs run by different operators and
+#     must agree; a creation date counts only for the code created then
+#     (round-4 fixes 4 and 5);
 #   - the function belongs to the contract the explorer says was compiled (or
 #     one of its ancestors, resolved through import aliases); nothing in that
-#     chain overrides it or any function it calls; only full/exact source
-#     matches count;
+#     chain overrides it or any function or modifier it calls; only full/exact
+#     source matches count;
 #   - the audited commit's date and the creation time of the deployment (and
 #     of its implementation) are read and stored.
 # The challenger's stake says NOT_FIXED.
@@ -131,7 +139,7 @@ import typing
 #
 # The runner rejects the str replace method; slice around find() instead.
 
-VERSION = "1.4.0"
+VERSION = "1.5.0"
 BPS = 10000
 
 V_FIXED = "FIXED"
