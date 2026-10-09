@@ -126,7 +126,8 @@ import typing
 # deployment and why it is now this narrow), docs/ATTACK_REPORT.md (the nine
 # findings closed by "fix 1" .. "fix 9" in the comments below) and
 # docs/ATTACK_REPORT_R2.md (the twelve closed by "round-2 fix 1" .. "12") and
-# docs/ATTACK_REPORT_R3.md (the three closed by "round-3 fix 1" and "2").
+# docs/ATTACK_REPORT_R3.md (the three closed by "round-3 fix 1" and "2") and
+# docs/ATTACK_REPORT_R4.md (closed by "round-4 fix 1" .. ).
 #
 # The runner rejects the str replace method; slice around find() instead.
 
@@ -500,6 +501,18 @@ def pinned_commit(url: typing.Any) -> dict:
     return {}
 
 
+def docs_repo(url: typing.Any) -> dict:
+    """Round-4 fix 1: the GitHub repository a docs URL pins, as {"owner",
+    "repo", "sha"}: a raw GitHub URL at a full SHA, or a web.archive.org
+    capture of a GitHub URL at a full SHA (R3 item 1: such captures were always
+    refused). {} for anything else - a website capture names no GitHub
+    account the fix could be compared with."""
+    c = pinned_commit(url)
+    if c and not c.get("bad"):
+        return c
+    return {}
+
+
 def pinned_kind(url: typing.Any) -> str:
     if github_pin(url):
         return "github"
@@ -511,7 +524,7 @@ def pinned_kind(url: typing.Any) -> str:
 def protocol_key(docs_url: str) -> str:
     """The protocol a check is scored under, derived from the pinned docs URL
     (never typed by the filer): "github:owner/repo" or "web:host"."""
-    g = github_pin(docs_url)
+    g = docs_repo(docs_url)
     if g:
         return "github:" + g["owner"] + "/" + g["repo"]
     a = archive_pin(docs_url)
@@ -1982,7 +1995,13 @@ def allowed_url(url: str) -> bool:
     pages: a commit's .atom feed (its date), a pull request (merged? when?)
     and a commit's branch_commits fragment (on the default branch?)."""
     for p in ALLOWED_PREFIXES:
-        if url.startswith(p):
+        # round-4 fix 1: a prefix without a trailing slash is a whole origin
+        # (or exact RPC URL), so https://mainnet.base.org never matches
+        # https://mainnet.base.org.evil.com or https://mainnet.base.org@evil.com
+        if p.endswith("/"):
+            if url.startswith(p):
+                return True
+        elif url == p or url.startswith(p + "/"):
             return True
     if not url.startswith(GITHUB_WEB):
         return False
@@ -2285,6 +2304,17 @@ def deployed_function(chain: str, address: str, base: str, fn: str, slot_block: 
     slot = eip1967_impl(chain, address, block)
     if slot is None:
         return {"refused": "RPC_UNREADABLE"}
+    # round-4 fix 2 (R3 item 4): the named block must still hold the current
+    # implementation. A validator also reads the slot at its own (head -
+    # margin); a block from before an upgrade is refused, so the leader cannot
+    # pick between two implementations inside the window.
+    latest = head - margin
+    if block != latest:
+        now_slot = eip1967_impl(chain, address, latest)
+        if now_slot is None:
+            return {"refused": "RPC_UNREADABLE"}
+        if now_slot != slot:
+            return {"refused": "SLOT_CHANGED_SINCE_SLOT_BLOCK"}
     out = {"impl": "", "source_sha256": got["sha256"], "impl_source_sha256": "", "slot_block": block,
            "compiled": src["target"], "dep_status": "OK", "dep": {"ok": False, "code": "", "canon": ""}}
     files = src["files"]
@@ -2838,9 +2868,14 @@ class FixCheck(gl.contract.Contract):
         if fg["sha"] == ag["sha"] and fg["owner"] == ag["owner"] and fg["repo"] == ag["repo"]:
             return self._refuse("FIX_COMMIT_IS_AUDITED_COMMIT")
         # round-2 fix 9: the fix lives in the protocol's own GitHub account -
-        # the owner of its pinned docs (the audited repo is Sherlock's copy)
-        dg = github_pin(docs)
-        if not dg or dg["owner"] != fg["owner"]:
+        # the owner of its pinned docs (the audited repo is Sherlock's copy);
+        # round-4 fix 1: raw or archived, the docs must pin a GitHub commit
+        if pinned_commit(docs).get("bad"):
+            return self._refuse("DOCS_REF_NOT_A_FULL_SHA")
+        dg = docs_repo(docs)
+        if not dg:
+            return self._refuse("DOCS_NOT_ON_GITHUB")
+        if dg["owner"] != fg["owner"]:
             return self._refuse("FIX_REPO_NOT_PROTOCOLS")
         fid = _finding_id(finding_id)
         if fid == "":
