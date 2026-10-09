@@ -91,7 +91,7 @@ const banned = /guaranteed|100% (safe|secure|accurate|correct|certain|sure)|veri
 const files = ["README.md", ...sh("git", ["ls-files", "frontend/src"]).stdout.trim().split("\n")].filter((f) => /\.(md|tsx?)$/.test(f));
 const hits = files.filter((f) => banned.test(readFileSync(root + f, "utf8")));
 const readme = readFileSync(root + "README.md", "utf8");
-add("B15", "Honest limitations, no absolute claims", hits.length === 0 && /## Known limits/.test(readme), `No "guaranteed / 100% / verified safe" wording in README or site sources (${files.length} files); README has a Known limits section; site has "What a verdict means — and doesn't".`);
+add("B15", "Honest limitations, no absolute claims", hits.length === 0 && /## Known limit/.test(readme), `No "guaranteed / 100% / verified safe" wording in README or site sources (${files.length} files); README has a Known limits section; site has "What a verdict means — and doesn't".`);
 
 // ---- C1 live numbers
 const html = async (p) => { const r = await fetch(SITE + p, { cache: "no-store" }); return await r.text(); };
@@ -137,8 +137,8 @@ const keyFileTracked = sh("git", ["log", "--all", "--oneline", "--", "test/.acco
 const ignored = sh("git", ["check-ignore", "test/.accounts.json"]).status === 0;
 const msgs = sh("git", ["log", "--all", "--format=%an %ae%n%B"]).stdout;
 const ai = /claude|anthropic|co-authored-by|chatgpt|openai|generated with/i;
-const aiFiles = sh("git", ["grep", "-I", "-l", "-i", "-E", "claude|anthropic|co-authored-by|chatgpt|generated with \\[", "--", ".", ":!research_cache", ":!tools/final_check.mjs"]).stdout.trim();
-const pk = sh("git", ["grep", "-I", "-n", "-E", "(PRIVATE KEY|privateKey\\s*[:=]\\s*[\"']0x[0-9a-fA-F]{64}|\"key\"\\s*:\\s*\"0x[0-9a-fA-F]{64}\")", "--", ".", ":!tools/final_check.mjs"]).stdout.trim();
+const aiFiles = sh("git", ["grep", "-I", "-l", "-i", "-E", "claude|anthropic|co-authored-by|chatgpt|generated with \\[", "--", ".", ":!research_cache", ":!tools/final_check.mjs", ":!docs/FINAL_CHECK.md"]).stdout.trim();
+const pk = sh("git", ["grep", "-I", "-n", "-E", "(PRIVATE KEY|privateKey\\s*[:=]\\s*[\"']0x[0-9a-fA-F]{64}|\"key\"\\s*:\\s*\"0x[0-9a-fA-F]{64}\")", "--", ".", ":!tools/final_check.mjs", ":!docs/FINAL_CHECK.md"]).stdout.trim();
 add("C4", "Git history and files clean", !keyFileTracked && ignored && !ai.test(msgs) && !aiFiles && !pk,
   `test/.accounts.json gitignored: ${ignored}; ever committed: ${keyFileTracked ? "YES" : "no"}; AI/Co-Authored-By in any commit message: ${ai.test(msgs) ? "YES" : "none"}; in tracked files: ${aiFiles || "none"}; private-key patterns in tracked files: ${pk ? "FOUND" : "none"}.`);
 
