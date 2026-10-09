@@ -1,0 +1,38 @@
+{
+ "pr_only_closed": {
+  "url": "https://github.com/ethereum-optimism/superchain-registry/branch_commits/6be72121777d061d6ca7256f51ad1225235f6f93",
+  "final": "https://github.com/ethereum-optimism/superchain-registry/branch_commits/6be72121777d061d6ca7256f51ad1225235f6f93",
+  "status": 200,
+  "body": "\n\n    <span id=\"js-spoofed-commit-warning-trigger\" class=\"pb-1\" ></span>\n"
+ },
+ "pr_only_open": {
+  "url": "https://github.com/ethereum-optimism/superchain-registry/branch_commits/3f81046b46a52bd730304829d72665373e7f940b",
+  "final": "https://github.com/ethereum-optimism/superchain-registry/branch_commits/3f81046b46a52bd730304829d72665373e7f940b",
+  "status": 200,
+  "body": "\n\n    <span id=\"js-spoofed-commit-warning-trigger\" class=\"pb-1\" ></span>\n"
+ },
+ "upstream_pr_branch": {
+  "url": "https://github.com/ethereum-optimism/superchain-registry/branch_commits/882ca03bc1b2e95d31dd3dd8b38a8ae39715bfb7",
+  "final": "https://github.com/ethereum-optimism/superchain-registry/branch_commits/882ca03bc1b2e95d31dd3dd8b38a8ae39715bfb7",
+  "status": 200,
+  "body": "\n\n    <div class=\"pt-2\">\n      <svg aria-hidden=\"true\" data-component=\"Octicon\" height=\"16\" viewBox=\"0 0 16 16\" version=\"1.1\" width=\"16\" data-view-component=\"true\" class=\"octicon octicon-git-branch\">\n    <path d=\"M9.5 3.25a2.25 2.25 0 1 1 3 2.122V6A2.5 2.5 0 0 1 10 8.5H6a1 1 0 0 0-1 1v1.128a2.251 2.251 0 1 1-1.5 0V5.372a2.25 2.25 0 1 1 1.5 0v1.836A2.493 2.493 0 0 1 6 7h4a1 1 0 0 0 1-1v-.628A2.25 2.25 0 0 1 9.5 3.25Zm-6 0a.75.75 0 1 0 1.5 0 .75.75 0 0 0-1.5 0Zm8.25-.75a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5ZM4.25 12a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5Z\"></path>\n</svg>\n      <ul class=\"branches-list\">\n          <li class=\"branch\"><a href=\"/ethereum-optimism/superchain-registry/compare/feat/plataberget-superchain\">feat/plataberget-superchain</a></li>\n            <li class=\"pull-request\">(<a title=\"Open Pull Request: Add Plataberget superchain target\" href=\"/ethereum-optimism/superchain-registry/pull/1309\">#1309</a>)</li>\n      </ul>\n    </div>\n"
+ },
+ "deleted_branch": {
+  "url": "https://github.com/generationsoftware/pt-v5-vault/branch_commits/905189bb6fb7c36f24e4a9b90d7872c963d58010",
+  "final": "https://github.com/generationsoftware/pt-v5-vault/branch_commits/905189bb6fb7c36f24e4a9b90d7872c963d58010",
+  "status": 200,
+  "body": "\n\n    <span id=\"js-spoofed-commit-warning-trigger\" class=\"pb-1\" ></span>\n"
+ },
+ "renamed_old_name": {
+  "url": "https://github.com/uniswap/uniswap-v3-core/branch_commits/d0831dc6b8a318df3872b6d68f6de135c9f3ec29",
+  "final": "https://github.com/Uniswap/v3-core/branch_commits/d0831dc6b8a318df3872b6d68f6de135c9f3ec29",
+  "status": 200,
+  "body": "\n\n    <div class=\"pt-2\">\n      <svg aria-hidden=\"true\" data-component=\"Octicon\" height=\"16\" viewBox=\"0 0 16 16\" version=\"1.1\" width=\"16\" data-view-component=\"true\" class=\"octicon octicon-git-branch\">\n    <path d=\"M9.5 3.25a2.25 2.25 0 1 1 3 2.122V6A2.5 2.5 0 0 1 10 8.5H6a1 1 0 0 0-1 1v1.128a2.251 2.251 0 1 1-1.5 0V5.372a2.25 2.25 0 1 1 1.5 0v1.836A2.493 2.493 0 0 1 6 7h4a1 1 0 0 0 1-1v-.628A2.25 2.25 0 0 1 9.5 3.25Zm-6 0a.75.75 0 1 0 1.5 0 .75.75 0 0 0-1.5 0Zm8.25-.75a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5ZM4.25 12a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5Z\"></path>\n</svg>\n      <ul class=\"branches-list\">\n          <li class=\"branch\"><a href=\"/Uniswap/v3-core\">main</a></li>\n            <li class=\"pull-request\">(<a title=\"Merged Pull Request: ci: harden lint workflow\" href=\"/Uniswap/v3-core/pull/1091\">#1091</a>)</li>\n      </ul>\n    </div>\n"
+ },
+ "renamed_new_name": {
+  "url": "https://github.com/uniswap/v3-core/branch_commits/d0831dc6b8a318df3872b6d68f6de135c9f3ec29",
+  "final": "https://github.com/uniswap/v3-core/branch_commits/d0831dc6b8a318df3872b6d68f6de135c9f3ec29",
+  "status": 200,
+  "body": "\n\n    <div class=\"pt-2\">\n      <svg aria-hidden=\"true\" data-component=\"Octicon\" height=\"16\" viewBox=\"0 0 16 16\" version=\"1.1\" width=\"16\" data-view-component=\"true\" class=\"octicon octicon-git-branch\">\n    <path d=\"M9.5 3.25a2.25 2.25 0 1 1 3 2.122V6A2.5 2.5 0 0 1 10 8.5H6a1 1 0 0 0-1 1v1.128a2.251 2.251 0 1 1-1.5 0V5.372a2.25 2.25 0 1 1 1.5 0v1.836A2.493 2.493 0 0 1 6 7h4a1 1 0 0 0 1-1v-.628A2.25 2.25 0 0 1 9.5 3.25Zm-6 0a.75.75 0 1 0 1.5 0 .75.75 0 0 0-1.5 0Zm8.25-.75a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5ZM4.25 12a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5Z\"></path>\n</svg>\n      <ul class=\"branches-list\">\n          <li class=\"branch\"><a href=\"/Uniswap/v3-core\">main</a></li>\n            <li class=\"pull-request\">(<a title=\"Merged Pull Request: ci: harden lint workflow\" href=\"/Uniswap/v3-core/pull/1091\">#1091</a>)</li>\n      </ul>\n    </div>\n"
+ }
+}

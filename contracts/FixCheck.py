@@ -369,6 +369,40 @@ def _clean_url(url: typing.Any) -> str:
     return t
 
 
+def github_name_ok(owner: str, repo: str) -> bool:
+    """Round-4 fix 3: only names GitHub issues. An account is 1-39 letters,
+    digits and single hyphens, not at either end; a repository is 1-100
+    letters, digits, '.', '-' and '_', is not '.' or '..' and does not end in
+    '.git' or '.'. Anything else is a spelling GitHub resolves to some other
+    repository, or to none."""
+    if len(owner) < 1 or len(owner) > 39 or owner[0] == "-" or owner[-1] == "-" or owner.find("--") >= 0:
+        return False
+    for ch in owner:
+        if not (ch.isascii() and (ch.isalnum() or ch == "-")):
+            return False
+    if len(repo) < 1 or len(repo) > 100 or repo in (".", "..") or repo.lower().endswith(".git") or repo[-1] == ".":
+        return False
+    for ch in repo:
+        if not (ch.isascii() and (ch.isalnum() or ch in "._-")):
+            return False
+    return True
+
+
+def github_names(url: typing.Any) -> bool:
+    """False if the URL names a GitHub owner/repo (raw GitHub, or a capture of
+    raw GitHub or github.com) that GitHub never issues."""
+    t = _clean_url(url)
+    if t.startswith(ARCHIVE):
+        a = archive_pin(t)
+        t = a["target"] if a else ""
+    for pre in (GITHUB_RAW, GITHUB_WEB):
+        if t.lower().startswith(pre):
+            parts = t[len(pre):].split("/")
+            if len(parts) < 2 or not github_name_ok(parts[0], parts[1]):
+                return False
+    return True
+
+
 def github_pin(url: typing.Any) -> dict:
     """https://raw.githubusercontent.com/<owner>/<repo>/<40-hex sha>/<path>
     -> {"owner", "repo", "sha", "path"}; {} if not exactly that shape. A
@@ -1890,10 +1924,18 @@ def repo_branches(page: str, owner: str, repo: str) -> list:
             break
         href = low[a:b]
         name = page[c + 1:d].strip()[:100]
-        if name != "":
+        # round-4 fix 3: a link counts only as the branch it names - its text
+        # is exactly the ref the link points at - and never as a refs/* or
+        # pull/* ref (a pull request's head is not a branch)
+        ref = ""
+        for kind in ("/compare/", "/tree/"):
+            if href.startswith(root + kind):
+                ref = href[len(root + kind):]
+        bad = name.lower().startswith("refs/") or name.lower().startswith("pull/")
+        if name != "" and not bad:
             if href == root:
                 out.append("default:" + name)
-            elif href.startswith(root + "/compare/") or href.startswith(root + "/tree/"):
+            elif ref != "" and ref == name.lower():
                 out.append("branch:" + name)
         i = d
     return out
@@ -2839,6 +2881,9 @@ class FixCheck(gl.contract.Contract):
         for u in (report_url, docs_url, audited_url, fix_url):
             if percent_in_path(u):
                 return self._refuse("URL_PERCENT_ENCODED")
+        for u in (report_url, docs_url, audited_url, fix_url):
+            if not github_names(u):
+                return self._refuse("GITHUB_NAME_INVALID")
         rep = _clean_url(report_url)
         if pinned_kind(rep) == "":
             return self._refuse("REPORT_URL_NOT_PINNED")

@@ -154,5 +154,175 @@ class R4_L3_AllowlistHostBoundary(unittest.TestCase):
         self.assertFalse(MOD.allowed_url("https://eth.blockscout.com.evil.com/api/v2/"))
 
 
+
+# =============================================================================
+# Step 2. The round-3 fork-commit check, attacked from outside
+# =============================================================================
+
+R4P = json.loads((HERE / "fixtures" / "pages_r4.json").read_text())   # real GitHub answers (tools/build_fixtures_r4.py)
+SPOOFED_CLOSED_PR = R4P["pr_only_closed"]["body"]   # head of closed fork PR #1305: raw serves it under the upstream path
+SPOOFED_OPEN_PR = R4P["pr_only_open"]["body"]       # head of open fork PR #1344
+UPSTREAM_PR_BRANCH = R4P["upstream_pr_branch"]["body"]
+DELETED_BRANCH = R4P["deleted_branch"]["body"]      # head of PR #63, branch deleted after the PR closed
+RENAMED = R4P["renamed_old_name"]["body"]           # Uniswap/uniswap-v3-core -> 301 -> Uniswap/v3-core
+
+
+class R4_F1_PullRequestRefs(unittest.TestCase):
+    """GitHub serves a commit that exists only on refs/pull/<n>/head - a pull
+    request from a fork, open or closed - under the upstream repo's raw path
+    (checked: HTTP 200 for both heads below). It is on no branch of the
+    upstream repo and must be refused."""
+
+    def file_at(self, what, sha, body):
+        w = B.World()
+        case = B.VAULT_ETH
+        url = R3.at_sha(case[what], sha)
+        serve_as = PAGES[case[what]]
+        R3.serve(url, serve_as)
+        R3.branch_answer(url, body)
+        return w, w.file(case, **{("report_url" if what == "report" else "docs_url"): url})
+
+    def test_commit_only_on_a_pull_request_ref_is_refused(self):
+        for body, sha in ((SPOOFED_CLOSED_PR, "6be72121777d061d6ca7256f51ad1225235f6f93"),
+                          (SPOOFED_OPEN_PR, "3f81046b46a52bd730304829d72665373e7f940b")):
+            for what in ("report", "docs"):
+                w, out = self.file_at(what, sha, body)
+                self.assertEqual((out["status"], out["reason"]),
+                                 ("REFUSED", what.upper() + "_COMMIT_NOT_ON_BRANCH"), (what, sha))
+                self.assertEqual(int(w.c.checks_n), 0)
+
+    def test_upstream_branch_with_an_open_pr_counts_as_that_branch_only(self):
+        self.assertEqual(MOD.repo_branches(UPSTREAM_PR_BRANCH, "ethereum-optimism", "superchain-registry"),
+                         ["branch:feat/plataberget-superchain"], "the pull-request item is never a branch")
+
+    def test_a_pull_ref_rendered_as_a_branch_link_is_not_a_branch(self):
+        # defence in depth: whatever GitHub renders, refs/pull/*, refs/* and a
+        # link whose text is not the branch it points at are not branches
+        def page(href, name):
+            return '<ul class="branches-list"><li class="branch"><a href="' + href + '">' + name + '</a></li></ul>'
+        o, r = "sherlock-audit", "x-judging"
+        for href, name in (("/sherlock-audit/x-judging/tree/refs/pull/12/head", "refs/pull/12/head"),
+                           ("/sherlock-audit/x-judging/compare/refs/heads/main", "refs/heads/main"),
+                           ("/sherlock-audit/x-judging/tree/pull/12/head", "pull/12/head"),
+                           ("/sherlock-audit/x-judging/compare/feature", "main")):
+            self.assertEqual(MOD.repo_branches(page(href, name), o, r), [], href + " " + name)
+        self.assertEqual(MOD.repo_branches(page("/sherlock-audit/x-judging/tree/escalations", "escalations"), o, r),
+                         ["branch:escalations"])
+
+
+class R4_F2_BranchDeletedOrForcePushed(unittest.TestCase):
+    """The rule: the proof is GitHub's branch list AT FILING, read by every
+    validator and stored (report_reach / docs_reach). A commit that is on no
+    branch at filing - deleted, or force-pushed away - is refused. A branch
+    deleted or force-pushed AFTER filing changes nothing: every evidence body
+    is bound by sha256 at filing and decide() never reads GitHub again."""
+
+    def test_deleted_before_filing_is_refused(self):
+        w = B.World()
+        branch = GH + "generationsoftware/pt-dev-docs/branch_commits/" + MOD.github_pin(B.CLAIMER["docs"])["sha"]
+        WEB.pages[branch] = (200, DELETED_BRANCH)
+        out = w.file(B.CLAIMER)
+        self.assertEqual((out["status"], out["reason"]), ("REFUSED", "DOCS_COMMIT_NOT_ON_BRANCH"))
+
+    def test_deleted_after_filing_keeps_the_snapshot(self):
+        w = B.World()
+        out = w.file(B.CLAIMER)
+        before = w.c.get_check(out["check_id"])
+        for u in list(WEB.pages):
+            if u.find("/branch_commits/") >= 0:
+                WEB.pages[u] = (200, DELETED_BRANCH)
+        WEB.log.clear()
+        w.at(T0 + 3600)
+        d = w.call(B.ANYONE, "decide", out["check_id"])
+        self.assertEqual((d["verdict"], d["basis"]), ("FIXED", "CODE_MATCH_FIX"))
+        after = w.c.get_check(out["check_id"])
+        self.assertEqual((after["report_reach"], after["docs_reach"]), (before["report_reach"], before["docs_reach"]))
+        self.assertEqual([u for u in WEB.log if u.startswith(GH)], [], "decide() never reads GitHub")
+
+    def test_deleted_between_leader_and_validator_writes_nothing(self):
+        w = B.World()
+        branch = GH + "generationsoftware/pt-dev-docs/branch_commits/" + MOD.github_pin(B.CLAIMER["docs"])["sha"]
+        WEB.flaky = lambda url, n: (200, DELETED_BRANCH) if (url == branch and n >= 2) else None
+        self.assertTrue(rolled(w, B.CLAIMER), "the validator saw the branch gone: the round must fail")
+        self.assertEqual(int(w.c.checks_n), 0)
+
+
+class R4_F3_OwnerRepoSpellings(unittest.TestCase):
+    """Case, whitespace, %-escapes and names GitHub never issues, in owner/repo."""
+
+    def test_case_variant_of_a_fork_commit_is_still_refused(self):
+        w = B.World()
+        case = B.VAULT_ETH
+        forged = R3.at_sha(case["report"], R3.FORK_SHA).replace("sherlock-audit/2024-05-pooltogether-judging",
+                                                               "Sherlock-AUDIT/2024-05-PoolTogether-Judging")
+        R3.serve(forged, PAGES[case["report"]])
+        R3.branch_answer(forged, R3.FORK_ONLY)
+        out = w.file(case, report_url=forged)
+        self.assertEqual((out["status"], out["reason"]), ("REFUSED", "REPORT_COMMIT_NOT_ON_BRANCH"))
+        self.assertIn(GH + R3.JUDGING + "/branch_commits/" + R3.FORK_SHA, WEB.log, "read under the lowercased name")
+
+    def test_case_variant_of_the_real_report_is_the_same_check(self):
+        w = B.World()
+        self.assertEqual(w.file(B.CLAIMER)["status"], "OK")
+        upper = B.CLAIMER["report"].replace("sherlock-audit/2024-05-pooltogether-judging",
+                                            "SHERLOCK-AUDIT/2024-05-POOLTOGETHER-JUDGING")
+        out = w.file(B.CLAIMER, report_url="  " + upper + "\n")
+        self.assertEqual(out["reason"], "ALREADY_OPEN_AS_CHECK_1")
+
+    def test_whitespace_and_escapes_inside_owner_or_repo(self):
+        w = B.World()
+        r = B.CLAIMER["report"]
+        for bad, why in ((r.replace("sherlock-audit/", "sherlock-audit /"), "REPORT_URL_NOT_PINNED"),
+                         (r.replace("sherlock-audit/", "sherlock\taudit/"), "REPORT_URL_NOT_PINNED"),
+                         (r.replace("sherlock-audit/", "sherlock%2Daudit/"), "URL_PERCENT_ENCODED"),
+                         (r.replace("sherlock-audit/", "sherlock%2daudit/"), "URL_PERCENT_ENCODED")):
+            out = w.file(B.CLAIMER, report_url=bad)
+            self.assertEqual((out["status"], out["reason"]), ("REFUSED", why), bad)
+        self.assertEqual(int(w.c.checks_n), 0)
+
+    def test_names_github_never_issues_are_refused_before_any_fetch(self):
+        d = B.CLAIMER["docs"]
+        for bad in (d.replace("/pt-dev-docs/", "/pt-dev-docs.git/"), d.replace("/pt-dev-docs/", "/pt-dev-docs./"),
+                    d.replace("GenerationSoftware/", "-GenerationSoftware/"),
+                    d.replace("GenerationSoftware/", "Generation_Software/"),
+                    d.replace("GenerationSoftware/", "Generation--Software/")):
+            w = B.World()
+            out = w.file(B.CLAIMER, docs_url=bad)
+            self.assertEqual((out["status"], out["reason"]), ("REFUSED", "GITHUB_NAME_INVALID"), bad)
+            self.assertEqual(WEB.log, [], bad)
+
+
+class R4_F4_RenamedOrTransferredRepos(unittest.TestCase):
+    """GitHub keeps serving a renamed or transferred repo under its old name:
+    raw answers 200 directly, and github.com answers 301 to the new name
+    (real: Uniswap/uniswap-v3-core -> Uniswap/v3-core). The rule: a URL must
+    name the repository as GitHub names it now. Under the old name the branch
+    list (after the redirect GenVM follows) links the NEW name, which is not
+    the repository the URL names, so the commit is on no branch of it and the
+    filing is refused. One repository therefore has one spelling, one check
+    key and one protocol key."""
+
+    def test_real_redirected_answer(self):
+        self.assertEqual(MOD.repo_branches(RENAMED, "uniswap", "uniswap-v3-core"), [])
+        self.assertEqual(MOD.repo_branches(RENAMED, "uniswap", "v3-core"), ["default:main"])
+
+    def test_report_and_docs_under_an_old_name_are_refused(self):
+        case = B.VAULT_ETH
+        real_report_bc = PAGES[GH + R3.JUDGING + "/branch_commits/" + MOD.github_pin(case["report"])["sha"]]
+        old = case["report"].replace("2024-05-pooltogether-judging", "2024-05-pooltogether-judging-old-judging")
+        w = B.World()
+        R3.serve(old, PAGES[case["report"]])
+        R3.branch_answer(old, real_report_bc)            # what the redirect lands on
+        out = w.file(case, report_url=old)
+        self.assertEqual((out["status"], out["reason"]), ("REFUSED", "REPORT_COMMIT_NOT_ON_BRANCH"))
+        real_docs_bc = PAGES[GH + "generationsoftware/pt-dev-docs/branch_commits/"
+                             + MOD.github_pin(case["docs"])["sha"]]
+        old = case["docs"].replace("/pt-dev-docs/", "/pooltogether-docs/")
+        w = B.World()
+        R3.serve(old, PAGES[case["docs"]])
+        R3.branch_answer(old, real_docs_bc)
+        out = w.file(case, docs_url=old)
+        self.assertEqual((out["status"], out["reason"]), ("REFUSED", "DOCS_COMMIT_NOT_ON_BRANCH"))
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

@@ -34,3 +34,29 @@ FAILED (failures=5)
 ```
 
 After the fix: 6 tests, OK. The 205 earlier tests still pass.
+
+## Step 2. The fork-commit check (round-3 fix 1), attacked from outside (round-4 fix 3)
+
+Real GitHub answers for every case are in `test/fixtures/pages_r4.json` (`tools/build_fixtures_r4.py`).
+
+| Attack | Real data | Result on the round-3 code | Rule now |
+|---|---|---|---|
+| A commit that exists only on `refs/pull/<n>/head` (a pull request from a fork) | Heads of `ethereum-optimism/superchain-registry` PR #1305 (closed, fork `Kemperino`) and PR #1344 (open, fork `arunimshukla`): raw GitHub serves both under the upstream path (HTTP 200); `branch_commits` shows only GitHub's spoofed-commit warning, no branch | **Held**: refused `*_COMMIT_NOT_ON_BRANCH` (`R4_F1`) | Same. A pull request's head is never a branch: the `pull-request` item next to a real upstream branch (PR #1309, branch `feat/plataberget-superchain`) is not counted. |
+| A pull ref rendered as a branch link (`/tree/refs/pull/12/head`), or a link whose text is not the branch it points at | synthetic page (defence in depth) | **Failed**: counted as `branch:refs/pull/12/head` | A link counts only if its text is exactly the ref in its href, and never as `refs/*` or `pull/*`. |
+| Branch deleted, or force-pushed so the commit leaves it | Head of `GenerationSoftware/pt-v5-vault` PR #63, whose branch was deleted: spoofed-commit warning | **Held** (`R4_F2`) | Defined: the proof is GitHub's branch list **at filing**, read by every validator and stored as `report_reach`/`docs_reach`. Gone before filing: refused. Gone between the leader's and a validator's read: the round fails and nothing is written. Gone after filing: nothing changes; every body is bound by sha256 and `decide()` never reads GitHub. |
+| Case, whitespace, %-escapes in owner/repo | `Sherlock-AUDIT/…-Judging` at a fork SHA; `SHERLOCK-AUDIT/…` at the real SHA; space, tab, `%2D` | **Held** (`R4_F3`): case is normalised (the branch list is read under the lowercased name and the same check key results); inner whitespace is refused as not pinned; `%` is refused | Same. |
+| Names GitHub never issues: `repo.git`, `repo.`, leading `-`, `_`, `--` in the account | — | **Failed**: fetched, then refused only as `DOCS_BRANCHES_UNREADABLE` | `github_name_ok`: refused as `GITHUB_NAME_INVALID` before anything is fetched. |
+| Renamed or transferred repo under its old name | `Uniswap/uniswap-v3-core` → 301 → `Uniswap/v3-core`; raw serves the old name directly (200) | **Held** (`R4_F4`): after the redirect the branch list links the new name, which is not the repo the URL names | Defined: a URL must name the repository as GitHub names it now. One repository has one spelling, one check key and one protocol key. |
+
+Run before this fix (16 of 18 already held):
+
+```
+FAIL: test_a_pull_ref_rendered_as_a_branch_link_is_not_a_branch (__main__.R4_F1_PullRequestRefs.test_a_pull_ref_rendered_as_a_branch_link_is_not_a_branch)
+AssertionError: Lists differ: ['branch:refs/pull/12/head'] != []
+FAIL: test_names_github_never_issues_are_refused_before_any_fetch (__main__.R4_F3_OwnerRepoSpellings.test_names_github_never_issues_are_refused_before_any_fetch)
+AssertionError: Tuples differ: ('REFUSED', 'DOCS_BRANCHES_UNREADABLE') != ('REFUSED', 'GITHUB_NAME_INVALID')
+Ran 18 tests in 1.053s
+FAILED (failures=2)
+```
+
+After the fix: 18 tests, OK.
