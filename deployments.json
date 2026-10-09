@@ -4,6 +4,59 @@
   "explorer": "https://explorer-studio-dev.genlayer.com/",
   "contracts": {
     "FixCheck": {
+      "address": "0x65Fe440d63437e14fB9e990D1D0Dc283EE40bb56",
+      "deploy_tx": "0xab068c6f505cd4b430031d6ba1759cb0de1d495fb6708498314591bd0274a6c7",
+      "file": "contracts/FixCheck.py",
+      "commit": "93de7be2deb171cbb0a19b7b47fc280938da520b",
+      "bytes": 135096,
+      "sha256": "e66fb8a621cfde3d2e2dff5d819d3240cf97a0440cef5622e6e47155abc23078",
+      "constructor_args": [
+        "CANONICAL",
+        3600,
+        86400,
+        200,
+        "0x8bfB2761bA064D3F829F382f444867EE10294b1C"
+      ],
+      "deployer": "0x8bfB2761bA064D3F829F382f444867EE10294b1C",
+      "deployed_at": "2026-10-09T13:11:53.690Z",
+      "mode": "CANONICAL"
+    },
+    "FixCheckDemo": {
+      "address": "0x66E008fc08414ecF423e59482c20A046FAd7A01c",
+      "deploy_tx": "0x35a507b7695ec9f52ec10b6370dcb6790fa4dfa850cb9980cf19ca969da80fd7",
+      "file": "contracts/FixCheck.py",
+      "commit": "93de7be2deb171cbb0a19b7b47fc280938da520b",
+      "bytes": 135096,
+      "sha256": "e66fb8a621cfde3d2e2dff5d819d3240cf97a0440cef5622e6e47155abc23078",
+      "constructor_args": [
+        "DEMO",
+        90,
+        300,
+        200,
+        "0x8bfB2761bA064D3F829F382f444867EE10294b1C"
+      ],
+      "deployer": "0x8bfB2761bA064D3F829F382f444867EE10294b1C",
+      "deployed_at": "2026-10-09T13:12:05.115Z",
+      "mode": "DEMO"
+    },
+    "FixRegistry": {
+      "address": "0x90f8c37976D166364BD563f71156aEd187CAc9d2",
+      "deploy_tx": "0xf7a7e8c1f15cdb346985fbe759c8cae388bfbc94a80eab048b23e2153c95beea",
+      "file": "contracts/FixRegistry.py",
+      "commit": "93de7be2deb171cbb0a19b7b47fc280938da520b",
+      "bytes": 3229,
+      "sha256": "6d99a876d5dadfd4bc4f9e6864dd2ade203af9a49839d100adb793cb7b97330a",
+      "constructor_args": [
+        "0x65Fe440d63437e14fB9e990D1D0Dc283EE40bb56"
+      ],
+      "deployer": "0x8bfB2761bA064D3F829F382f444867EE10294b1C",
+      "deployed_at": "2026-10-09T13:12:10.543Z",
+      "reads": "0x65Fe440d63437e14fB9e990D1D0Dc283EE40bb56"
+    }
+  },
+  "superseded": [
+    {
+      "name": "FixCheck",
       "address": "0x893f96A5c72771D40F0bB55035A013a77159cc33",
       "deploy_tx": "0xca6c44d302ef1361c79e5e9710045de0f8db84e3b502ba3de324fb746022ef00",
       "file": "contracts/FixCheck.py",
@@ -19,9 +72,12 @@
       ],
       "deployer": "0x8bfB2761bA064D3F829F382f444867EE10294b1C",
       "deployed_at": "2026-10-07T12:00:33.486Z",
-      "mode": "CANONICAL"
+      "mode": "CANONICAL",
+      "superseded_by": "0x65Fe440d63437e14fB9e990D1D0Dc283EE40bb56",
+      "why": "redeployed"
     },
-    "FixCheckDemo": {
+    {
+      "name": "FixCheckDemo",
       "address": "0xF5133724f0dffF025ceA878881285aE681d71c89",
       "deploy_tx": "0x1173147bce2b51971bb84242f95ff2c50f060a766bff3e69f60b518913896b05",
       "file": "contracts/FixCheck.py",
@@ -37,9 +93,12 @@
       ],
       "deployer": "0x8bfB2761bA064D3F829F382f444867EE10294b1C",
       "deployed_at": "2026-10-07T12:00:40.076Z",
-      "mode": "DEMO"
+      "mode": "DEMO",
+      "superseded_by": "0x66E008fc08414ecF423e59482c20A046FAd7A01c",
+      "why": "redeployed"
     },
-    "FixRegistry": {
+    {
+      "name": "FixRegistry",
       "address": "0x50a60867153d3C63F322340dcEfe492bdd0d8D04",
       "deploy_tx": "0x491f3cf87b089535d169fec7b0c9df966b880af33b28b355bcd6694e7fa0f707",
       "file": "contracts/FixRegistry.py",
@@ -51,7 +110,9 @@
       ],
       "deployer": "0x8bfB2761bA064D3F829F382f444867EE10294b1C",
       "deployed_at": "2026-10-07T12:00:48.990Z",
-      "reads": "0x893f96A5c72771D40F0bB55035A013a77159cc33"
+      "reads": "0x893f96A5c72771D40F0bB55035A013a77159cc33",
+      "superseded_by": "0x90f8c37976D166364BD563f71156aEd187CAc9d2",
+      "why": "redeployed"
     }
-  }
+  ]
 }
