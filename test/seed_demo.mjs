@@ -7,7 +7,7 @@
  *   D3 INCONCLUSIVE      PoolTogether M-19 `claimPrize` filed against the PrizePool
  *                        (listed in the docs, verified, but Claimable.sol is not in it)
  *   D4 NO-DEFENDER FEE   PoolTogether M-5 (deployed == fix), nobody defends
- *   D5 EXPIRY            Cap M-3, never decided; expire() after the decide deadline
+ *   D5 EXPIRY            Cap M-1 (Cap M-3 is the live round-3 proxy case, docs/DEPLOYED_VERIFICATION.md), never decided; expire() after the decide deadline
  *   D6 MODEL             Mellow M-5 (deployed function changed) decided by the model
  *   D7 REFUSAL           an unpinned report URL: refused, stake stays withdrawable
  *   D8 PREDATES AUDIT    PoolTogether M-9 on OP (deployed 2024-04-18, before the audit) vs a defender: refund
@@ -34,7 +34,7 @@ const PLAN = [
   { tag: "D2", s: find("Mellow", "H-1", "checkSignatures"), defend: 1n },
   { tag: "D3", s: { ...m19, chain: "optimism", address: PRIZEPOOL_OP, docs_url: seeds.find((s) => s.chain === "optimism" && s.protocol.startsWith("PoolTogether")).docs_url }, defend: 1n },
   { tag: "D4", s: find("PoolTogether", "M-5", "claimPrizes", "optimism") },
-  { tag: "D5", s: find("Cap", "M-3", "realizeRestakerInterest"), expire: true },
+  { tag: "D5", s: find("Cap", "M-1", "liquidate"), expire: true },
   { tag: "D6", s: find("Mellow", "M-5", "cancelDepositRequest") },
   { tag: "D8", s: find("PoolTogether", "M-9", "liquidatableBalanceOf", "optimism"), defend: 1n },
   { tag: "D9", s: find("PoolTogether", "M-16", "maxDeposit", "arbitrum"), defend: 1n },
