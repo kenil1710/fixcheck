@@ -13,10 +13,10 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
 const CHAINS: Record<string, { kind: "blockscout" | "sourcify"; base: string; id: number; rpc: string }> = {
-  ethereum: { kind: "blockscout", base: "https://eth.blockscout.com", id: 1, rpc: "https://ethereum-rpc.publicnode.com" },
+  ethereum: { kind: "blockscout", base: "https://eth.blockscout.com", id: 1, rpc: "https://rpc.mevblocker.io" },
   optimism: { kind: "blockscout", base: "https://explorer.optimism.io", id: 10, rpc: "https://mainnet.optimism.io" },
   base: { kind: "sourcify", base: "https://sourcify.dev", id: 8453, rpc: "https://mainnet.base.org" },
-  arbitrum: { kind: "sourcify", base: "https://sourcify.dev", id: 42161, rpc: "https://arb1.arbitrum.io/rpc" },
+  arbitrum: { kind: "sourcify", base: "https://sourcify.dev", id: 42161, rpc: "https://arb-pokt.nodies.app" },
   polygon: { kind: "sourcify", base: "https://sourcify.dev", id: 137, rpc: "https://polygon.drpc.org" },
 };
 const SLOT = "0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc";
