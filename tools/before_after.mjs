@@ -1,4 +1,4 @@
-/** Before/after table: the previous canonical deployment (docs/superseded/seed-canonical-v1.3.json) vs the chain now.
+/** Before/after table: the previous canonical deployment (docs/superseded/seed-canonical-v1.4.json) vs the chain now.
  *   node tools/before_after.mjs > <file>.md */
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
@@ -11,7 +11,7 @@ const seeds = JSON.parse(readFileSync(root + "docs/research/seeds.json", "utf8")
 const c = createClient({ chain: process.env.STUDIO_RPC ? { ...studioDevnet, rpcUrls: { default: { http: [process.env.STUDIO_RPC] } } } : studioDevnet });
 const plain = (v) => v instanceof Map ? Object.fromEntries([...v].map(([k, x]) => [k, plain(x)])) : Array.isArray(v) ? v.map(plain) : typeof v === "bigint" ? Number(v) : v;
 const now = plain(await c.readContract({ address: dep.FixCheck.address, functionName: "get_checks", args: [0, 100] })).items;
-const before = JSON.parse(readFileSync(root + "docs/superseded/seed-canonical-v1.3.json", "utf8")).items;
+const before = JSON.parse(readFileSync(root + "docs/superseded/seed-canonical-v1.4.json", "utf8")).items;
 const key = (x) => `${x.report_url}#${x.finding_id}@${x.chain}:${x.address.toLowerCase()}`;
 const day = (t) => (t ? new Date(t * 1000).toISOString().slice(0, 10) : "—");
 const v = (x) => (x.state === "OPEN" ? "open" : x.verdict) + (x.basis ? ` (${x.basis})` : "");
@@ -19,7 +19,7 @@ const why = (b, a) => {
   if (b.verdict === a.verdict && b.basis === a.basis) return "unchanged";
   return `changed: ${b.basis} → ${a.basis}; see docs/ATTACK_REPORT_R3.md`;
 };
-let md = "| # | Finding | Chain | Before (commit 7efb699) | After (commit " + dep.FixCheck.commit.slice(0, 7) + ") | Reason |\n|---|---|---|---|---|---|\n";
+let md = "| # | Finding | Chain | Before (commit 93de7be) | After (commit " + dep.FixCheck.commit.slice(0, 7) + ") | Reason |\n|---|---|---|---|---|---|\n";
 const rows = [];
 for (const a of now.sort((x, y) => x.check_id - y.check_id)) {
   const b = before.find((x) => key(x) === key(a));

@@ -83,7 +83,7 @@ python3 -m unittest discover -s test -p "test_*.py"   # 205 tests, OK, 0 expecte
 
 ## Re-seed on the round-3 contracts (2026-10-09)
 
-All 22 seeds filed and decided on canonical `0x65Fe440d63437e14fB9e990D1D0Dc283EE40bb56` (deployed from `93de7be`), compared with the previous canonical deployment (`docs/superseded/seed-canonical-v1.3.json`) by `node tools/before_after.mjs`. No seed pins a fork-only commit and no seeded proxy switched implementation after its fix, so no verdict changes; the three fixed paths are shown live in [`DEPLOYED_VERIFICATION.md`](DEPLOYED_VERIFICATION.md) and offline in `test/test_attacks_r3.py`.
+All 22 seeds filed and decided on canonical round-3 canonical (commit 93de7be), address in docs/superseded/README.md (deployed from `93de7be`), compared with the previous canonical deployment (`docs/superseded/seed-canonical-v1.3.json`) by `node tools/before_after.mjs`. No seed pins a fork-only commit and no seeded proxy switched implementation after its fix, so no verdict changes; the three fixed paths are shown live in [`DEPLOYED_VERIFICATION.md`](DEPLOYED_VERIFICATION.md) and offline in `test/test_attacks_r3.py`.
 
 | # | Finding | Chain | Before (commit 7efb699) | After (commit 93de7be) | Reason |
 |---|---|---|---|---|---|

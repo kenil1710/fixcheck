@@ -8,6 +8,26 @@ python3 test/test_attacks_r4.py
 
 Earlier reports: [round 1](ATTACK_REPORT.md) and [round 2](ATTACK_REPORT_R2.md) have no open items (every finding is marked fixed). [Round 3](ATTACK_REPORT_R3.md) left three Lows open (its items 1, 4 and 5). They are step 1 below.
 
+## Summary
+
+Eleven issues, all fixed and each with a test that failed on the round-3 code:
+
+| ID | Severity | Issue | Step |
+|---|---|---|---|
+| R4-L1 | Low | Docs captured on the Wayback Machine always refused (R3 item 1) | 1 |
+| R4-L2 | Low | The leader could pick the slot block inside the window (R3 item 4) | 1 |
+| R4-L3 | Low | Allowlist prefixes had no host boundary (R3 item 5) | 1 |
+| R4-01 | Low | A pull ref rendered as a branch link would count as a branch | 2 |
+| R4-02 | Low | Owner/repo names GitHub never issues were fetched instead of refused | 2 |
+| R4-03 | Medium | A beacon proxy the explorer does not resolve was judged and dated as a plain contract | 3 |
+| R4-04 | Medium | Code redeployed at the same address (metamorphic) kept its first creation date → PREDATES | 3 |
+| R4-05 | Medium | An Upgraded event above the slot block was ignored → PREDATES for code re-chosen after the fix | 3 |
+| R4-06 | Medium | Every chain fact came from one source (one RPC, or one explorer) | 4 |
+| R4-07 | Medium | A status block typed into a participant's comment counted as Sherlock's (README limitation) | 6 |
+| R4-08 | Medium | Modifiers were not followed: an overridden modifier still gave a code verdict (README limitation) | 6 |
+
+Already held, now regression tests: commits only on a pull request's head, deleted or force-pushed branches, case/whitespace/%-escapes, renamed repos, beacon proxies the explorer resolves, UUPS, A → B → A rollbacks.
+
 ## Step 1. Lows left open in round 3 (round-4 fixes 1 and 2)
 
 | ID | Was | Test | Fix |
