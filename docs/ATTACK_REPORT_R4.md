@@ -163,3 +163,15 @@ Changes to earlier tests forced by this fix: `test/fixtures/rpc.json` keys move 
 After the fix: 41 tests in `test_attacks_r4.py`, OK; all earlier suites OK.
 
 **Live replay.** `node`-free: `python3 tools/live_preview.py` runs the contract's own `gather()` and code decision for all 22 seeds against live GitHub, explorers and both RPCs ([`research/live_preview.json`](research/live_preview.json)). All 22 gather; every creation proof is `OK`; the three proxies' switches (Cap ×2, OP's DisputeGameFactory) are `EVENT`, confirmed by both RPCs; every predicted verdict equals the round-3 verdict. An RPC that does not answer (HTTP 429 from a throttled free endpoint) refuses the filing instead of being stored, so validators cannot split on who was throttled (`test_an_unanswered_read_is_not_a_fact`).
+
+## Step 5. A live case where the date rule alone decides: searched again, none found
+
+What such a case needs, all at once: (1) a proxy on Ethereum or OP Mainnet (the only chains with a dated log source); (2) a full/exact verified implementation; (3) a Sherlock report that pins the audited commit; (4) a deployed function canonically equal to the **audited (vulnerable)** version, so that only the dates separate NOT_FIXED from PREDATES_FIX; and (5) the proxy (or its switch) dated on the side of the fix that makes the difference. (4) and (5) together mean a team selected, or kept from before the fix, code still lacking a fix it shipped elsewhere.
+
+Searched this round, beyond the 21 seeded findings:
+
+- **Exactly Protocol** (Sherlock `2024-07-exactly-stacking-contracts`, fixes in `exactly/protocol`, Market and StakedEXA proxies on OP Mainnet, hardhat deployment files pinned in the same account as the fix): a natural fit for (1) and (5). It fails (3): the report links the audited code only as `blob/main` (26 links, none at a commit SHA), so filing is refused `AUDITED_COMMIT_NOT_LINKED_BY_REPORT`. That is the rule that keeps an attacker from pointing "audited" at any commit.
+- The 99 Sherlock contests in `research_cache/fixed.json` (835 findings marked fixed) were screened by deployment chain and proxy pattern. The contests with upgradeable proxies are mostly on Arbitrum or Base (no log source: Perennial, Tapioca, Superfluid, Ethos), beacon-based (Arrakis: now `BEACON_PROXY`), or route through a dispatcher whose function is not in the compiled contract (Notional). None was checked to the point of a filing.
+- Among the seeded findings the only proxies are Cap's Lender (two checks) and OP's DisputeGameFactory, all partial matches, so (2) fails; the live replay confirms their switches are dated and confirmed by both RPCs (`EVENT`).
+
+So the date-only path stays covered offline: `R3_Reg_ProxyChronology`, `R4_P3_RollbackABA`, `R4_P4_CodeRedeployedAtTheSameAddress` and `R4_P5_SlotReadBeforeTheLastUpgrade` serve the real Ethereum vault (deployed code == audited) as a proxy, with explorer and RPC logs. The live proxy case on the new demo shows the chronology fields stored and confirmed by both RPCs (docs/DEPLOYED_VERIFICATION.md).
