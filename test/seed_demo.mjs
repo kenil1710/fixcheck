@@ -42,8 +42,30 @@ const PLAN = [
 const state = {};
 const idOf = async (s) => { const st = await tr.view("fix_status", [s.chain, s.address, s.report_url, s.finding_id]); return Number(st.open_check_id || st.check_id || 0); };
 
+// A check whose decide window passed before this script reached it (an interrupted
+// run) is expired, then the same evidence is filed again as a new check.
+// Each case is filed, defended and decided before the next is filed, so every
+// decide lands inside its 300 s window.
+const decideOne = async (p, id) => {
+  for (let attempt = 1; attempt <= 4; attempt++) {
+    const c = await tr.view("get_check", [id]);
+    if (c.state !== "OPEN") { log(p.tag, "check", id, c.state, c.verdict, c.basis, c.model_votes, c.quote_lines); break; }
+    const wait = Number(c.counter_deadline) + 8 - Date.now() / 1000;
+    if (wait > 0) await sleep(wait * 1000);
+    const o = await tr.send("decide", [id]);
+    log(p.tag, "decide", id, o.status, o.ok, o.seconds?.toFixed(0) + "s", o.revertReason?.slice(0, 120) || "");
+  }
+};
 for (const p of PLAN) {
   let id = await idOf(p.s);
+  if (id && !p.expire) {
+    const c = await tr.view("get_check", [id]);
+    if (c.state === "OPEN" && Date.now() / 1000 > Number(c.decide_deadline)) {
+      const o = await tr.send("expire", [id]);
+      log(p.tag, "expire stale check", id, o.status, o.ok);
+    }
+    if ((await tr.view("get_check", [id])).state === "EXPIRED") id = 0;
+  }
   if (!id) {
     const o = await ch.send("file_check", [p.s.report_url, p.s.finding_id, p.s.function, p.s.audited_url, p.s.fix_url, p.s.chain, p.s.address, p.s.docs_url], GEN);
     log(p.tag, "file", o.status, o.seconds?.toFixed(0) + "s", await ch.view("get_last_result", [ch.account.address]));
@@ -58,22 +80,11 @@ for (const p of PLAN) {
       log(p.tag, "counter-stake", o.status, await df.view("get_last_result", [df.account.address]));
     }
   }
+  if (id && !p.expire) await decideOne(p, id);
 }
 // D7 refusal
 const r = await ch.send("file_check", [PLAN[0].s.report_url.replace(/\/[0-9a-f]{40}\//, "/main/"), PLAN[0].s.finding_id, PLAN[0].s.function, PLAN[0].s.audited_url, PLAN[0].s.fix_url, PLAN[0].s.chain, PLAN[0].s.address, PLAN[0].s.docs_url], GEN);
 log("D7 refusal", r.status, await ch.view("get_last_result", [ch.account.address]));
-// decide all but D5
-for (const p of PLAN.filter((p) => !p.expire)) {
-  const id = state[p.tag];
-  for (let attempt = 1; attempt <= 4; attempt++) {
-    const c = await tr.view("get_check", [id]);
-    if (c.state !== "OPEN") { log(p.tag, "check", id, c.state, c.verdict, c.basis, c.model_votes, c.quote_lines); break; }
-    const wait = Number(c.counter_deadline) + 8 - Date.now() / 1000;
-    if (wait > 0) await sleep(wait * 1000);
-    const o = await tr.send("decide", [id]);
-    log(p.tag, "decide", id, o.status, o.ok, o.seconds?.toFixed(0) + "s", o.revertReason?.slice(0, 120) || "");
-  }
-}
 // D5 expiry
 {
   const id = state.D5;

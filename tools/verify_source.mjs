@@ -14,7 +14,7 @@ const { studioDevnet } = require("genlayer-js/chains");
 const sha = (b) => createHash("sha256").update(b).digest("hex");
 const dep = JSON.parse(readFileSync(root + "deployments.json", "utf8")).contracts;
 const head = execFileSync("git", ["-C", root, "rev-parse", "HEAD"]).toString().trim();
-const client = createClient({ chain: studioDevnet });
+const client = createClient({ chain: process.env.STUDIO_RPC ? { ...studioDevnet, rpcUrls: { default: { http: [process.env.STUDIO_RPC] } } } : studioDevnet });
 let bad = 0;
 console.log(`HEAD ${head}`);
 for (const [name, rec] of Object.entries(dep)) {

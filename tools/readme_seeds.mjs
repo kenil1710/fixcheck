@@ -7,7 +7,7 @@ const { studioDevnet } = require("genlayer-js/chains");
 const root = new URL("..", import.meta.url).pathname;
 const dep = JSON.parse(readFileSync(root + "deployments.json", "utf8")).contracts;
 const seeds = JSON.parse(readFileSync(root + "docs/research/seeds.json", "utf8"));
-const c = createClient({ chain: studioDevnet });
+const c = createClient({ chain: process.env.STUDIO_RPC ? { ...studioDevnet, rpcUrls: { default: { http: [process.env.STUDIO_RPC] } } } : studioDevnet });
 const r = await c.readContract({ address: dep.FixCheck.address, functionName: "get_checks", args: [0, 100] });
 const items = (r.items ?? r.get?.("items")).map((x) => (x instanceof Map ? Object.fromEntries(x) : x)).sort((a, b) => Number(a.check_id) - Number(b.check_id));
 const SITE = "https://fixcheck-ledger.vercel.app";

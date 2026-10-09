@@ -8,7 +8,7 @@ const { studioDevnet } = require("genlayer-js/chains");
 const root = new URL("..", import.meta.url).pathname;
 const dep = JSON.parse(readFileSync(root + "deployments.json", "utf8")).contracts;
 const seeds = JSON.parse(readFileSync(root + "docs/research/seeds.json", "utf8"));
-const c = createClient({ chain: studioDevnet });
+const c = createClient({ chain: process.env.STUDIO_RPC ? { ...studioDevnet, rpcUrls: { default: { http: [process.env.STUDIO_RPC] } } } : studioDevnet });
 const plain = (v) => v instanceof Map ? Object.fromEntries([...v].map(([k, x]) => [k, plain(x)])) : Array.isArray(v) ? v.map(plain) : typeof v === "bigint" ? Number(v) : v;
 const now = plain(await c.readContract({ address: dep.FixCheck.address, functionName: "get_checks", args: [0, 100] })).items;
 const before = JSON.parse(readFileSync(root + "docs/superseded/seed-canonical-v1.3.json", "utf8")).items;
@@ -17,10 +17,9 @@ const day = (t) => (t ? new Date(t * 1000).toISOString().slice(0, 10) : "—");
 const v = (x) => (x.state === "OPEN" ? "open" : x.verdict) + (x.basis ? ` (${x.basis})` : "");
 const why = (b, a) => {
   if (b.verdict === a.verdict && b.basis === a.basis) return "unchanged";
-  if (a.verdict === "PREDATES_FIX") return `created ${day(a.created_at)}, after the audit (${day(a.audited_at)}) but before the fix existed (${day(a.fix_at)}: the later of the fix commit and its PR's merge) — round-2 fix 1`;
-  return "changed: see the report";
+  return `changed: ${b.basis} → ${a.basis}; see docs/ATTACK_REPORT_R3.md`;
 };
-let md = "| # | Finding | Chain | Before (commit 0c20168) | After (commit " + dep.FixCheck.commit.slice(0, 7) + ") | Reason |\n|---|---|---|---|---|---|\n";
+let md = "| # | Finding | Chain | Before (commit 7efb699) | After (commit " + dep.FixCheck.commit.slice(0, 7) + ") | Reason |\n|---|---|---|---|---|---|\n";
 const rows = [];
 for (const a of now.sort((x, y) => x.check_id - y.check_id)) {
   const b = before.find((x) => key(x) === key(a));

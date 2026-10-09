@@ -80,3 +80,35 @@ Regression tests (`R3_Reg_BranchReachability` and `R3_Reg_ProxyChronology`, 19 t
 ```
 python3 -m unittest discover -s test -p "test_*.py"   # 205 tests, OK, 0 expected failures
 ```
+
+## Re-seed on the round-3 contracts (2026-10-09)
+
+All 22 seeds filed and decided on canonical `0x65Fe440d63437e14fB9e990D1D0Dc283EE40bb56` (deployed from `93de7be`), compared with the previous canonical deployment (`docs/superseded/seed-canonical-v1.3.json`) by `node tools/before_after.mjs`. No seed pins a fork-only commit and no seeded proxy switched implementation after its fix, so no verdict changes; the three fixed paths are shown live in [`DEPLOYED_VERIFICATION.md`](DEPLOYED_VERIFICATION.md) and offline in `test/test_attacks_r3.py`.
+
+| # | Finding | Chain | Before (commit 7efb699) | After (commit 93de7be) | Reason |
+|---|---|---|---|---|---|
+| 1 | PoolTogether V5 M-5 `claimPrizes` | optimism | FIXED (CODE_MATCH_FIX) | FIXED (CODE_MATCH_FIX) | unchanged |
+| 2 | PoolTogether V5 M-8 `_computeFeePerClaim` | base | FIXED (CODE_MATCH_FIX) | FIXED (CODE_MATCH_FIX) | unchanged |
+| 3 | PoolTogether V5 M-15 `shutdownAt` | optimism | PREDATES_AUDIT (DEPLOYED_BEFORE_AUDIT) | PREDATES_AUDIT (DEPLOYED_BEFORE_AUDIT) | unchanged |
+| 4 | PoolTogether V5 M-9 `liquidatableBalanceOf` | optimism | PREDATES_AUDIT (DEPLOYED_BEFORE_AUDIT) | PREDATES_AUDIT (DEPLOYED_BEFORE_AUDIT) | unchanged |
+| 5 | PoolTogether V5 M-16 `maxDeposit` | arbitrum | PREDATES_FIX (DEPLOYED_BEFORE_FIX) | PREDATES_FIX (DEPLOYED_BEFORE_FIX) | unchanged |
+| 6 | PoolTogether V5 M-17 `_convertToShares` | ethereum | NOT_FIXED (CODE_MATCH_VULNERABLE) | NOT_FIXED (CODE_MATCH_VULNERABLE) | unchanged |
+| 7 | PoolTogether V5 M-19 `claimPrize` | base | PREDATES_AUDIT (DEPLOYED_BEFORE_AUDIT) | PREDATES_AUDIT (DEPLOYED_BEFORE_AUDIT) | unchanged |
+| 8 | PoolTogether V5 M-1 `isRequestComplete` | optimism | PREDATES_AUDIT (DEPLOYED_BEFORE_AUDIT) | PREDATES_AUDIT (DEPLOYED_BEFORE_AUDIT) | unchanged |
+| 9 | PoolTogether V5 M-1 `isRequestComplete` | arbitrum | FIXED (CODE_MATCH_FIX) | FIXED (CODE_MATCH_FIX) | unchanged |
+| 10 | PoolTogether V5 M-14 `canStartDraw` | optimism | PREDATES_AUDIT (DEPLOYED_BEFORE_AUDIT) | PREDATES_AUDIT (DEPLOYED_BEFORE_AUDIT) | unchanged |
+| 11 | PoolTogether V5 H-3 `startDrawReward` | optimism | PREDATES_AUDIT (DEPLOYED_BEFORE_AUDIT) | PREDATES_AUDIT (DEPLOYED_BEFORE_AUDIT) | unchanged |
+| 12 | Mellow Flexible Vaults H-1 `checkSignatures` | ethereum | FIXED (CODE_MATCH_FIX) | FIXED (CODE_MATCH_FIX) | unchanged |
+| 13 | Mellow Flexible Vaults H-2 `_handleReport` | ethereum | INCONCLUSIVE (MODEL_UNGROUNDED) | INCONCLUSIVE (MODEL_UNGROUNDED) | unchanged |
+| 14 | Mellow Flexible Vaults H-3 `callHook` | ethereum | INCONCLUSIVE (PARTIAL_MATCH) | INCONCLUSIVE (PARTIAL_MATCH) | unchanged |
+| 15 | Mellow Flexible Vaults H-4 `calculateFee` | ethereum | INCONCLUSIVE (MODEL_UNGROUNDED) | INCONCLUSIVE (MODEL_UNGROUNDED) | unchanged |
+| 16 | Mellow Flexible Vaults H-5 `calculateFee` | ethereum | FIXED (CODE_MATCH_FIX) | FIXED (CODE_MATCH_FIX) | unchanged |
+| 17 | Mellow Flexible Vaults M-1 `updateChecks` | ethereum | INCONCLUSIVE (MODEL_UNGROUNDED) | INCONCLUSIVE (MODEL_UNGROUNDED) | unchanged |
+| 18 | Mellow Flexible Vaults M-4 `handleReport` | ethereum | FIXED (CODE_MATCH_FIX) | FIXED (CODE_MATCH_FIX) | unchanged |
+| 19 | Mellow Flexible Vaults M-5 `cancelDepositRequest` | ethereum | FIXED (CODE_CONTAINS_FIX) | FIXED (CODE_CONTAINS_FIX) | unchanged |
+| 20 | Cap M-1 `liquidate` | ethereum | INCONCLUSIVE (PARTIAL_MATCH) | INCONCLUSIVE (PARTIAL_MATCH) | unchanged |
+| 21 | Cap M-3 `realizeRestakerInterest` | ethereum | INCONCLUSIVE (PARTIAL_MATCH) | INCONCLUSIVE (PARTIAL_MATCH) | unchanged |
+| 22 | OP Stack fault proofs M-3 `create` | ethereum | INCONCLUSIVE (PARTIAL_MATCH) | INCONCLUSIVE (PARTIAL_MATCH) | unchanged |
+
+22 checks; 22 unchanged, 0 changed.
+

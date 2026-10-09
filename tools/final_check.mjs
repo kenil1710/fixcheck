@@ -11,7 +11,7 @@ const require = createRequire(new URL("../test/package.json", import.meta.url));
 const { createClient } = require("genlayer-js");
 const { studioDevnet } = require("genlayer-js/chains");
 const SITE = process.env.SITE ?? "https://fixcheck-ledger.vercel.app";
-const c = createClient({ chain: studioDevnet });
+const c = createClient({ chain: process.env.STUDIO_RPC ? { ...studioDevnet, rpcUrls: { default: { http: [process.env.STUDIO_RPC] } } } : studioDevnet });
 const dep = JSON.parse(readFileSync(root + "deployments.json", "utf8")).contracts;
 const plain = (v) => v instanceof Map ? Object.fromEntries([...v].map(([k, x]) => [k, plain(x)])) : Array.isArray(v) ? v.map(plain) : typeof v === "bigint" ? Number(v) : v;
 const view = async (a, fn, args = []) => { for (let i = 0; ; i++) { try { return plain(await c.readContract({ address: a, functionName: fn, args })); } catch (e) { if (i > 6) throw e; await new Promise((r) => setTimeout(r, 5000)); } } };

@@ -1,8 +1,8 @@
 # Seeds
 
-Read from the chain by `tools/seeds_md.mjs` on 2026-10-07T13:46Z. Every row links to its page; every value comes from contract state.
+Read from the chain by `tools/seeds_md.mjs` on 2026-10-09T14:31Z. Every row links to its page; every value comes from contract state.
 
-## Canonical — 0x893f96A5c72771D40F0bB55035A013a77159cc33
+## Canonical — 0x65Fe440d63437e14fB9e990D1D0Dc283EE40bb56
 
 22 checks of 21 findings · **7 fixed** · **1 not fixed** · **6 predates audit** · **1 predates fix** · 7 inconclusive · 0 open. Ledger: balance 29 = open 0 + withdrawable 28.9 + fees 0.1 GEN (invariant holds).
 
@@ -37,20 +37,28 @@ Read from the chain by `tools/seeds_md.mjs` on 2026-10-07T13:46Z. Every row link
 
 **Every NOT_FIXED is a code fact** (deployed function identical to the audited one, on code created after the fix existed). Where the model was asked and an answer did not point at the fix (a line the fix added for fixed, a removed line still deployed for not fixed), the check is INCONCLUSIVE and everyone was refunded. **PREDATES_AUDIT** means the deployed code is the audited version on a contract created before the audited commit and not upgradeable: the fix could not have been applied there. **PREDATES_FIX** means it is the audited version on code created before the fix existed (the later of the fix commit and its PR’s merge), so it could not contain the fix. Earlier deployments: `docs/superseded/`.
 
-## Demo — 0xF5133724f0dffF025ceA878881285aE681d71c89
+## Demo — 0x66E008fc08414ecF423e59482c20A046FAd7A01c
 
 90 s counter window, 300 s decide window; same source. Every path:
 
 | # | Path | Finding | Verdict | Basis | Payout |
 |---|---|---|---|---|---|
-| [1](https://fixcheck-ledger.vercel.app/demo/checks/1) | challenge wins (defender loses) | M-17 `_convertToShares` | NOT_FIXED | CODE_MATCH_VULNERABLE | challenger 2 GEN, fee 0 GEN |
-| [2](https://fixcheck-ledger.vercel.app/demo/checks/2) | challenge loses (defender wins) | H-1 `checkSignatures` | FIXED | CODE_MATCH_FIX | challenger 0 GEN, fee 0 GEN |
-| [3](https://fixcheck-ledger.vercel.app/demo/checks/3) | inconclusive refund (function not in that contract) | M-19 `claimPrize` | INCONCLUSIVE | FUNCTION_MISSING | challenger 1 GEN, fee 0 GEN |
-| [4](https://fixcheck-ledger.vercel.app/demo/checks/4) | no defender → refund minus fee | M-5 `claimPrizes` | FIXED | CODE_MATCH_FIX | challenger 0.98 GEN, fee 0.02 GEN |
-| [5](https://fixcheck-ledger.vercel.app/demo/checks/5) | expiry → everyone refunded | M-3 `realizeRestakerInterest` | EXPIRED (refunded) | EXPIRED | challenger 1 GEN, fee 0 GEN |
-| [6](https://fixcheck-ledger.vercel.app/demo/checks/6) | function changed since the fix, still contains it in place → code decides (CODE_CONTAINS_FIX) | M-5 `cancelDepositRequest` | FIXED | CODE_CONTAINS_FIX | challenger 0.98 GEN, fee 0.02 GEN |
-| [7](https://fixcheck-ledger.vercel.app/demo/checks/7) | deployed before the audit → PREDATES_AUDIT, everyone refunded | M-9 `liquidatableBalanceOf` | PREDATES_AUDIT | DEPLOYED_BEFORE_AUDIT | challenger 1 GEN, fee 0 GEN |
-| [8](https://fixcheck-ledger.vercel.app/demo/checks/8) | deployed before the fix existed → PREDATES_FIX, everyone refunded | M-16 `maxDeposit` | PREDATES_FIX | DEPLOYED_BEFORE_FIX | challenger 1 GEN, fee 0 GEN |
-| [9](https://fixcheck-ledger.vercel.app/demo/checks/9) | filed on camera through the app (real wallet) → PREDATES_AUDIT | M-16 `maxDeposit` | PREDATES_AUDIT | DEPLOYED_BEFORE_AUDIT | challenger 1 GEN, fee 0 GEN |
+| [1](https://fixcheck-ledger.vercel.app/demo/checks/1) | round-3 live proxy case (docs/DEPLOYED_VERIFICATION.md) | M-3 `realizeRestakerInterest` | INCONCLUSIVE | PARTIAL_MATCH | challenger 1 GEN, fee 0 GEN |
+| [2](https://fixcheck-ledger.vercel.app/demo/checks/2) | interrupted seed run; decide window passed, expired and refiled | M-17 `_convertToShares` | EXPIRED (refunded) | EXPIRED | challenger 1 GEN, fee 0 GEN |
+| [3](https://fixcheck-ledger.vercel.app/demo/checks/3) | interrupted seed run; decide window passed, expired and refiled | H-1 `checkSignatures` | EXPIRED (refunded) | EXPIRED | challenger 1 GEN, fee 0 GEN |
+| [4](https://fixcheck-ledger.vercel.app/demo/checks/4) | interrupted seed run; decide window passed, expired and refiled | M-19 `claimPrize` | EXPIRED (refunded) | EXPIRED | challenger 1 GEN, fee 0 GEN |
+| [5](https://fixcheck-ledger.vercel.app/demo/checks/5) | interrupted seed run; decide window passed, expired and refiled | M-5 `claimPrizes` | EXPIRED (refunded) | EXPIRED | challenger 1 GEN, fee 0 GEN |
+| [6](https://fixcheck-ledger.vercel.app/demo/checks/6) | interrupted seed run; decide window passed, expired and refiled | M-1 `liquidate` | EXPIRED (refunded) | EXPIRED | challenger 1 GEN, fee 0 GEN |
+| [7](https://fixcheck-ledger.vercel.app/demo/checks/7) | interrupted seed run; decide window passed, expired and refiled | M-5 `cancelDepositRequest` | EXPIRED (refunded) | EXPIRED | challenger 1 GEN, fee 0 GEN |
+| [8](https://fixcheck-ledger.vercel.app/demo/checks/8) | interrupted seed run; decide window passed, expired and refiled | M-9 `liquidatableBalanceOf` | EXPIRED (refunded) | EXPIRED | challenger 1 GEN, fee 0 GEN |
+| [9](https://fixcheck-ledger.vercel.app/demo/checks/9) | interrupted seed run; decide window passed, expired and refiled | M-16 `maxDeposit` | EXPIRED (refunded) | EXPIRED | challenger 1 GEN, fee 0 GEN |
+| [10](https://fixcheck-ledger.vercel.app/demo/checks/10) | challenge wins (defender loses) | M-17 `_convertToShares` | NOT_FIXED | CODE_MATCH_VULNERABLE | challenger 2 GEN, fee 0 GEN |
+| [11](https://fixcheck-ledger.vercel.app/demo/checks/11) | challenge loses (defender wins) | H-1 `checkSignatures` | FIXED | CODE_MATCH_FIX | challenger 0 GEN, fee 0 GEN |
+| [12](https://fixcheck-ledger.vercel.app/demo/checks/12) | inconclusive refund (function not in that contract) | M-19 `claimPrize` | INCONCLUSIVE | FUNCTION_MISSING | challenger 1 GEN, fee 0 GEN |
+| [13](https://fixcheck-ledger.vercel.app/demo/checks/13) | no defender → refund minus fee | M-5 `claimPrizes` | FIXED | CODE_MATCH_FIX | challenger 0.98 GEN, fee 0.02 GEN |
+| [14](https://fixcheck-ledger.vercel.app/demo/checks/14) | expiry → everyone refunded | M-1 `liquidate` | EXPIRED (refunded) | EXPIRED | challenger 1 GEN, fee 0 GEN |
+| [15](https://fixcheck-ledger.vercel.app/demo/checks/15) | function changed since the fix, still contains it in place → code decides (CODE_CONTAINS_FIX) | M-5 `cancelDepositRequest` | FIXED | CODE_CONTAINS_FIX | challenger 0.98 GEN, fee 0.02 GEN |
+| [16](https://fixcheck-ledger.vercel.app/demo/checks/16) | deployed before the audit → PREDATES_AUDIT, everyone refunded | M-9 `liquidatableBalanceOf` | PREDATES_AUDIT | DEPLOYED_BEFORE_AUDIT | challenger 1 GEN, fee 0 GEN |
+| [17](https://fixcheck-ledger.vercel.app/demo/checks/17) | deployed before the fix existed → PREDATES_FIX, everyone refunded | M-16 `maxDeposit` | PREDATES_FIX | DEPLOYED_BEFORE_FIX | challenger 1 GEN, fee 0 GEN |
 
 Also on the demo: an unpinned report URL refused (stake left withdrawable), `sweep_fees`, every account withdrew, and a second `withdraw` was refused ("nothing to withdraw"). Demo ledger: balance 0 = open 0 + withdrawable 0 + fees 0 (invariant holds). Raw logs: `docs/seed-demo.json`, `docs/seed-canonical.json`.
