@@ -70,7 +70,16 @@ def sherlock_report(c, text):
     2 accepts reports from Sherlock only)."""
     url = SHERLOCK_TEST + c * 40 + "/README.md"
     WEB.pages[url] = (200, text)
+    on_branch("sherlock-audit", "test-contest-judging", c * 40)
     return url
+
+
+def on_branch(owner, repo, sha, href=None, name="main"):
+    """GitHub's branch_commits answer for a commit a test invents: on the
+    default branch of owner/repo (round-3 fix 1), or under `href`."""
+    WEB.pages["https://github.com/" + owner.lower() + "/" + repo.lower() + "/branch_commits/" + sha] = (
+        200, '<ul class="branches-list"><li class="branch"><a href="' + (href or "/" + owner + "/" + repo)
+        + '">' + name + '</a></li></ul>')
 
 
 def sherlock_status(links):

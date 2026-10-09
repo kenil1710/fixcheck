@@ -27,6 +27,9 @@ for proto, fid, chain in WANT:
     s = next(x for x in seeds if x["protocol"] == proto and x["finding_id"] == fid and x["chain"] == chain)
     addr = s["address"].lower()
     for u in (s["report_url"], s["docs_url"], s["audited_url"], s["fix_url"]): put(u)
+    for u in (s["report_url"], s["docs_url"]):      # round-3 fix 1: on a branch of the named repo
+        pc = M.pinned_commit(u)
+        if pc: put(M.GITHUB_WEB + pc["owner"] + "/" + pc["repo"] + "/branch_commits/" + pc["sha"])
     ap, fp = M.github_pin(s["audited_url"]), M.github_pin(s["fix_url"])
     put(M.GITHUB_WEB + ap["owner"] + "/" + ap["repo"] + "/commits/" + ap["sha"] + ".atom")
     sec = M.finding_section(pages[M.norm_url(s["report_url"])], fid)["text"]
@@ -50,6 +53,7 @@ for proto, fid, chain in WANT:
     if int(slot, 16):
         put(M.source_url(chain, "0x" + slot[-40:]))
         born.append("0x" + slot[-40:])
+        if M.upgraded_logs_url(chain, addr): put(M.upgraded_logs_url(chain, addr))   # round-3 fix 2
     kind, base, cid, _ = M.CHAINS[chain]
     for who in born:
         if kind == "blockscout":
@@ -61,6 +65,17 @@ for proto, fid, chain in WANT:
             rpcs.append([rurl, "eth_getBlockByNumber", [blk, False], live_rpc(rurl, "eth_getBlockByNumber", [blk, False])])
     cases.append(dict(protocol=proto, id=fid, fn=s["function"], chain=chain, address=s["address"], report=s["report_url"],
                       docs=s["docs_url"], audited=s["audited_url"], fix=s["fix_url"]))
+# round-3 regression evidence, read from GitHub as-is: a commit that exists
+# only in a fork (under the upstream path, and under the fork's own path), a
+# commit on a non-default branch only, and a commit reachable only from a tag
+GH_EXTRA = ["https://github.com/sherlock-audit/2024-05-pooltogether-judging/branch_commits/a925a29c22c5b928f4ddc692bee352ad6e0ba664",
+            "https://github.com/edwardmadi/2024-05-pooltogether-judging/branch_commits/a925a29c22c5b928f4ddc692bee352ad6e0ba664",
+            "https://github.com/generationsoftware/pt-v5-vault/branch_commits/ab93652d0c96df8bfaac9e530b87d8a0db31a2d3",
+            "https://github.com/generationsoftware/pt-v5-vault/branch_commits/ddd63e233cc65ec27e375927276f639ab3bfae48"]
+for u in GH_EXTRA: put(u)
+# a real proxy whose Upgraded log is emitted several times in one transaction
+# (OP's DisputeGameFactory proxy, check #22): ordering is by (block, log index)
+put(M.upgraded_logs_url("ethereum", "0xe5965ab5962edc7477c8520243a95517cd252fa9"))
 (ROOT / "test/fixtures/pages.json").write_text(json.dumps(pages))
 (ROOT / "test/fixtures/rpc.json").write_text(json.dumps(rpcs))
 (ROOT / "test/fixtures/cases.json").write_text(json.dumps(cases, indent=1))

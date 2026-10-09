@@ -31,10 +31,14 @@ import typing
 #     merge commit); the fix's commit and merge dates are read;
 #   - an archived capture is exactly the requested one, taken no later than
 #     the filing, and no URL path carries %-escapes;
+#   - the report's and the docs' pinned GitHub commits are on a branch of the
+#     repository each URL names (not only in a fork: GitHub serves a fork's
+#     commit under the upstream path); the branch is stored as proof;
 #   - the docs page lists the address; the deployed contract is verified;
 #   - a proxy is resolved by its EIP-1967 slot, read over RPC at a block the
 #     leader names, cross-checked with the explorer; only the implementation's
-#     sources are judged;
+#     sources are judged; the block of the proxy's last Upgraded event at or
+#     below that block dates the switch to the current implementation;
 #   - the function belongs to the contract the explorer says was compiled (or
 #     one of its ancestors, resolved through import aliases); nothing in that
 #     chain overrides it or any function it calls; only full/exact source
@@ -49,11 +53,15 @@ import typing
 # DECIDE (decide, permissionless, after the counter deadline). Code first:
 #   deployed == fix version            -> FIXED          (CODE_MATCH_FIX)
 #   deployed == audited version        -> NOT_FIXED      (CODE_MATCH_VULNERABLE)
-#     ... and the (non-proxy) contract
-#     was created before the audited
-#     commit                           -> PREDATES_AUDIT (DEPLOYED_BEFORE_AUDIT)
-#     ... or the code that runs was
-#     created before the fix existed   -> PREDATES_FIX   (DEPLOYED_BEFORE_FIX)
+#     ... and the code that runs was
+#     chosen before the audited commit -> PREDATES_AUDIT (DEPLOYED_BEFORE_AUDIT)
+#     ... or before the fix existed    -> PREDATES_FIX   (DEPLOYED_BEFORE_FIX)
+#     ... or it is a proxy whose switch
+#     to its implementation could not
+#     be dated                         -> INCONCLUSIVE   (UPGRADE_TIME_UNKNOWN)
+#     ("chosen" = the deployment's creation; for a proxy, the LATEST of the
+#     proxy's creation, the implementation's creation and the proxy's switch
+#     to that implementation)
 #   every fix hunk present, contiguous,
 #   in order, inside the fix's own
 #   blocks, no early exit before it,
@@ -117,11 +125,12 @@ import typing
 # DESIGN NOTES: docs/RESEARCH.md (what the model got wrong on an earlier
 # deployment and why it is now this narrow), docs/ATTACK_REPORT.md (the nine
 # findings closed by "fix 1" .. "fix 9" in the comments below) and
-# docs/ATTACK_REPORT_R2.md (the twelve closed by "round-2 fix 1" .. "12").
+# docs/ATTACK_REPORT_R2.md (the twelve closed by "round-2 fix 1" .. "12") and
+# docs/ATTACK_REPORT_R3.md (the three closed by "round-3 fix 1" and "2").
 #
 # The runner rejects the str replace method; slice around find() instead.
 
-VERSION = "1.3.0"
+VERSION = "1.4.0"
 BPS = 10000
 
 V_FIXED = "FIXED"
@@ -159,6 +168,7 @@ B_MODEL_QUOTE_INVALID = "MODEL_QUOTE_INVALID"
 B_MODEL_UNGROUNDED = "MODEL_UNGROUNDED"
 B_MODEL_ERROR = "MODEL_ERROR"
 B_EXPIRED = "EXPIRED"
+B_UPGRADE_TIME_UNKNOWN = "UPGRADE_TIME_UNKNOWN"
 
 # Where each chain's verified source, creation record and JSON-RPC are read.
 # Blockscout's v2 API answers from GenVM for Ethereum and OP Mainnet;
@@ -199,6 +209,9 @@ GITHUB_WEB = "https://github.com/"
 PATCH_BASE = "https://patch-diff.githubusercontent.com/raw/"
 ARCHIVE = "https://web.archive.org/web/"
 EIP1967_IMPL_SLOT = "0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc"
+# Round-3 fix 2: keccak256("Upgraded(address)"), the EIP-1967 event a proxy
+# emits when its implementation slot takes a new value.
+UPGRADED_TOPIC = "0xbc7cd75a20ee27fd9adebab32041f755214dbc6bffa90cc0225b39da2e5c2d3b"
 
 # B9: the only URL prefixes any validator ever fetches.
 ALLOWED_PREFIXES = (
@@ -446,6 +459,45 @@ def report_source_ok(url: typing.Any) -> bool:
             return len(parts) >= 2 and parts[0].lower() == REPORT_OWNER \
                 and parts[1].lower().endswith(REPORT_REPO_SUFFIX)
     return False
+
+
+def pinned_commit(url: typing.Any) -> dict:
+    """Round-3 fix 1: the GitHub commit a report or docs URL pins, as
+    {"owner", "repo", "sha"}; {} when it pins none (a capture of Sherlock's
+    report host, or of a GitHub page under a branch or tag NAME, which GitHub
+    resolves only inside the named repo); {"bad": True} for a captured GitHub
+    URL whose ref looks like an abbreviated SHA (GitHub resolves those in the
+    whole fork network, so only a full SHA can be checked)."""
+    g = github_pin(url)
+    if g:
+        return {"owner": g["owner"], "repo": g["repo"], "sha": g["sha"]}
+    a = archive_pin(url)
+    if not a:
+        return {}
+    t = a["target"]
+    for cut in ("?", "#"):
+        k = t.find(cut)
+        if k >= 0:
+            t = t[:k]
+    low = t.lower()
+    parts = []
+    at = 0
+    if low.startswith("https://raw.githubusercontent.com/"):
+        parts = t[len("https://raw.githubusercontent.com/"):].split("/")
+        at = 2
+    elif low.startswith("https://github.com/"):
+        parts = t[len("https://github.com/"):].split("/")
+        at = 3
+        if len(parts) <= at or parts[2].lower() not in ("blob", "raw", "tree", "commit", "blame"):
+            return {}
+    if len(parts) <= at or parts[0] == "" or parts[1] == "":
+        return {}
+    ref = parts[at].lower()
+    if len(ref) >= 7 and _is_hex(ref, len(ref)):
+        if len(ref) != 40:
+            return {"bad": True}
+        return {"owner": parts[0].lower(), "repo": parts[1].lower(), "sha": ref}
+    return {}
 
 
 def pinned_kind(url: typing.Any) -> str:
@@ -1449,12 +1501,14 @@ DEP_STATUS_BASIS = {
 
 
 def code_decision(dep_status: str, dep_canon: str, aud_canon: str, fix_canon: str,
-                  predates: bool = False, predates_fix: bool = False) -> dict:
+                  predates: bool = False, predates_fix: bool = False, born_unknown: bool = False) -> dict:
     """{"verdict", "basis"} when code alone decides; {} when the model must.
-    predates: the deployment is not a proxy and was created before the
-    audited commit. predates_fix: the code that runs (the implementation, for
-    a proxy) was created before the fix existed (round-2 fix 1). Only code
-    created after the fix existed can be NOT_FIXED."""
+    predates: the code that runs was chosen before the audited commit.
+    predates_fix: it was chosen before the fix existed (round-2 fix 1).
+    born_unknown: it is a proxy whose switch to its current implementation
+    could not be dated, and its other dates do not settle it (round-3 fix 2):
+    never PREDATES, never NOT_FIXED. Only code chosen after the fix existed
+    can be NOT_FIXED. See running_code_before()."""
     if dep_status != "OK":
         return {"verdict": V_INCONCLUSIVE, "basis": DEP_STATUS_BASIS.get(dep_status, B_FUNCTION_MISSING)}
     if fix_canon != "" and dep_canon == fix_canon:
@@ -1464,6 +1518,8 @@ def code_decision(dep_status: str, dep_canon: str, aud_canon: str, fix_canon: st
             return {"verdict": V_PREDATES, "basis": B_DEPLOYED_BEFORE_AUDIT}
         if predates_fix:
             return {"verdict": V_PREDATES_FIX, "basis": B_DEPLOYED_BEFORE_FIX}
+        if born_unknown:
+            return {"verdict": V_INCONCLUSIVE, "basis": B_UPGRADE_TIME_UNKNOWN}
         return {"verdict": V_NOT_FIXED, "basis": B_CODE_MATCH_VULNERABLE}
     return {}
 
@@ -1789,10 +1845,64 @@ def pr_facts(page: str, n: str) -> dict:
     return {"state": state, "merged_at": merged if state == "MERGED" else 0, "merge_sha": sha}
 
 
+def repo_branches(page: str, owner: str, repo: str) -> list:
+    """Round-3 fix 1: the branches OF owner/repo that GitHub's branch_commits
+    fragment lists as containing a commit: "default:<name>" (a link to the
+    repository root) or "branch:<name>" (a link under /owner/repo/compare/ or
+    /owner/repo/tree/). Only the branches-list is read: tags (the
+    branches-tag-list) and pull requests are never a branch, and a branch
+    linked under any other owner or repo (a fork's) is not counted. A commit
+    that exists only in a fork lists no branch at all under the upstream
+    path (docs/ATTACK_REPORT_R3.md)."""
+    low = page.lower()
+    s = low.find('<ul class="branches-list">')
+    if s < 0:
+        return []
+    e = low.find("</ul>", s)
+    if e < 0:
+        return []
+    root = "/" + owner.lower() + "/" + repo.lower()
+    tag = '<li class="branch"><a href="'
+    out = []
+    i = s
+    while True:
+        k = low.find(tag, i, e)
+        if k < 0:
+            break
+        a = k + len(tag)
+        b = low.find('"', a, e)
+        c = low.find(">", b, e) if b >= 0 else -1
+        d = low.find("</a>", c, e) if c >= 0 else -1
+        if d < 0:
+            break
+        href = low[a:b]
+        name = page[c + 1:d].strip()[:100]
+        if name != "":
+            if href == root:
+                out.append("default:" + name)
+            elif href.startswith(root + "/compare/") or href.startswith(root + "/tree/"):
+                out.append("branch:" + name)
+        i = d
+    return out
+
+
 def on_default_branch(page: str, owner: str, repo: str) -> bool:
     """GitHub's branch_commits fragment for a commit lists the repository's
     DEFAULT branch as a link to the repository root."""
-    return page.lower().find('<li class="branch"><a href="/' + owner + "/" + repo + '">') >= 0
+    for b in repo_branches(page, owner, repo):
+        if b.startswith("default:"):
+            return True
+    return False
+
+
+def reach_proof(branches: list) -> str:
+    """The branch a commit is proven on, as stored at filing: the default
+    branch if it is listed, else the first listed branch by name; "" if
+    none."""
+    for b in branches:
+        if b.startswith("default:"):
+            return b
+    return sorted(branches)[0] if branches else ""
 
 
 def patch_head(patch: str) -> str:
@@ -2067,6 +2177,80 @@ def creation_time(chain: str, address: str) -> dict:
     return {"tx": tx, "at": at}
 
 
+def upgraded_logs_url(chain: str, proxy: str) -> str:
+    """Round-3 fix 2: the explorer's list of the Upgraded(address) logs a
+    proxy emitted (newest first); "" on a chain with no such list (Sourcify
+    keeps no logs, and the frozen public RPCs refuse eth_getLogs over a
+    proxy's lifetime - docs/RESEARCH.md)."""
+    kind, base, _c, _r = CHAINS[chain]
+    if kind != "blockscout":
+        return ""
+    return base + "/api/v2/addresses/" + proxy + "/logs?topic=" + UPGRADED_TOPIC
+
+
+def last_upgrade(text: str, proxy: str, block: int) -> dict:
+    """From the explorer's log list: the LAST Upgraded(address) log the proxy
+    itself emitted at or below `block` (the leader-named block the slot was
+    read at), ordered by (block, log index) - an upgrade that sets the slot
+    twice, or a rollback, counts by its last event. {"block", "index",
+    "impl", "at"}, {} if there is none, {"error": True} if the answer cannot
+    be read or may be incomplete."""
+    try:
+        doc = json.loads(text)
+    except Exception:
+        return {"error": True}
+    if not isinstance(doc, dict) or not isinstance(doc.get("items"), list):
+        return {"error": True}
+    best = {}
+    for it in doc["items"]:
+        if not isinstance(it, dict):
+            return {"error": True}
+        ad = it.get("address")
+        who = _addr(ad.get("hash") if isinstance(ad, dict) else ad)
+        tops = it.get("topics")
+        if who != proxy or not isinstance(tops, list) or len(tops) < 2:
+            continue
+        if str(tops[0]).lower() != UPGRADED_TOPIC:
+            continue
+        t1 = str(tops[1]).lower()
+        if len(t1) != 66 or not _is_hex(t1[2:], 64):
+            return {"error": True}
+        blk = _as_int(it.get("block_number"), -1)
+        idx = _as_int(it.get("index"), -1)
+        at = _epoch_from_iso(it.get("block_timestamp"))
+        if blk < 0 or idx < 0 or at <= 0:
+            return {"error": True}
+        if blk > block:
+            continue
+        if not best or (blk, idx) > (best["block"], best["index"]):
+            best = {"block": blk, "index": idx, "impl": "0x" + t1[26:], "at": at}
+    if not best and doc.get("next_page_params") is not None:
+        return {"error": True}
+    return best
+
+
+def switch_time(chain: str, proxy: str, impl: str, block: int) -> dict:
+    """When the proxy switched to the implementation its EIP-1967 slot holds
+    at `block`: {"status", "block", "at"}. status EVENT (dated), NO_LOG_SOURCE,
+    UNREADABLE, NO_EVENT, or EVENT_MISMATCH (the last event names another
+    implementation: the slot was set some other way). Only EVENT dates the
+    switch; every other status leaves it unknown (round-3 fix 2)."""
+    url = upgraded_logs_url(chain, proxy)
+    if url == "":
+        return {"status": "NO_LOG_SOURCE", "block": 0, "at": 0}
+    got = fetch(url)
+    if not got["ok"] or got["http"] != 200:
+        return {"status": "UNREADABLE", "block": 0, "at": 0}
+    last = last_upgrade(got["text"], proxy, block)
+    if "error" in last:
+        return {"status": "UNREADABLE", "block": 0, "at": 0}
+    if not last:
+        return {"status": "NO_EVENT", "block": 0, "at": 0}
+    if last["impl"] != impl:
+        return {"status": "EVENT_MISMATCH", "block": last["block"], "at": 0}
+    return {"status": "EVENT", "block": last["block"], "at": last["at"]}
+
+
 def _cap_fn(got: dict) -> dict:
     if got.get("ok") and len(got["code"]) > FUNCTION_CAP:
         return {"ok": False, "why": "FUNCTION_TOO_LARGE"}
@@ -2137,7 +2321,31 @@ def deployed_function(chain: str, address: str, base: str, fn: str, slot_block: 
     return out
 
 
-def fix_provenance(fpin: dict, fix_ref: str) -> dict:
+def branch_page(owner: str, repo: str, sha: str, cache: dict) -> dict:
+    """GitHub's branch_commits fragment for owner/repo@sha, fetched at most
+    once per filing (round-3 fix 1: GitHub throttles anonymous reads)."""
+    k = owner + "/" + repo + "@" + sha
+    if k not in cache:
+        cache[k] = fetch(GITHUB_WEB + owner + "/" + repo + "/branch_commits/" + sha)
+    return cache[k]
+
+
+def commit_reach(pin: dict, what: str, cache: dict) -> dict:
+    """Round-3 fix 1: the pinned commit must be on a branch of the repository
+    its URL names - any branch of that repository, never only a fork's.
+    {"proof": "default:<name>" | "branch:<name>"} or {"refused"}. A throttled
+    or failed read (GitHub answers 403/429) refuses the filing: nothing is
+    written and the stake stays withdrawable."""
+    bc = branch_page(pin["owner"], pin["repo"], pin["sha"], cache)
+    if not bc["ok"] or bc["http"] != 200:
+        return {"refused": what + "_BRANCHES_UNREADABLE"}
+    proof = reach_proof(repo_branches(bc["text"], pin["owner"], pin["repo"]))
+    if proof == "":
+        return {"refused": what + "_COMMIT_NOT_ON_BRANCH"}
+    return {"proof": proof}
+
+
+def fix_provenance(fpin: dict, fix_ref: str, cache: typing.Any = None) -> dict:
     """Round-2 fixes 1 and 9: is the fix on the protocol repo's default
     branch, and since when did it exist? {"reach": "HEAD" | "MERGE",
     "committed_at", "merged_at", "fix_at"} or {"refused"}. A pull request
@@ -2146,13 +2354,15 @@ def fix_provenance(fpin: dict, fix_ref: str) -> dict:
     merge date - the most generous date for the protocol team."""
     o = fpin["owner"]
     r = fpin["repo"]
+    if cache is None:
+        cache = {}
     feed = fetch(GITHUB_WEB + o + "/" + r + "/commits/" + fpin["sha"] + ".atom")
     if not feed["ok"] or feed["http"] != 200:
         return {"refused": "FIX_DATE_UNREADABLE"}
     committed = atom_first_updated(feed["text"])
     if committed <= 0:
         return {"refused": "FIX_DATE_UNREADABLE"}
-    bc = fetch(GITHUB_WEB + o + "/" + r + "/branch_commits/" + fpin["sha"])
+    bc = branch_page(o, r, fpin["sha"], cache)
     if not bc["ok"] or bc["http"] != 200:
         return {"refused": "FIX_BRANCHES_UNREADABLE"}
     head_on = on_default_branch(bc["text"], o, r)
@@ -2168,7 +2378,7 @@ def fix_provenance(fpin: dict, fix_ref: str) -> dict:
             return {"refused": "FIX_PR_UNREADABLE"}
         merged = facts["merged_at"]
         if not head_on and facts["state"] == "MERGED" and facts["merge_sha"] != "":
-            mc = fetch(GITHUB_WEB + o + "/" + r + "/branch_commits/" + facts["merge_sha"])
+            mc = branch_page(o, r, facts["merge_sha"], cache)
             if not mc["ok"] or mc["http"] != 200:
                 return {"refused": "FIX_BRANCHES_UNREADABLE"}
             if on_default_branch(mc["text"], o, r):
@@ -2189,6 +2399,22 @@ def gather(p: dict, slot_block: int = -1) -> dict:
     apin = github_pin(p["audited_url"])
     fpin = github_pin(p["fix_url"])
     base = basename(apin["path"])
+    cache = {}
+    # --- round-3 fix 1: the report's and the docs' pinned commits are on a
+    # branch of the repository each URL names. GitHub raw (and GitHub's blob
+    # pages) serve a commit made in ANY fork under the upstream owner/repo
+    # path; a fork-only commit lists no branch of the upstream repo.
+    report_reach = "NO_GITHUB_COMMIT"
+    rc = pinned_commit(p["report_url"])
+    if rc:
+        got = commit_reach(rc, "REPORT", cache)
+        if "refused" in got:
+            return got
+        report_reach = got["proof"]
+    got = commit_reach(pinned_commit(p["docs_url"]), "DOCS", cache)
+    if "refused" in got:
+        return got
+    docs_reach = got["proof"]
     # --- the report and the finding's section
     rep = fetch(p["report_url"])
     if not rep["ok"] or rep["http"] != 200:
@@ -2226,7 +2452,7 @@ def gather(p: dict, slot_block: int = -1) -> dict:
     if fix_ref == "":
         return {"refused": "FIX_NOT_LINKED_IN_FINDING"}
     # --- round-2 fixes 1 + 9: merged into the default branch, and when
-    prov = fix_provenance(fpin, fix_ref)
+    prov = fix_provenance(fpin, fix_ref, cache)
     if "refused" in prov:
         return prov
     # --- fix 7: the audited commit's date
@@ -2274,11 +2500,15 @@ def gather(p: dict, slot_block: int = -1) -> dict:
     if not born:
         return {"refused": "CREATION_DATE_UNREADABLE"}
     impl_at = 0
+    sw = {"status": "", "block": 0, "at": 0}
     if d["impl"] != "":
         ib = creation_time(p["chain"], d["impl"])
         if not ib:
             return {"refused": "CREATION_DATE_UNREADABLE"}
         impl_at = ib["at"]
+        # round-3 fix 2: when the proxy switched to this implementation, read
+        # at the same leader-named block as the slot
+        sw = switch_time(p["chain"], p["address"], d["impl"], d["slot_block"])
     dep = d["dep"]
     title = sec["title"]
     if len(title) > TITLE_CAP:
@@ -2299,6 +2529,11 @@ def gather(p: dict, slot_block: int = -1) -> dict:
         "created_at": born["at"],
         "creation_tx": born["tx"],
         "impl_created_at": impl_at,
+        "switch_status": sw["status"],
+        "switch_block": sw["block"],
+        "switched_at": sw["at"],
+        "report_reach": report_reach,
+        "docs_reach": docs_reach,
         "slot_block": d["slot_block"],
         "compiled": d["compiled"],
         "report_sha256": rep["sha256"],
@@ -2318,10 +2553,42 @@ def gather(p: dict, slot_block: int = -1) -> dict:
     }
 
 
-def code_born(impl: str, created_at: int, impl_created_at: int) -> int:
-    """When the code that runs was created: the implementation's creation for
-    a proxy, else the deployment's own."""
-    return impl_created_at if impl != "" else created_at
+def code_born(impl: str, created_at: int, impl_created_at: int, switched_at: int = 0) -> int:
+    """Round-3 fix 2: the latest known time at which the code that runs was
+    chosen. A contract that is not a proxy: its creation. A proxy: the LATEST
+    of the proxy's creation, its implementation's creation and the block in
+    which the proxy switched to that implementation (its last EIP-1967
+    Upgraded event, switched_at; 0 = not known). A new proxy, or an upgrade
+    or rollback onto an old implementation, is dated by when it happened, not
+    by when the old code was written."""
+    if impl == "":
+        return created_at
+    born = created_at if created_at > impl_created_at else impl_created_at
+    return switched_at if switched_at > born else born
+
+
+def running_code_before(impl: str, created_at: int, impl_created_at: int, switched_at: int, t: int) -> str:
+    """Was the code that runs chosen before time t? "YES" | "NO" | "UNKNOWN".
+    NO as soon as any known date is at or after t. For a proxy whose switch
+    to the current implementation could not be dated (switched_at 0), every
+    other date being before t proves nothing: UNKNOWN, never YES."""
+    born = code_born(impl, created_at, impl_created_at, switched_at)
+    if born >= t:
+        return "NO"
+    if born <= 0 or (impl != "" and switched_at <= 0):
+        return "UNKNOWN"
+    return "YES"
+
+
+def chronology(impl: str, created_at: int, impl_created_at: int, switched_at: int,
+               audited_at: int, fix_at: int) -> dict:
+    """{"predates", "predates_fix", "unknown"} for code_decision(), from the
+    dates stored at filing. unknown: the running code may or may not predate
+    the fix; only INCONCLUSIVE is fair."""
+    pa = running_code_before(impl, created_at, impl_created_at, switched_at, audited_at)
+    pf = running_code_before(impl, created_at, impl_created_at, switched_at, fix_at)
+    return {"predates": pa == "YES", "predates_fix": pf == "YES",
+            "unknown": pf == "UNKNOWN" or (pa == "UNKNOWN" and pf != "NO")}
 
 
 # =============================================================================
@@ -2361,6 +2628,11 @@ class Check:
     fix_merged_at: u64
     fix_at: u64
     impl_created_at: u64
+    switch_status: str
+    switch_block: u64
+    switched_at: u64
+    report_reach: str
+    docs_reach: str
     slot_block: u64
     compiled: str
     report_sha256: str
@@ -2544,6 +2816,8 @@ class FixCheck(gl.contract.Contract):
             return self._refuse("ARCHIVE_TIMESTAMP_AFTER_FILING")
         if not report_source_ok(rep):
             return self._refuse("REPORT_SOURCE_NOT_ALLOWED")
+        if pinned_commit(rep).get("bad"):
+            return self._refuse("REPORT_REF_NOT_A_FULL_SHA")
         docs = _clean_url(docs_url)
         if pinned_kind(docs) == "":
             return self._refuse("DOCS_URL_NOT_PINNED")
@@ -2622,6 +2896,9 @@ class FixCheck(gl.contract.Contract):
             creation_tx=str(ev["creation_tx"]), fix_reach=str(ev["fix_reach"]),
             fix_committed_at=u64(int(ev["fix_committed_at"])), fix_merged_at=u64(int(ev["fix_merged_at"])),
             fix_at=u64(int(ev["fix_at"])), impl_created_at=u64(int(ev["impl_created_at"])),
+            switch_status=str(ev["switch_status"]), switch_block=u64(int(ev["switch_block"])),
+            switched_at=u64(int(ev["switched_at"])), report_reach=str(ev["report_reach"]),
+            docs_reach=str(ev["docs_reach"]),
             slot_block=u64(int(ev["slot_block"])), compiled=str(ev["compiled"]),
             report_sha256=str(ev["report_sha256"]), docs_sha256=str(ev["docs_sha256"]),
             audited_sha256=str(ev["audited_sha256"]), fix_sha256=str(ev["fix_sha256"]),
@@ -2652,15 +2929,14 @@ class FixCheck(gl.contract.Contract):
         sc.open = u32(int(sc.open) + 1)
         self.totals.checks = u32(int(self.totals.checks) + 1)
         self.totals.open = u32(int(self.totals.open) + 1)
-        predates = str(ev["impl"]) == "" and 0 < int(ev["created_at"]) < int(ev["audited_at"])
-        predates_fix = 0 < code_born(str(ev["impl"]), int(ev["created_at"]), int(ev["impl_created_at"])) \
-            < int(ev["fix_at"])
+        when = chronology(str(ev["impl"]), int(ev["created_at"]), int(ev["impl_created_at"]),
+                          int(ev["switched_at"]), int(ev["audited_at"]), int(ev["fix_at"]))
         if ev["dep_status"] != "OK":
             preview = code_decision(str(ev["dep_status"]), "", "", "")
         elif ev["dep_canon_sha256"] == ev["fix_canon_sha256"]:
             preview = {"verdict": V_FIXED, "basis": B_CODE_MATCH_FIX}
         elif ev["dep_canon_sha256"] == ev["aud_canon_sha256"]:
-            preview = code_decision("OK", "a", "a", "b", predates, predates_fix)
+            preview = code_decision("OK", "a", "a", "b", when["predates"], when["predates_fix"], when["unknown"])
         elif contains_fix(str(ev["dep_code"]), str(ev["aud_code"]), str(ev["fix_code"])):
             preview = {"verdict": V_FIXED, "basis": B_CODE_CONTAINS_FIX}
         else:
@@ -2793,9 +3069,11 @@ class FixCheck(gl.contract.Contract):
         if (dep_code != "" and _sha(dep_canon) != c.dep_canon_sha256) or _sha(aud_canon) != c.aud_canon_sha256 \
                 or (fix_code != "" and _sha(fix_canon) != c.fix_canon_sha256):
             raise gl.vm.UserError("stored evidence does not match its filing hashes")
-        predates = c.implementation == "" and 0 < int(c.created_at) < int(c.audited_at)
-        predates_fix = 0 < code_born(c.implementation, int(c.created_at), int(c.impl_created_at)) < int(c.fix_at)
-        out = code_decision(c.dep_status, dep_canon, aud_canon, fix_canon, predates, predates_fix)
+        when = chronology(c.implementation, int(c.created_at), int(c.impl_created_at), int(c.switched_at),
+                          int(c.audited_at), int(c.fix_at))
+        predates = when["predates"]
+        predates_fix = when["predates_fix"]
+        out = code_decision(c.dep_status, dep_canon, aud_canon, fix_canon, predates, predates_fix, when["unknown"])
         if not out and contains_fix(dep_code, aud_code, fix_code):
             out = {"verdict": V_FIXED, "basis": B_CODE_CONTAINS_FIX}
         votes = ""
@@ -2843,6 +3121,9 @@ class FixCheck(gl.contract.Contract):
             if verdict == V_NOT_FIXED and (predates or predates_fix):
                 # round-2 fix 1: code created before the fix existed is never NOT_FIXED
                 verdict, basis = V_PREDATES_FIX, B_DEPLOYED_BEFORE_FIX
+            elif verdict == V_NOT_FIXED and when["unknown"]:
+                # round-3 fix 2: nor is a proxy whose switch could not be dated
+                verdict, basis = V_INCONCLUSIVE, B_UPGRADE_TIME_UNKNOWN
             out = {"verdict": verdict, "basis": basis}
         # --- writes
         lines = code_lines(dep_code)
@@ -2924,6 +3205,10 @@ class FixCheck(gl.contract.Contract):
             "fix_reach": c.fix_reach, "fix_committed_at": int(c.fix_committed_at),
             "fix_merged_at": int(c.fix_merged_at), "fix_at": int(c.fix_at),
             "impl_created_at": int(c.impl_created_at), "slot_block": int(c.slot_block), "compiled": c.compiled,
+            "switch_status": c.switch_status, "switch_block": int(c.switch_block),
+            "switched_at": int(c.switched_at), "code_born": code_born(c.implementation, int(c.created_at),
+                                                                      int(c.impl_created_at), int(c.switched_at)),
+            "report_reach": c.report_reach, "docs_reach": c.docs_reach,
             "report_sha256": c.report_sha256, "docs_sha256": c.docs_sha256,
             "audited_sha256": c.audited_sha256, "fix_sha256": c.fix_sha256,
             "source_sha256": c.source_sha256, "aud_canon_sha256": c.aud_canon_sha256,
