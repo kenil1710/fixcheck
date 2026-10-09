@@ -246,7 +246,7 @@ Contracts changed, so all three were redeployed from commit `8519168641d560b7528
 
 The round-3 addresses moved to [`superseded/README.md`](superseded/README.md).
 
-**Re-seed.** All 22 seeds filed and decided on the new canonical contract. Five filings (Cap ×2 and OP's DisputeGameFactory on Ethereum, and the demo's Cap M-1) were first refused `RPC_UNREADABLE` when a free public RPC throttled the five validators' burst of reads; nothing was stored, the stakes stayed withdrawable, and each was filed again (the seed scripts resume from chain state). This is the round-4 rule working as intended: a read one RPC did not answer is never stored as a fact. Before/after (`node tools/before_after.mjs`, previous canonical = `docs/superseded/seed-canonical-v1.4.json`):
+**Re-seed.** All 22 seeds filed and decided on the new canonical contract. Four filings (Cap M-1, Cap M-3 and OP's DisputeGameFactory on the canonical contract, and Cap M-1 on the demo; five refusals in all, the DisputeGameFactory twice) were first refused `RPC_UNREADABLE` when a free public RPC throttled the five validators' burst of reads; nothing was stored, the stakes stayed withdrawable, and each was filed again (the seed scripts resume from chain state). This is the round-4 rule working as intended: a read one RPC did not answer is never stored as a fact. Before/after (`node tools/before_after.mjs`, previous canonical = `docs/superseded/seed-canonical-v1.4.json`):
 
 | # | Finding | Chain | Before (commit 93de7be) | After (commit 8519168) | Reason |
 |---|---|---|---|---|---|
