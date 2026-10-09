@@ -3,8 +3,10 @@
 Scope: `git diff 548caffe199ffc51f72c94623fb7d4fa522ff7a1..2b0f979 -- contracts/` (FixCheck 1.3.0, FixRegistry, `_probe.py`) and the live deployment. Only High and Medium findings are listed. Each one has a test in `test/test_attacks_r3.py` that fails on the current code:
 
 ```
-python3 test/test_attacks_r3.py      # 3 tests, 3 failures (expected)
+python3 test/test_attacks_r3.py      # at 2b0f979: 3 tests, 3 failures (expected)
 ```
+
+**Status: fixed** (round-3 fix 1 for R3-01 and R3-02, round-3 fix 2 for R3-03). See "Fixes" at the end.
 
 The 183 existing tests still pass: `test_fixcheck.py` has 157, `test_attacks.py` has 12 and `test_attacks_r2.py` has 14.
 
@@ -53,3 +55,28 @@ Canonical FixCheck `0x893f96A5c72771D40F0bB55035A013a77159cc33`, `get_checks(0, 
 | `0x50a60867153d3C63F322340dcEfe492bdd0d8D04` | contracts/FixRegistry.py | `6d99a876…b97330a` | yes |
 
 https://fixcheck-ledger.vercel.app shows 22 checks of 21 findings: 7 confirmed in deployed code, 1 not in deployed code, 6 deployed before the audit, 1 deployed before the fix and 7 inconclusive. These **match** the chain.
+
+## Fixes
+
+### Round-3 fix 1: pinned commits must be on a branch of the named repository (R3-01, R3-02)
+
+`gather()` first checks every GitHub commit that a report or docs URL pins. This includes a Wayback capture of a GitHub URL pinned at a full SHA. A captured URL whose ref looks like a short SHA is refused before anything is fetched (`REPORT_REF_NOT_A_FULL_SHA`). The check reads `github.com/<owner>/<repo>/branch_commits/<sha>`, the same page `fix_provenance` already reads for the fix. It accepts the commit only if the `branches-list` names a branch of that exact owner/repo: the default branch (`href="/owner/repo"`) or another branch of it (`/owner/repo/compare/<b>` or `/owner/repo/tree/<b>`). A fork-only commit lists no branch under the upstream path, so it is refused. So is a branch linked under a fork's path, even one named `main`, and so is a commit reached only from a tag (`branches-tag-list`). The refusals are `REPORT_COMMIT_NOT_ON_BRANCH` and `DOCS_COMMIT_NOT_ON_BRANCH`. Both happen before the report or docs body is read, so nothing is written and the stake stays withdrawable. The proof is stored at filing as `report_reach` / `docs_reach` (`default:main`, `branch:<name>` or `NO_GITHUB_COMMIT` for a capture of Sherlock's report host). The fix commit keeps its stricter rule: it must be on the default branch.
+
+GitHub calls: the contract never calls `api.github.com`. Each validator reads at most one extra `branch_commits` page for the report and one for the docs. Pages are cached per filing, so a commit shared by the docs and the fix is read once. When GitHub throttles an anonymous reader (HTTP 403 or 429), the filing is refused with `REPORT_BRANCHES_UNREADABLE`, `DOCS_BRANCHES_UNREADABLE` or `FIX_BRANCHES_UNREADABLE`. Nothing is written, the stake stays on the sender's withdrawable balance, and the filing can be sent again later.
+
+### Round-3 fix 2: proxies are dated by when the running code was chosen (R3-03)
+
+For a proxy, the date compared with the audited commit (PREDATES_AUDIT) and with the fix (PREDATES_FIX) is now the **latest** of three dates: the proxy's creation, the implementation's creation, and the block of the proxy's last `Upgraded(address)` event at or below the leader-named block where the slot was read. Events are ordered by (block, log index), so an upgrade that emits the event twice or a rollback counts by its last event. The explorer's log list (`/api/v2/addresses/<proxy>/logs?topic=<Upgraded>`) is read on the Blockscout chains, Ethereum and OP Mainnet. The switch is dated only if that last event names the implementation the slot holds (`switch_status` `EVENT`). Otherwise the switch time is unknown: `NO_EVENT`, `EVENT_MISMATCH`, `UNREADABLE`, or `NO_LOG_SOURCE` on Base/Arbitrum/Polygon, where Sourcify keeps no logs and the frozen public RPCs refuse `eth_getLogs` over a proxy's lifetime. If any known date is at or after the fix, the code was chosen after the fix existed and the verdict can be NOT_FIXED. If every known date is before it and the switch is unknown, the result is INCONCLUSIVE (`UPGRADE_TIME_UNKNOWN`), never PREDATES and never NOT_FIXED. The same rule applies to a model NOT_FIXED answer. `switch_status`, `switch_block` and `switched_at` are stored at filing.
+
+### The three tests
+
+The `xfail` marks are removed and all three tests pass. No assertion was removed or loosened. Changes:
+
+- R3-01 and R3-02: with fix 1, a fork commit with no `branch_commits` page in the stub would have been refused as `*_BRANCHES_UNREADABLE`, which is the wrong reason. The tests now use the real fork-only commit `a925a29` and GitHub's real answer for it (a fixture; it lists no branch), instead of the made-up SHA `f0…f0`. Each test also asserts the exact reason (`DOCS_COMMIT_NOT_ON_BRANCH` / `REPORT_COMMIT_NOT_ON_BRANCH`). R3-01 asserts that nothing is stored, and R3-02 asserts that the forged report is never read.
+- R3-03 is unchanged. `code_born()` keeps its call shape and gains an optional `switched_at`.
+
+Regression tests (`R3_Reg_BranchReachability` and `R3_Reg_ProxyChronology`, 19 tests) cover the following: a fork commit whose page lists a fork branch with the same name; a non-default branch of the original repo (allowed); a tag-only commit (real page); GitHub 403/429; each branch page read once; archived GitHub targets; a new proxy after the fix; an old proxy that still gets PREDATES_FIX; a rollback; `Upgraded` emitted twice in one transaction (both orders); `Upgraded` emitted twice on the real OP DisputeGameFactory proxy; a log above the leader block; no event; unreadable or incomplete logs; a non-standard slot; chains with no log source; and the chronology matrix.
+
+```
+python3 -m unittest discover -s test -p "test_*.py"   # 205 tests, OK, 0 expected failures
+```
