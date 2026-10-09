@@ -1,10 +1,10 @@
 # Seeds
 
-Read from the chain by `tools/seeds_md.mjs` on 2026-10-09T14:31Z. Every row links to its page; every value comes from contract state.
+Read from the chain by `tools/seeds_md.mjs` on 2026-10-09T17:19Z. Every row links to its page; every value comes from contract state.
 
-## Canonical — 0x65Fe440d63437e14fB9e990D1D0Dc283EE40bb56
+## Canonical — 0x263C6a42B98E9133CF85A00A436b05C3573B88fe
 
-22 checks of 21 findings · **7 fixed** · **1 not fixed** · **6 predates audit** · **1 predates fix** · 7 inconclusive · 0 open. Ledger: balance 29 = open 0 + withdrawable 28.9 + fees 0.1 GEN (invariant holds).
+22 checks of 21 findings · **7 fixed** · **1 not fixed** · **6 predates audit** · **1 predates fix** · 7 inconclusive · 0 open. Ledger: balance 32 = open 0 + withdrawable 31.9 + fees 0.1 GEN (invariant holds).
 
 | # | Protocol | Finding | Function | Chain | Deployed (created · fix existed) | Offline research | On-chain verdict | Basis | Model (asked twice) | Stakes (not fixed / fixed) |
 |---|---|---|---|---|---|---|---|---|---|---|
@@ -22,7 +22,7 @@ Read from the chain by `tools/seeds_md.mjs` on 2026-10-09T14:31Z. Every row link
 | [12](https://fixcheck-ledger.vercel.app/checks/12) | Mellow Flexible Vaults | [H-1](https://raw.githubusercontent.com/sherlock-audit/2025-07-mellow-flexible-vaults-judging/4bcbdcfe643761c67d7dd862ca5909168c3ad859/README.md) | `checkSignatures` | ethereum | `0x0000000167598d2c78e2313fd5328e16bd9a0b13` 2025-09-08 · 2025-07-16 | IDENTICAL_TO_FIX | **FIXED** | CODE_MATCH_FIX | not asked | 1 / 2 |
 | [13](https://fixcheck-ledger.vercel.app/checks/13) | Mellow Flexible Vaults | [H-2](https://raw.githubusercontent.com/sherlock-audit/2025-07-mellow-flexible-vaults-judging/4bcbdcfe643761c67d7dd862ca5909168c3ad859/README.md) | `_handleReport` | ethereum | `0x000000000c139266ba06170ed1deaca6d11903c1` 2026-01-23 · 2025-07-22 | CHANGED | **INCONCLUSIVE** | MODEL_UNGROUNDED | UNGROUNDED|UNGROUNDED | 1 / 1 |
 | [14](https://fixcheck-ledger.vercel.app/checks/14) | Mellow Flexible Vaults | [H-3](https://raw.githubusercontent.com/sherlock-audit/2025-07-mellow-flexible-vaults-judging/4bcbdcfe643761c67d7dd862ca5909168c3ad859/README.md) | `callHook` | ethereum | `0x0000000637f1b1ccda4af2db6cddf5e5ec45fd93` 2025-09-08 · 2025-07-26 | CHANGED | **INCONCLUSIVE** | PARTIAL_MATCH | not asked | 1 / 0 |
-| [15](https://fixcheck-ledger.vercel.app/checks/15) | Mellow Flexible Vaults | [H-4](https://raw.githubusercontent.com/sherlock-audit/2025-07-mellow-flexible-vaults-judging/4bcbdcfe643761c67d7dd862ca5909168c3ad859/README.md) | `calculateFee` | ethereum | `0x0000000de74e5d51651326e0a3e1aca94beaf6e1` 2025-09-08 · 2025-07-27 | CHANGED | **INCONCLUSIVE** | MODEL_UNGROUNDED | UNGROUNDED|INCONCLUSIVE | 1 / 0 |
+| [15](https://fixcheck-ledger.vercel.app/checks/15) | Mellow Flexible Vaults | [H-4](https://raw.githubusercontent.com/sherlock-audit/2025-07-mellow-flexible-vaults-judging/4bcbdcfe643761c67d7dd862ca5909168c3ad859/README.md) | `calculateFee` | ethereum | `0x0000000de74e5d51651326e0a3e1aca94beaf6e1` 2025-09-08 · 2025-07-27 | CHANGED | **INCONCLUSIVE** | MODEL_UNGROUNDED | INCONCLUSIVE|UNGROUNDED | 1 / 0 |
 | [16](https://fixcheck-ledger.vercel.app/checks/16) | Mellow Flexible Vaults | [H-5](https://raw.githubusercontent.com/sherlock-audit/2025-07-mellow-flexible-vaults-judging/4bcbdcfe643761c67d7dd862ca5909168c3ad859/README.md) | `calculateFee` | ethereum | `0x0000000de74e5d51651326e0a3e1aca94beaf6e1` 2025-09-08 · 2025-07-28 | IDENTICAL_TO_FIX | **FIXED** | CODE_MATCH_FIX | not asked | 1 / 0 |
 | [17](https://fixcheck-ledger.vercel.app/checks/17) | Mellow Flexible Vaults | [M-1](https://raw.githubusercontent.com/sherlock-audit/2025-07-mellow-flexible-vaults-judging/4bcbdcfe643761c67d7dd862ca5909168c3ad859/README.md) | `updateChecks` | ethereum | `0x0000000e8eb7173fa1a3ba60eca325bcb6aaf378` 2025-09-08 · 2025-07-27 | CHANGED | **INCONCLUSIVE** | MODEL_UNGROUNDED | UNGROUNDED|UNGROUNDED | 1 / 0 |
 | [18](https://fixcheck-ledger.vercel.app/checks/18) | Mellow Flexible Vaults | [M-4](https://raw.githubusercontent.com/sherlock-audit/2025-07-mellow-flexible-vaults-judging/4bcbdcfe643761c67d7dd862ca5909168c3ad859/README.md) | `handleReport` | ethereum | `0x0000000615b2771511daa693ac07be5622869e01` 2025-09-08 · 2025-08-11 | IDENTICAL_TO_FIX | **FIXED** | CODE_MATCH_FIX | not asked | 1 / 0 |
@@ -31,34 +31,26 @@ Read from the chain by `tools/seeds_md.mjs` on 2026-10-09T14:31Z. Every row link
 | [21](https://fixcheck-ledger.vercel.app/checks/21) | Cap | [M-3](https://raw.githubusercontent.com/sherlock-audit/2025-07-cap-judging/e1c4f01994e830b520238e0c292303b0d7eed1e1/README.md) | `realizeRestakerInterest` | ethereum | `0x15622c3dbbc5614e6dfa9446603c1779647f01fc` 2025-07-07 · 2025-08-15 | IDENTICAL_TO_FIX | **INCONCLUSIVE** | PARTIAL_MATCH | not asked | 1 / 0 |
 | [22](https://fixcheck-ledger.vercel.app/checks/22) | OP Stack fault proofs | [M-3](https://raw.githubusercontent.com/sherlock-audit/2024-02-optimism-2024-judging/2b7f5d81eeb2755a4de99e6fd5b2fce823177a3c/README.md) | `create` | ethereum | `0xe5965ab5962edc7477c8520243a95517cd252fa9` 2024-05-16 · 2024-04-15 | CHANGED | **INCONCLUSIVE** | PARTIAL_MATCH | not asked | 1 / 0 |
 
-**Model double-run agreement:** 2 of 3 checks that reached the model got the same accepted answer twice (#13 UNGROUNDED|UNGROUNDED, #15 UNGROUNDED|INCONCLUSIVE, #17 UNGROUNDED|UNGROUNDED). Code alone decided 19.
+**Model double-run agreement:** 2 of 3 checks that reached the model got the same accepted answer twice (#13 UNGROUNDED|UNGROUNDED, #15 INCONCLUSIVE|UNGROUNDED, #17 UNGROUNDED|UNGROUNDED). Code alone decided 19.
 
 **Offline vs on chain:** 7 of 15 findings that research classified as identical to the fix or to the audited code got exactly that verdict by code match on chain. The 7 "changed" findings: #13 MODEL_UNGROUNDED, #14 PARTIAL_MATCH, #15 MODEL_UNGROUNDED, #17 MODEL_UNGROUNDED, #19 CODE_CONTAINS_FIX, #20 PARTIAL_MATCH, #22 PARTIAL_MATCH.
 
 **Every NOT_FIXED is a code fact** (deployed function identical to the audited one, on code created after the fix existed). Where the model was asked and an answer did not point at the fix (a line the fix added for fixed, a removed line still deployed for not fixed), the check is INCONCLUSIVE and everyone was refunded. **PREDATES_AUDIT** means the deployed code is the audited version on a contract created before the audited commit and not upgradeable: the fix could not have been applied there. **PREDATES_FIX** means it is the audited version on code created before the fix existed (the later of the fix commit and its PR’s merge), so it could not contain the fix. Earlier deployments: `docs/superseded/`.
 
-## Demo — 0x66E008fc08414ecF423e59482c20A046FAd7A01c
+## Demo — 0x19bc7Cb16Ce1B4F328f33d0FDfeA61297dA04f68
 
 90 s counter window, 300 s decide window; same source. Every path:
 
 | # | Path | Finding | Verdict | Basis | Payout |
 |---|---|---|---|---|---|
-| [1](https://fixcheck-ledger.vercel.app/demo/checks/1) | round-3 live proxy case (docs/DEPLOYED_VERIFICATION.md) | M-3 `realizeRestakerInterest` | INCONCLUSIVE | PARTIAL_MATCH | challenger 1 GEN, fee 0 GEN |
-| [2](https://fixcheck-ledger.vercel.app/demo/checks/2) | interrupted seed run; decide window passed, expired and refiled | M-17 `_convertToShares` | EXPIRED (refunded) | EXPIRED | challenger 1 GEN, fee 0 GEN |
-| [3](https://fixcheck-ledger.vercel.app/demo/checks/3) | interrupted seed run; decide window passed, expired and refiled | H-1 `checkSignatures` | EXPIRED (refunded) | EXPIRED | challenger 1 GEN, fee 0 GEN |
-| [4](https://fixcheck-ledger.vercel.app/demo/checks/4) | interrupted seed run; decide window passed, expired and refiled | M-19 `claimPrize` | EXPIRED (refunded) | EXPIRED | challenger 1 GEN, fee 0 GEN |
-| [5](https://fixcheck-ledger.vercel.app/demo/checks/5) | interrupted seed run; decide window passed, expired and refiled | M-5 `claimPrizes` | EXPIRED (refunded) | EXPIRED | challenger 1 GEN, fee 0 GEN |
-| [6](https://fixcheck-ledger.vercel.app/demo/checks/6) | interrupted seed run; decide window passed, expired and refiled | M-1 `liquidate` | EXPIRED (refunded) | EXPIRED | challenger 1 GEN, fee 0 GEN |
-| [7](https://fixcheck-ledger.vercel.app/demo/checks/7) | interrupted seed run; decide window passed, expired and refiled | M-5 `cancelDepositRequest` | EXPIRED (refunded) | EXPIRED | challenger 1 GEN, fee 0 GEN |
-| [8](https://fixcheck-ledger.vercel.app/demo/checks/8) | interrupted seed run; decide window passed, expired and refiled | M-9 `liquidatableBalanceOf` | EXPIRED (refunded) | EXPIRED | challenger 1 GEN, fee 0 GEN |
-| [9](https://fixcheck-ledger.vercel.app/demo/checks/9) | interrupted seed run; decide window passed, expired and refiled | M-16 `maxDeposit` | EXPIRED (refunded) | EXPIRED | challenger 1 GEN, fee 0 GEN |
-| [10](https://fixcheck-ledger.vercel.app/demo/checks/10) | challenge wins (defender loses) | M-17 `_convertToShares` | NOT_FIXED | CODE_MATCH_VULNERABLE | challenger 2 GEN, fee 0 GEN |
-| [11](https://fixcheck-ledger.vercel.app/demo/checks/11) | challenge loses (defender wins) | H-1 `checkSignatures` | FIXED | CODE_MATCH_FIX | challenger 0 GEN, fee 0 GEN |
-| [12](https://fixcheck-ledger.vercel.app/demo/checks/12) | inconclusive refund (function not in that contract) | M-19 `claimPrize` | INCONCLUSIVE | FUNCTION_MISSING | challenger 1 GEN, fee 0 GEN |
-| [13](https://fixcheck-ledger.vercel.app/demo/checks/13) | no defender → refund minus fee | M-5 `claimPrizes` | FIXED | CODE_MATCH_FIX | challenger 0.98 GEN, fee 0.02 GEN |
-| [14](https://fixcheck-ledger.vercel.app/demo/checks/14) | expiry → everyone refunded | M-1 `liquidate` | EXPIRED (refunded) | EXPIRED | challenger 1 GEN, fee 0 GEN |
-| [15](https://fixcheck-ledger.vercel.app/demo/checks/15) | function changed since the fix, still contains it in place → code decides (CODE_CONTAINS_FIX) | M-5 `cancelDepositRequest` | FIXED | CODE_CONTAINS_FIX | challenger 0.98 GEN, fee 0.02 GEN |
-| [16](https://fixcheck-ledger.vercel.app/demo/checks/16) | deployed before the audit → PREDATES_AUDIT, everyone refunded | M-9 `liquidatableBalanceOf` | PREDATES_AUDIT | DEPLOYED_BEFORE_AUDIT | challenger 1 GEN, fee 0 GEN |
-| [17](https://fixcheck-ledger.vercel.app/demo/checks/17) | deployed before the fix existed → PREDATES_FIX, everyone refunded | M-16 `maxDeposit` | PREDATES_FIX | DEPLOYED_BEFORE_FIX | challenger 1 GEN, fee 0 GEN |
+| [1](https://fixcheck-ledger.vercel.app/demo/checks/1) | live proxy case (docs/DEPLOYED_VERIFICATION.md) | M-3 `realizeRestakerInterest` | INCONCLUSIVE | PARTIAL_MATCH | challenger 1 GEN, fee 0 GEN |
+| [2](https://fixcheck-ledger.vercel.app/demo/checks/2) | challenge wins (defender loses) | M-17 `_convertToShares` | NOT_FIXED | CODE_MATCH_VULNERABLE | challenger 2 GEN, fee 0 GEN |
+| [3](https://fixcheck-ledger.vercel.app/demo/checks/3) | challenge loses (defender wins) | H-1 `checkSignatures` | FIXED | CODE_MATCH_FIX | challenger 0 GEN, fee 0 GEN |
+| [4](https://fixcheck-ledger.vercel.app/demo/checks/4) | inconclusive refund (function not in that contract) | M-19 `claimPrize` | INCONCLUSIVE | FUNCTION_MISSING | challenger 1 GEN, fee 0 GEN |
+| [5](https://fixcheck-ledger.vercel.app/demo/checks/5) | no defender → refund minus fee | M-5 `claimPrizes` | FIXED | CODE_MATCH_FIX | challenger 0.98 GEN, fee 0.02 GEN |
+| [6](https://fixcheck-ledger.vercel.app/demo/checks/6) | function changed since the fix, still contains it in place → code decides (CODE_CONTAINS_FIX) | M-5 `cancelDepositRequest` | FIXED | CODE_CONTAINS_FIX | challenger 0.98 GEN, fee 0.02 GEN |
+| [7](https://fixcheck-ledger.vercel.app/demo/checks/7) | deployed before the audit → PREDATES_AUDIT, everyone refunded | M-9 `liquidatableBalanceOf` | PREDATES_AUDIT | DEPLOYED_BEFORE_AUDIT | challenger 1 GEN, fee 0 GEN |
+| [8](https://fixcheck-ledger.vercel.app/demo/checks/8) | deployed before the fix existed → PREDATES_FIX, everyone refunded | M-16 `maxDeposit` | PREDATES_FIX | DEPLOYED_BEFORE_FIX | challenger 1 GEN, fee 0 GEN |
+| [9](https://fixcheck-ledger.vercel.app/demo/checks/9) | expiry → everyone refunded | M-1 `liquidate` | EXPIRED (refunded) | EXPIRED | challenger 1 GEN, fee 0 GEN |
 
 Also on the demo: an unpinned report URL refused (stake left withdrawable), `sweep_fees`, every account withdrew, and a second `withdraw` was refused ("nothing to withdraw"). Demo ledger: balance 0 = open 0 + withdrawable 0 + fees 0 (invariant holds). Raw logs: `docs/seed-demo.json`, `docs/seed-canonical.json`.

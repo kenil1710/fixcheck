@@ -233,3 +233,47 @@ FAILED (failures=5)
 Earlier test helper changed: `sherlock_report()` (home-made reports) now renders a `Source:` line per issue and serves that issue's page with Sherlock's status comment, as Sherlock's bot does. The real fixture cases use their real issue pages (`test/fixtures/pages_r4.json`, GitHub's embedded JSON cut from the page).
 
 The rest stay, with the reason in the README: one function per finding, comments ignored, removal-only fixes and "not fixed is a code fact" (by design); one explorer per chain for verified source and undated switches on Base/Arbitrum/Polygon (no second source or log source reachable from GenVM); Sherlock only (each auditor needs its own authorship rule); `audits.sherlock.xyz` captures have no issue page to check; fix provenance from GitHub HTML (API rate limit); external calls not followed (another contract's code); identical-code metamorphic redeploys (needs history no RPC serves); Studio Dev.
+
+## Step 7. Redeployed, re-seeded, live proofs redone
+
+Contracts changed, so all three were redeployed from commit `8519168641d560b7528f3a23640c7722598c16fe` (FixCheck 1.5.0) with the bytes of `git show <commit>:<file>`; `node tools/verify_source.mjs` reads them back: **byte-identical** (FixCheck and demo sha256 `bea39601…ce31a0`, FixRegistry `6d99a876…7330a`).
+
+| Contract | Address |
+|---|---|
+| FixCheck (canonical) | `0x263C6a42B98E9133CF85A00A436b05C3573B88fe` |
+| FixCheck (demo) | `0x19bc7Cb16Ce1B4F328f33d0FDfeA61297dA04f68` |
+| FixRegistry | `0xA37F98977f023D8C0bd17aCF1A7983E5d328d9A4` |
+
+The round-3 addresses moved to [`superseded/README.md`](superseded/README.md).
+
+**Re-seed.** All 22 seeds filed and decided on the new canonical contract. Five filings (Cap ×2 and OP's DisputeGameFactory on Ethereum, and the demo's Cap M-1) were first refused `RPC_UNREADABLE` when a free public RPC throttled the five validators' burst of reads; nothing was stored, the stakes stayed withdrawable, and each was filed again (the seed scripts resume from chain state). This is the round-4 rule working as intended: a read one RPC did not answer is never stored as a fact. Before/after (`node tools/before_after.mjs`, previous canonical = `docs/superseded/seed-canonical-v1.4.json`):
+
+| # | Finding | Chain | Before (commit 93de7be) | After (commit 8519168) | Reason |
+|---|---|---|---|---|---|
+| 1 | PoolTogether V5 M-5 `claimPrizes` | optimism | FIXED (CODE_MATCH_FIX) | FIXED (CODE_MATCH_FIX) | unchanged |
+| 2 | PoolTogether V5 M-8 `_computeFeePerClaim` | base | FIXED (CODE_MATCH_FIX) | FIXED (CODE_MATCH_FIX) | unchanged |
+| 3 | PoolTogether V5 M-15 `shutdownAt` | optimism | PREDATES_AUDIT (DEPLOYED_BEFORE_AUDIT) | PREDATES_AUDIT (DEPLOYED_BEFORE_AUDIT) | unchanged |
+| 4 | PoolTogether V5 M-9 `liquidatableBalanceOf` | optimism | PREDATES_AUDIT (DEPLOYED_BEFORE_AUDIT) | PREDATES_AUDIT (DEPLOYED_BEFORE_AUDIT) | unchanged |
+| 5 | PoolTogether V5 M-16 `maxDeposit` | arbitrum | PREDATES_FIX (DEPLOYED_BEFORE_FIX) | PREDATES_FIX (DEPLOYED_BEFORE_FIX) | unchanged |
+| 6 | PoolTogether V5 M-17 `_convertToShares` | ethereum | NOT_FIXED (CODE_MATCH_VULNERABLE) | NOT_FIXED (CODE_MATCH_VULNERABLE) | unchanged |
+| 7 | PoolTogether V5 M-19 `claimPrize` | base | PREDATES_AUDIT (DEPLOYED_BEFORE_AUDIT) | PREDATES_AUDIT (DEPLOYED_BEFORE_AUDIT) | unchanged |
+| 8 | PoolTogether V5 M-1 `isRequestComplete` | optimism | PREDATES_AUDIT (DEPLOYED_BEFORE_AUDIT) | PREDATES_AUDIT (DEPLOYED_BEFORE_AUDIT) | unchanged |
+| 9 | PoolTogether V5 M-1 `isRequestComplete` | arbitrum | FIXED (CODE_MATCH_FIX) | FIXED (CODE_MATCH_FIX) | unchanged |
+| 10 | PoolTogether V5 M-14 `canStartDraw` | optimism | PREDATES_AUDIT (DEPLOYED_BEFORE_AUDIT) | PREDATES_AUDIT (DEPLOYED_BEFORE_AUDIT) | unchanged |
+| 11 | PoolTogether V5 H-3 `startDrawReward` | optimism | PREDATES_AUDIT (DEPLOYED_BEFORE_AUDIT) | PREDATES_AUDIT (DEPLOYED_BEFORE_AUDIT) | unchanged |
+| 12 | Mellow Flexible Vaults H-1 `checkSignatures` | ethereum | FIXED (CODE_MATCH_FIX) | FIXED (CODE_MATCH_FIX) | unchanged |
+| 13 | Mellow Flexible Vaults H-2 `_handleReport` | ethereum | INCONCLUSIVE (MODEL_UNGROUNDED) | INCONCLUSIVE (MODEL_UNGROUNDED) | unchanged |
+| 14 | Mellow Flexible Vaults H-3 `callHook` | ethereum | INCONCLUSIVE (PARTIAL_MATCH) | INCONCLUSIVE (PARTIAL_MATCH) | unchanged |
+| 15 | Mellow Flexible Vaults H-4 `calculateFee` | ethereum | INCONCLUSIVE (MODEL_UNGROUNDED) | INCONCLUSIVE (MODEL_UNGROUNDED) | unchanged |
+| 16 | Mellow Flexible Vaults H-5 `calculateFee` | ethereum | FIXED (CODE_MATCH_FIX) | FIXED (CODE_MATCH_FIX) | unchanged |
+| 17 | Mellow Flexible Vaults M-1 `updateChecks` | ethereum | INCONCLUSIVE (MODEL_UNGROUNDED) | INCONCLUSIVE (MODEL_UNGROUNDED) | unchanged |
+| 18 | Mellow Flexible Vaults M-4 `handleReport` | ethereum | FIXED (CODE_MATCH_FIX) | FIXED (CODE_MATCH_FIX) | unchanged |
+| 19 | Mellow Flexible Vaults M-5 `cancelDepositRequest` | ethereum | FIXED (CODE_CONTAINS_FIX) | FIXED (CODE_CONTAINS_FIX) | unchanged |
+| 20 | Cap M-1 `liquidate` | ethereum | INCONCLUSIVE (PARTIAL_MATCH) | INCONCLUSIVE (PARTIAL_MATCH) | unchanged |
+| 21 | Cap M-3 `realizeRestakerInterest` | ethereum | INCONCLUSIVE (PARTIAL_MATCH) | INCONCLUSIVE (PARTIAL_MATCH) | unchanged |
+| 22 | OP Stack fault proofs M-3 `create` | ethereum | INCONCLUSIVE (PARTIAL_MATCH) | INCONCLUSIVE (PARTIAL_MATCH) | unchanged |
+
+22 checks; 22 unchanged, 0 changed.
+
+
+No seed pins a fork, pull-request or tag commit; every seed's status comment is confirmed on GitHub; every creation proof is `OK`; the three proxies' switches are `EVENT`, confirmed by both RPCs; no seeded function applies an overridden modifier. So no verdict changes. The issues this round closes are shown live in [`DEPLOYED_VERIFICATION.md`](DEPLOYED_VERIFICATION.md) (fork-only report and docs commits refused, a pull-request-only docs commit refused, the Cap proxy's chronology stored and confirmed by both RPCs) and offline in `test/test_attacks_r4.py`.
