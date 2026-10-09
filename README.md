@@ -4,6 +4,8 @@
 
 Live: **https://fixcheck-ledger.vercel.app** · GenLayer Studio Dev · contracts in [`contracts/`](contracts/) · demo video: [`docs/demo/fixcheck-demo-voiced.mp4`](docs/demo/fixcheck-demo-voiced.mp4) ([vertical cut](docs/demo/fixcheck-demo-vertical.mp4))
 
+Recorded on the previous deployment (addresses in docs/superseded/README.md); the flow is unchanged.
+
 ![FixCheck finding page: audited vs deployed function](docs/screenshots/checks-5-1440-light.png)
 
 ## The problem
@@ -72,9 +74,9 @@ Ledger invariant, checked after every call in the tests and shown live on `/bala
 
 | Contract | Address |
 |---|---|
-| FixCheck — canonical (1 h counter, 24 h decide) | `0x893f96A5c72771D40F0bB55035A013a77159cc33` |
-| FixCheck — demo (90 s counter, 300 s decide) | `0xF5133724f0dffF025ceA878881285aE681d71c89` |
-| FixRegistry — read-only consumer | `0x50a60867153d3C63F322340dcEfe492bdd0d8D04` |
+| FixCheck — canonical (1 h counter, 24 h decide) | `0x65Fe440d63437e14fB9e990D1D0Dc283EE40bb56` |
+| FixCheck — demo (90 s counter, 300 s decide) | `0x66E008fc08414ecF423e59482c20A046FAd7A01c` |
+| FixRegistry — read-only consumer | `0x90f8c37976D166364BD563f71156aEd187CAc9d2` |
 
 Deployed from commit `7efb699928b20cdd580b534a58609da1c1defe08` with the bytes of `git show <commit>:<file>`; `node tools/verify_source.mjs` reads the code back from the chain and confirms all three are byte-identical to HEAD. sha256 and deploy transactions: [`ADDRESSES.md`](ADDRESSES.md). Explorer: https://explorer-studio-dev.genlayer.com/
 
@@ -117,7 +119,7 @@ Full table with links, stakes, dates and the demo paths: [`docs/SEEDS.md`](docs/
 |---|---|
 | `contracts/FixCheck.py` | the contract (GenVM v0.6 format) |
 | `contracts/FixRegistry.py` | read-only consumer |
-| `test/test_fixcheck.py`, `test/test_attacks.py` | offline suites on real fetched evidence — `python3 test/test_fixcheck.py && python3 test/test_attacks.py` |
+| `test/test_fixcheck.py`, `test/test_attacks*.py` | offline suites on real fetched evidence, 205 tests, no expected failures — `python3 -m unittest discover -s test -p "test_*.py"` |
 | `tools/scan_writes.py` | static check: no state written before any revert |
 | `test/deploy.mjs`, `test/seed_*.mjs` | HEAD-only deploy, resumable seeding |
 | `tools/` | research pipeline, source verification, docs generators, screenshots, video |
@@ -125,13 +127,6 @@ Full table with links, stakes, dates and the demo paths: [`docs/SEEDS.md`](docs/
 | `docs/` | research, threat model, attack report, seeds, screenshots, demo video |
 
 ## Known limitations
-
-The third attack pass ([`docs/ATTACK_REPORT_R3.md`](docs/ATTACK_REPORT_R3.md)) found two gaps that are not fixed yet. Its three tests in `test/test_attacks_r3.py` are marked as expected failures, so they will turn the suite red once a fix makes them pass.
-
-* **Pinned report and docs commits are not yet checked against the original repository's branches.** GitHub serves a commit made in a fork under the original repository's path, so a report or docs commit that exists only in a fork could be pinned. The fix commit itself is already checked: it must be on the protocol's default branch. Planned fix: the same branch check for every pinned commit.
-* **Proxies are dated by creation, not by their last upgrade.** For a proxy, PREDATES_AUDIT and PREDATES_FIX use the creation dates of the proxy and its implementation, not the time the proxy was last pointed at that implementation. A proxy pointed at an old implementation after the fix existed could be marked PREDATES instead of NOT_FIXED. Planned fix: date the implementation by the proxy's `Upgraded` event.
-
-Other limits:
 
 * **One function per finding.** A fix that lives in another function looks "changed"; the model can only confirm it by quoting the fix's added lines, otherwise the check is inconclusive.
 * **Comments and whitespace are ignored; everything else counts.** A renamed variable, a reordered statement or an extra statement inside the fix's lines is a change; code then cannot decide FIXED by containment and the model must ground its answer.
@@ -142,4 +137,6 @@ Other limits:
 * **Sherlock's status block is recognised by its author line.** Fix links are read only from `**sherlock-admin…**` blocks that carry a fixed-status phrase. A participant who types such a line into their own comment could still forge one; the forgery can only point at a commit that is in the protocol's own account and on its default branch. The lead judge can't be identified from the report, so their comments are not used.
 * **Fix provenance comes from GitHub's HTML.** Whether a commit is on the default branch and when a PR was merged are read from GitHub's `branch_commits` fragment and pull-request page (the API's rate limit is too low for validators), and validators compare only the extracted facts. A PR merged into a side branch counts from its merge date, though it may have reached the default branch later; the protocol's docs must be pinned on GitHub so the fix's account can be compared.
 * **Inheritance is resolved by name and import path.** Parents are traced through imports, aliases and remapped paths by unique suffix; anything ambiguous or unresolved makes the check inconclusive rather than guessing. Modifiers and external calls (`x.f()`) are not followed.
+* **Proxy upgrades are dated from the explorer's logs.** A proxy's switch to its current implementation is dated by its last `Upgraded` event, read from Blockscout on Ethereum and OP Mainnet. On Base, Arbitrum and Polygon (Sourcify keeps no logs and the public RPCs refuse `eth_getLogs` over a proxy's lifetime), and whenever no matching event is found, the switch is unknown. A proxy whose other dates are all before the fix is then INCONCLUSIVE (`UPGRADE_TIME_UNKNOWN`), never PREDATES and never NOT_FIXED.
+* **Report and docs commits are checked against GitHub's branch list.** A pinned report or docs commit must be listed on a branch of the repository its URL names (any branch; the fix must be on the default branch). If GitHub throttles the read (HTTP 403/429), the filing is refused, nothing is written and it can be filed again later. A commit that was on a branch and was later force-pushed away is refused too.
 * **Studio Dev.** This runs on a development network; windows are short so the canonical deployment can be seeded and decided in a day, and value transfers are queued by the network.
