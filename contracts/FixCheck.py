@@ -170,6 +170,8 @@ B_MODEL_UNGROUNDED = "MODEL_UNGROUNDED"
 B_MODEL_ERROR = "MODEL_ERROR"
 B_EXPIRED = "EXPIRED"
 B_UPGRADE_TIME_UNKNOWN = "UPGRADE_TIME_UNKNOWN"
+B_DEPLOY_TIME_UNKNOWN = "DEPLOY_TIME_UNKNOWN"
+B_BEACON_PROXY = "BEACON_PROXY"
 
 # Where each chain's verified source, creation record and JSON-RPC are read.
 # Blockscout's v2 API answers from GenVM for Ethereum and OP Mainnet;
@@ -210,6 +212,8 @@ GITHUB_WEB = "https://github.com/"
 PATCH_BASE = "https://patch-diff.githubusercontent.com/raw/"
 ARCHIVE = "https://web.archive.org/web/"
 EIP1967_IMPL_SLOT = "0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc"
+# Round-4 fix 4: bytes32(uint256(keccak256("eip1967.proxy.beacon")) - 1)
+EIP1967_BEACON_SLOT = "0xa3f0ad74e5423aebfd80d3ef4346578335a9a72aeaee59ff6cb3582b35133d50"
 # Round-3 fix 2: keccak256("Upgraded(address)"), the EIP-1967 event a proxy
 # emits when its implementation slot takes a new value.
 UPGRADED_TOPIC = "0xbc7cd75a20ee27fd9adebab32041f755214dbc6bffa90cc0225b39da2e5c2d3b"
@@ -1544,18 +1548,21 @@ DEP_STATUS_BASIS = {
     "FUNCTION_NOT_IN_COMPILED_CONTRACT": "FUNCTION_NOT_IN_COMPILED_CONTRACT",
     "PARENT_UNRESOLVED": "PARENT_UNRESOLVED",
     "HELPER_OVERRIDDEN": "HELPER_OVERRIDDEN",
+    "BEACON_PROXY": B_BEACON_PROXY,
 }
 
 
 def code_decision(dep_status: str, dep_canon: str, aud_canon: str, fix_canon: str,
-                  predates: bool = False, predates_fix: bool = False, born_unknown: bool = False) -> dict:
+                  predates: bool = False, predates_fix: bool = False, born_unknown: typing.Any = False) -> dict:
     """{"verdict", "basis"} when code alone decides; {} when the model must.
     predates: the code that runs was chosen before the audited commit.
     predates_fix: it was chosen before the fix existed (round-2 fix 1).
     born_unknown: it is a proxy whose switch to its current implementation
     could not be dated, and its other dates do not settle it (round-3 fix 2):
     never PREDATES, never NOT_FIXED. Only code chosen after the fix existed
-    can be NOT_FIXED. See running_code_before()."""
+    can be NOT_FIXED. A string is the basis to report (round-4 fix 4:
+    DEPLOY_TIME_UNKNOWN when a creation date is not proven). See
+    running_code_before()."""
     if dep_status != "OK":
         return {"verdict": V_INCONCLUSIVE, "basis": DEP_STATUS_BASIS.get(dep_status, B_FUNCTION_MISSING)}
     if fix_canon != "" and dep_canon == fix_canon:
@@ -1566,7 +1573,8 @@ def code_decision(dep_status: str, dep_canon: str, aud_canon: str, fix_canon: st
         if predates_fix:
             return {"verdict": V_PREDATES_FIX, "basis": B_DEPLOYED_BEFORE_FIX}
         if born_unknown:
-            return {"verdict": V_INCONCLUSIVE, "basis": B_UPGRADE_TIME_UNKNOWN}
+            return {"verdict": V_INCONCLUSIVE,
+                    "basis": born_unknown if isinstance(born_unknown, str) else B_UPGRADE_TIME_UNKNOWN}
         return {"verdict": V_NOT_FIXED, "basis": B_CODE_MATCH_VULNERABLE}
     return {}
 
@@ -2174,10 +2182,11 @@ def head_block(chain: str) -> int:
     return int(v[2:], 16)
 
 
-def eip1967_impl(chain: str, address: str, block: int) -> typing.Any:
-    """The EIP-1967 implementation slot read over RPC at `block` (round-2 fix
-    11): an address, "" for an empty slot, None if the RPC did not answer."""
-    v = rpc(chain, "eth_getStorageAt", [address, EIP1967_IMPL_SLOT, hex(block)])
+def eip1967_impl(chain: str, address: str, block: int, slot: str = EIP1967_IMPL_SLOT) -> typing.Any:
+    """The EIP-1967 implementation slot (or another address slot) read over
+    RPC at `block` (round-2 fix 11): an address, "" for an empty slot, None if
+    the RPC did not answer."""
+    v = rpc(chain, "eth_getStorageAt", [address, slot, hex(block)])
     if not isinstance(v, str) or not v.startswith("0x"):
         return None
     h = v[2:].lower()
@@ -2213,7 +2222,8 @@ def creation_time(chain: str, address: str) -> dict:
         except Exception:
             return {}
         at = _epoch_from_iso(str(t.get("timestamp") or ""))
-        return {"tx": tx, "at": at} if at > 0 else {}
+        blk = _as_int(t.get("block_number"), -1)
+        return {"tx": tx, "at": at, "block": blk} if at > 0 else {}
     got = fetch(base + "/server/v2/contract/" + str(cid) + "/" + address + "?fields=deployment")
     if not got["ok"] or got["http"] != 200:
         return {}
@@ -2235,7 +2245,39 @@ def creation_time(chain: str, address: str) -> dict:
         at = int(ts[2:], 16)
     except Exception:
         return {}
-    return {"tx": tx, "at": at}
+    return {"tx": tx, "at": at, "block": blk}
+
+
+def code_hex(chain: str, address: str, block: int) -> typing.Any:
+    """eth_getCode at `block`: lowercase hex ("0x" = no code), None if the RPC
+    did not answer."""
+    v = rpc(chain, "eth_getCode", [address, hex(block)])
+    if not isinstance(v, str) or not v.startswith("0x") or not _is_hex(v[2:].lower(), len(v) - 2):
+        return None
+    return v.lower()
+
+
+def code_status(chain: str, address: str, born: int, block: int) -> str:
+    """Round-4 fix 4: is the code that runs at `block` the code created at
+    `born` (the block of the explorer's creation tx)? Before EIP-6780 a
+    contract could SELFDESTRUCT and other code be created at the same address
+    (CREATE2), and the explorer's creation tx then dates the FIRST code.
+    "OK": no code at born - 1, code at born, the same code at `block`.
+    "CODE_CHANGED": other code runs now. "NOT_CREATED_THERE": the address had
+    code before born, or none at born. "UNREADABLE": the block is unknown or
+    an RPC did not answer. Only OK lets the creation date count."""
+    if born <= 0:
+        return "UNREADABLE"
+    before = code_hex(chain, address, born - 1)
+    then = code_hex(chain, address, born)
+    now = code_hex(chain, address, block)
+    if before is None or then is None or now is None:
+        return "UNREADABLE"
+    if before != "0x" or then == "0x":
+        return "NOT_CREATED_THERE"
+    if _sha(then) != _sha(now):
+        return "CODE_CHANGED"
+    return "OK"
 
 
 def upgraded_logs_url(chain: str, proxy: str) -> str:
@@ -2263,6 +2305,7 @@ def last_upgrade(text: str, proxy: str, block: int) -> dict:
     if not isinstance(doc, dict) or not isinstance(doc.get("items"), list):
         return {"error": True}
     best = {}
+    above = False
     for it in doc["items"]:
         if not isinstance(it, dict):
             return {"error": True}
@@ -2282,11 +2325,16 @@ def last_upgrade(text: str, proxy: str, block: int) -> dict:
         if blk < 0 or idx < 0 or at <= 0:
             return {"error": True}
         if blk > block:
+            above = True
             continue
         if not best or (blk, idx) > (best["block"], best["index"]):
             best = {"block": blk, "index": idx, "impl": "0x" + t1[26:], "at": at}
     if not best and doc.get("next_page_params") is not None:
         return {"error": True}
+    if above:
+        # round-4 fix 4: an Upgraded event above the slot block - the block is
+        # stale even if the slot holds the same implementation again
+        return {"above": True}
     return best
 
 
@@ -2305,6 +2353,8 @@ def switch_time(chain: str, proxy: str, impl: str, block: int) -> dict:
     last = last_upgrade(got["text"], proxy, block)
     if "error" in last:
         return {"status": "UNREADABLE", "block": 0, "at": 0}
+    if "above" in last:
+        return {"refused": "UPGRADED_AFTER_SLOT_BLOCK"}
     if not last:
         return {"status": "NO_EVENT", "block": 0, "at": 0}
     if last["impl"] != impl:
@@ -2359,6 +2409,14 @@ def deployed_function(chain: str, address: str, base: str, fn: str, slot_block: 
             return {"refused": "SLOT_CHANGED_SINCE_SLOT_BLOCK"}
     out = {"impl": "", "source_sha256": got["sha256"], "impl_source_sha256": "", "slot_block": block,
            "compiled": src["target"], "dep_status": "OK", "dep": {"ok": False, "code": "", "canon": ""}}
+    # round-4 fix 4: a beacon proxy runs whatever its beacon names; neither
+    # the address's own source nor its dates say what runs
+    beacon = eip1967_impl(chain, address, block, EIP1967_BEACON_SLOT)
+    if beacon is None:
+        return {"refused": "RPC_UNREADABLE"}
+    if beacon != "":
+        out["dep_status"] = "BEACON_PROXY"
+        return out
     files = src["files"]
     full = src["full"]
     if slot != "" or src["impl"] != "":
@@ -2573,14 +2631,20 @@ def gather(p: dict, slot_block: int = -1) -> dict:
         return {"refused": "CREATION_DATE_UNREADABLE"}
     impl_at = 0
     sw = {"status": "", "block": 0, "at": 0}
+    # round-4 fix 4: a creation date counts only for the code created then
+    code_st = code_status(p["chain"], p["address"], born["block"], d["slot_block"])
+    impl_code_st = ""
     if d["impl"] != "":
         ib = creation_time(p["chain"], d["impl"])
         if not ib:
             return {"refused": "CREATION_DATE_UNREADABLE"}
         impl_at = ib["at"]
+        impl_code_st = code_status(p["chain"], d["impl"], ib["block"], d["slot_block"])
         # round-3 fix 2: when the proxy switched to this implementation, read
         # at the same leader-named block as the slot
         sw = switch_time(p["chain"], p["address"], d["impl"], d["slot_block"])
+        if "refused" in sw:
+            return sw
     dep = d["dep"]
     title = sec["title"]
     if len(title) > TITLE_CAP:
@@ -2604,6 +2668,8 @@ def gather(p: dict, slot_block: int = -1) -> dict:
         "switch_status": sw["status"],
         "switch_block": sw["block"],
         "switched_at": sw["at"],
+        "code_status": code_st,
+        "impl_code_status": impl_code_st,
         "report_reach": report_reach,
         "docs_reach": docs_reach,
         "slot_block": d["slot_block"],
@@ -2641,26 +2707,39 @@ def code_born(impl: str, created_at: int, impl_created_at: int, switched_at: int
 
 def running_code_before(impl: str, created_at: int, impl_created_at: int, switched_at: int, t: int) -> str:
     """Was the code that runs chosen before time t? "YES" | "NO" | "UNKNOWN".
-    NO as soon as any known date is at or after t. For a proxy whose switch
-    to the current implementation could not be dated (switched_at 0), every
-    other date being before t proves nothing: UNKNOWN, never YES."""
+    NO as soon as any known date is at or after t. A date of 0 is unknown
+    (a proxy's undated switch; round-4 fix 4: a creation date whose code is
+    not the code that runs). Every known date being before t proves nothing
+    while one is unknown: UNKNOWN, never YES."""
     born = code_born(impl, created_at, impl_created_at, switched_at)
     if born >= t:
         return "NO"
-    if born <= 0 or (impl != "" and switched_at <= 0):
+    if born <= 0 or created_at <= 0 or (impl != "" and (switched_at <= 0 or impl_created_at <= 0)):
         return "UNKNOWN"
     return "YES"
 
 
+def proven(at: int, status: str) -> int:
+    """Round-4 fix 4: a creation date counts only if its code is the code
+    that runs ("OK"; "" = not checked, a contract filed before round 4)."""
+    return at if status in ("OK", "") else 0
+
+
 def chronology(impl: str, created_at: int, impl_created_at: int, switched_at: int,
-               audited_at: int, fix_at: int) -> dict:
+               audited_at: int, fix_at: int, code_st: str = "", impl_code_st: str = "") -> dict:
     """{"predates", "predates_fix", "unknown"} for code_decision(), from the
     dates stored at filing. unknown: the running code may or may not predate
-    the fix; only INCONCLUSIVE is fair."""
+    the fix; only INCONCLUSIVE is fair. It is the basis to report:
+    DEPLOY_TIME_UNKNOWN when a creation date is not proven, else
+    UPGRADE_TIME_UNKNOWN (the switch is not dated)."""
+    created_at = proven(created_at, code_st)
+    impl_created_at = proven(impl_created_at, impl_code_st) if impl != "" else impl_created_at
     pa = running_code_before(impl, created_at, impl_created_at, switched_at, audited_at)
     pf = running_code_before(impl, created_at, impl_created_at, switched_at, fix_at)
-    return {"predates": pa == "YES", "predates_fix": pf == "YES",
-            "unknown": pf == "UNKNOWN" or (pa == "UNKNOWN" and pf != "NO")}
+    unknown = pf == "UNKNOWN" or (pa == "UNKNOWN" and pf != "NO")
+    why = B_DEPLOY_TIME_UNKNOWN if (created_at <= 0 or (impl != "" and impl_created_at <= 0)) \
+        else B_UPGRADE_TIME_UNKNOWN
+    return {"predates": pa == "YES", "predates_fix": pf == "YES", "unknown": why if unknown else ""}
 
 
 # =============================================================================
@@ -2703,6 +2782,8 @@ class Check:
     switch_status: str
     switch_block: u64
     switched_at: u64
+    code_status: str
+    impl_code_status: str
     report_reach: str
     docs_reach: str
     slot_block: u64
@@ -2977,7 +3058,8 @@ class FixCheck(gl.contract.Contract):
             fix_committed_at=u64(int(ev["fix_committed_at"])), fix_merged_at=u64(int(ev["fix_merged_at"])),
             fix_at=u64(int(ev["fix_at"])), impl_created_at=u64(int(ev["impl_created_at"])),
             switch_status=str(ev["switch_status"]), switch_block=u64(int(ev["switch_block"])),
-            switched_at=u64(int(ev["switched_at"])), report_reach=str(ev["report_reach"]),
+            switched_at=u64(int(ev["switched_at"])), code_status=str(ev["code_status"]),
+            impl_code_status=str(ev["impl_code_status"]), report_reach=str(ev["report_reach"]),
             docs_reach=str(ev["docs_reach"]),
             slot_block=u64(int(ev["slot_block"])), compiled=str(ev["compiled"]),
             report_sha256=str(ev["report_sha256"]), docs_sha256=str(ev["docs_sha256"]),
@@ -3010,7 +3092,8 @@ class FixCheck(gl.contract.Contract):
         self.totals.checks = u32(int(self.totals.checks) + 1)
         self.totals.open = u32(int(self.totals.open) + 1)
         when = chronology(str(ev["impl"]), int(ev["created_at"]), int(ev["impl_created_at"]),
-                          int(ev["switched_at"]), int(ev["audited_at"]), int(ev["fix_at"]))
+                          int(ev["switched_at"]), int(ev["audited_at"]), int(ev["fix_at"]),
+                          str(ev["code_status"]), str(ev["impl_code_status"]))
         if ev["dep_status"] != "OK":
             preview = code_decision(str(ev["dep_status"]), "", "", "")
         elif ev["dep_canon_sha256"] == ev["fix_canon_sha256"]:
@@ -3150,7 +3233,7 @@ class FixCheck(gl.contract.Contract):
                 or (fix_code != "" and _sha(fix_canon) != c.fix_canon_sha256):
             raise gl.vm.UserError("stored evidence does not match its filing hashes")
         when = chronology(c.implementation, int(c.created_at), int(c.impl_created_at), int(c.switched_at),
-                          int(c.audited_at), int(c.fix_at))
+                          int(c.audited_at), int(c.fix_at), c.code_status, c.impl_code_status)
         predates = when["predates"]
         predates_fix = when["predates_fix"]
         out = code_decision(c.dep_status, dep_canon, aud_canon, fix_canon, predates, predates_fix, when["unknown"])
@@ -3203,7 +3286,8 @@ class FixCheck(gl.contract.Contract):
                 verdict, basis = V_PREDATES_FIX, B_DEPLOYED_BEFORE_FIX
             elif verdict == V_NOT_FIXED and when["unknown"]:
                 # round-3 fix 2: nor is a proxy whose switch could not be dated
-                verdict, basis = V_INCONCLUSIVE, B_UPGRADE_TIME_UNKNOWN
+                # (round-4 fix 4: nor code whose creation date is not proven)
+                verdict, basis = V_INCONCLUSIVE, when["unknown"]
             out = {"verdict": verdict, "basis": basis}
         # --- writes
         lines = code_lines(dep_code)
@@ -3286,8 +3370,10 @@ class FixCheck(gl.contract.Contract):
             "fix_merged_at": int(c.fix_merged_at), "fix_at": int(c.fix_at),
             "impl_created_at": int(c.impl_created_at), "slot_block": int(c.slot_block), "compiled": c.compiled,
             "switch_status": c.switch_status, "switch_block": int(c.switch_block),
-            "switched_at": int(c.switched_at), "code_born": code_born(c.implementation, int(c.created_at),
-                                                                      int(c.impl_created_at), int(c.switched_at)),
+            "switched_at": int(c.switched_at),
+            "code_born": code_born(c.implementation, proven(int(c.created_at), c.code_status),
+                                   proven(int(c.impl_created_at), c.impl_code_status), int(c.switched_at)),
+            "code_status": c.code_status, "impl_code_status": c.impl_code_status,
             "report_reach": c.report_reach, "docs_reach": c.docs_reach,
             "report_sha256": c.report_sha256, "docs_sha256": c.docs_sha256,
             "audited_sha256": c.audited_sha256, "fix_sha256": c.fix_sha256,

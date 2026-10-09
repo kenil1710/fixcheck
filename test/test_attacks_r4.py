@@ -324,5 +324,187 @@ class R4_F4_RenamedOrTransferredRepos(unittest.TestCase):
         out = w.file(case, docs_url=old)
         self.assertEqual((out["status"], out["reason"]), ("REFUSED", "DOCS_COMMIT_NOT_ON_BRANCH"))
 
+
+# =============================================================================
+# Step 3. The round-3 proxy chronology (round-3 fix 2), attacked from outside
+# =============================================================================
+
+BEACON_SLOT = "0xa3f0ad74e5423aebfd80d3ef4346578335a9a72aeaee59ff6cb3582b35133d50"
+BEACON = "0x" + "3c" * 20
+IMPL, OTHER = R3.IMPL, R3.OTHER
+BEFORE_FIX, AFTER_FIX = R3.BEFORE_FIX, R3.AFTER_FIX
+LONG_AGO = R3.epoch("2024-01-10T00:00:00Z")        # before the audit (2024-05-16)
+
+
+def run(case, *a, **k):
+    """File the case served as a proxy (R3.as_proxy), decide it, return (decide result, stored check)."""
+    w = B.World()
+    R3.as_proxy(case, *a, **k)
+    out = w.file(case)
+    if out["status"] != "OK":
+        return out, None
+    w.at(T0 + 3600)
+    d = w.call(B.ANYONE, "decide", out["check_id"])
+    return d, w.c.get_check(out["check_id"])
+
+
+def set_beacon(case, beacon=BEACON):
+    rpc = MOD.CHAINS[case["chain"]][3]
+    WEB.rpc[(rpc, "eth_getStorageAt", json.dumps([case["address"].lower(), BEACON_SLOT, "latest"]))] = slot_word(beacon)
+
+
+class R4_P1_BeaconProxies(unittest.TestCase):
+    """A beacon proxy keeps its implementation in a second contract (the
+    beacon); upgrades are the BEACON's Upgraded events, the proxy only emits
+    BeaconUpgraded. The proxy's own EIP-1967 implementation slot is empty."""
+
+    def test_beacon_proxy_the_explorer_resolves(self):
+        # Blockscout names the beacon's implementation; the slot is empty: held
+        w = B.World()
+        R3.as_proxy(B.VAULT_ETH, BEFORE_FIX, BEFORE_FIX, [], slot="", explorer_impl=IMPL)
+        set_beacon(B.VAULT_ETH)
+        out = w.file(B.VAULT_ETH)
+        self.assertEqual(out["code_says"], "INCONCLUSIVE")
+
+    def test_beacon_proxy_the_explorer_does_not_resolve(self):
+        # the address's own verified source carries the audited function, the
+        # explorer names no implementation, but the code that runs is chosen
+        # by a beacon: it must not be dated by the address's creation
+        w = B.World()
+        R3.as_proxy(B.VAULT_ETH, LONG_AGO, LONG_AGO, [], slot="", explorer_impl="")
+        set_beacon(B.VAULT_ETH)
+        out = w.file(B.VAULT_ETH)
+        self.assertEqual((out["status"], out["dep_status"]), ("OK", "BEACON_PROXY"),
+                         "a beacon proxy was judged and dated as a plain contract: " + json.dumps(out))
+        w.at(T0 + 3600)
+        d = w.call(B.ANYONE, "decide", out["check_id"])
+        self.assertEqual((d["verdict"], d["basis"]), ("INCONCLUSIVE", "BEACON_PROXY"))
+
+
+class R4_P2_UUPSAndWhoEmits(unittest.TestCase):
+    """UUPS: upgradeTo runs in the implementation's code but in the proxy's
+    context, so the proxy's address emits Upgraded, as with a transparent
+    proxy. An Upgraded log emitted by the implementation's own address (an
+    uninitialised implementation upgraded directly) says nothing about the
+    proxy."""
+
+    def test_uups_proxy_is_dated_by_its_own_event(self):
+        d, ch = run(B.VAULT_ETH, BEFORE_FIX, BEFORE_FIX, [(20430000, 4, IMPL, AFTER_FIX)])
+        self.assertEqual((d["verdict"], ch["switch_status"]), ("NOT_FIXED", "EVENT"))
+
+    def test_upgraded_logged_by_another_address_is_ignored(self):
+        addr = B.VAULT_ETH["address"].lower()
+        page = json.loads(R3.logs_page(addr, [(20430000, 4, IMPL, AFTER_FIX)]))
+        old = json.loads(R3.logs_page(IMPL, [(19500000, 1, IMPL, LONG_AGO)]))["items"]
+        page["items"] = page["items"] + old                   # the implementation's own, older log
+        last = MOD.last_upgrade(json.dumps(page), addr, 10 ** 9)
+        self.assertEqual((last["block"], last["impl"]), (20430000, IMPL))
+
+
+class R4_P3_RollbackABA(unittest.TestCase):
+    def test_a_then_b_then_back_to_a_after_the_fix(self):
+        d, ch = run(B.VAULT_ETH, BEFORE_FIX, BEFORE_FIX, [
+            (19900000, 3, IMPL, BEFORE_FIX), (20280000, 9, OTHER, R3.epoch("2024-07-10T00:00:00Z")),
+            (20430000, 4, IMPL, R3.epoch("2024-08-01T00:00:00Z"))])
+        self.assertEqual((d["verdict"], ch["switch_block"]), ("NOT_FIXED", 20430000))
+
+    def test_a_then_b_then_back_to_a_all_before_the_fix(self):
+        d, ch = run(B.VAULT_ETH, LONG_AGO, LONG_AGO, [
+            (19000000, 3, IMPL, LONG_AGO), (19100000, 9, OTHER, LONG_AGO + 86400),
+            (19950000, 4, IMPL, BEFORE_FIX)])
+        self.assertEqual((d["verdict"], ch["switch_block"]), ("PREDATES_FIX", 19950000))
+
+
+class R4_P4_CodeRedeployedAtTheSameAddress(unittest.TestCase):
+    """Metamorphic contracts: before EIP-6780 a contract could SELFDESTRUCT and
+    other code be created at the same address (CREATE2 with a changing init
+    code). The explorer's creation tx then dates the FIRST code. The code at
+    the slot block must be the code created at that tx's block - else the
+    creation date says nothing about the code that runs."""
+
+    def redeploy(self, address, created_at, later, code_then="0x60aa", code_now="0x60bb"):
+        WEB.code[address.lower()] = [(R3.block_of(created_at), code_then), (R3.block_of(later), code_now)]
+
+    def test_implementation_redeployed_after_the_fix(self):
+        w = B.World()
+        R3.as_proxy(B.VAULT_ETH, LONG_AGO, LONG_AGO, [(19000000, 3, IMPL, LONG_AGO)])
+        self.redeploy(IMPL, LONG_AGO, AFTER_FIX)
+        out = w.file(B.VAULT_ETH)
+        w.at(T0 + 3600)
+        d = w.call(B.ANYONE, "decide", out["check_id"])
+        self.assertNotIn(d["verdict"], ("PREDATES_AUDIT", "PREDATES_FIX"),
+                         "an implementation whose code changed after its creation was dated by that creation")
+        self.assertEqual((d["verdict"], d["basis"]), ("INCONCLUSIVE", "DEPLOY_TIME_UNKNOWN"))
+        self.assertEqual(w.c.get_check(out["check_id"])["impl_code_status"], "CODE_CHANGED")
+
+    def test_plain_contract_redeployed(self):
+        w = B.World()
+        case = B.VAULT_OP                                  # created 2024-04-18, before the audit: PREDATES_AUDIT
+        addr = case["address"].lower()
+        born = B.stub.born_block(addr)
+        WEB.code[addr] = [(born, "0x60aa"), (born + 10 ** 6, "0x60bb")]
+        out = w.file(case)
+        w.at(T0 + 3600)
+        d = w.call(B.ANYONE, "decide", out["check_id"])
+        self.assertEqual((d["verdict"], d["basis"]), ("INCONCLUSIVE", "DEPLOY_TIME_UNKNOWN"))
+
+    def test_not_created_in_the_block_the_explorer_names(self):
+        w = B.World()
+        case = B.VAULT_OP
+        addr = case["address"].lower()
+        WEB.code[addr] = [(0, "0x60aa")]                   # code already there before that block
+        out = w.file(case)
+        self.assertEqual(w.c.get_check(out["check_id"])["code_status"], "NOT_CREATED_THERE")
+        self.assertEqual(out["code_says"], "INCONCLUSIVE")
+
+    def test_unchanged_code_keeps_its_dates(self):
+        d, ch = run(B.VAULT_ETH, LONG_AGO, LONG_AGO, [(19000000, 3, IMPL, LONG_AGO)])
+        self.assertEqual(d["verdict"], "PREDATES_AUDIT")
+        self.assertEqual((ch["code_status"], ch["impl_code_status"]), ("OK", "OK"))
+
+    def test_a_later_known_date_still_decides(self):
+        # the implementation's own date is unknown, but the proxy was created
+        # after the fix: the running code was chosen after the fix either way
+        w = B.World()
+        R3.as_proxy(B.VAULT_ETH, AFTER_FIX, LONG_AGO, [(20670000, 3, IMPL, AFTER_FIX)])
+        self.redeploy(IMPL, LONG_AGO, BEFORE_FIX)
+        out = w.file(B.VAULT_ETH)
+        w.at(T0 + 3600)
+        self.assertEqual(w.call(B.ANYONE, "decide", out["check_id"])["verdict"], "NOT_FIXED")
+
+
+class R4_P5_SlotReadBeforeTheLastUpgrade(unittest.TestCase):
+    """An Upgraded event ABOVE the slot block means the block is stale. If the
+    upgrade re-set the same implementation after the fix (upgradeToAndCall
+    with the old implementation), the slot does not change, so the window
+    check (R4-L2) passes, and the switch was dated by the older event:
+    PREDATES_FIX for code re-chosen after the fix existed."""
+
+    def test_same_implementation_re_set_after_the_fix_above_the_slot_block(self):
+        w = B.World()
+        case = B.VAULT_ETH
+        head = B.stub.HEAD
+        R3.as_proxy(case, LONG_AGO, LONG_AGO, [(19000000, 3, IMPL, LONG_AGO), (head - 10, 2, IMPL, AFTER_FIX)])
+        FORGE["payload"] = MOD.gather(params_of(case), head - 50)
+        try:
+            out = w.file(case)
+        except B.stub._Rolled:
+            out = {"status": "ROLLED"}
+        self.assertEqual(int(w.c.checks_n), 0, "a slot block below a later Upgraded event was accepted: "
+                         + json.dumps(out)[:160])
+        self.assertEqual(MOD.gather(params_of(case), head - 50), {"refused": "UPGRADED_AFTER_SLOT_BLOCK"})
+
+    def test_explorer_ahead_of_the_rpc_refuses_then_files(self):
+        w = B.World()
+        case = B.VAULT_ETH
+        R3.as_proxy(case, LONG_AGO, LONG_AGO, [(19000000, 3, IMPL, LONG_AGO), (B.stub.HEAD + 5, 1, IMPL, AFTER_FIX)])
+        out = w.file(case)
+        self.assertEqual((out["status"], out["reason"]), ("REFUSED", "UPGRADED_AFTER_SLOT_BLOCK"))
+        WEB.head[MOD.CHAINS["ethereum"][3]] = B.stub.HEAD + 20          # the RPC caught up
+        out = w.file(case)
+        self.assertEqual(out["status"], "OK")
+        w.at(T0 + 3600)
+        self.assertEqual(w.call(B.ANYONE, "decide", out["check_id"])["verdict"], "NOT_FIXED")
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

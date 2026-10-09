@@ -295,6 +295,12 @@ AFTER_FIX = epoch("2024-09-01T00:00:00Z")
 DOCS_SWITCH = "docs/ATTACK_REPORT_R3.md"
 
 
+def block_of(at: int) -> int:
+    """An Ethereum block number for a time (12 s blocks, anchored on block
+    19900000 at 2024-05-17), as the explorer reports a creation tx's block."""
+    return 19900000 + (at - 1715900000) // 12
+
+
 def logs_page(proxy: str, events: list, more: bool = False) -> str:
     """The explorer's Upgraded log list (real shape: newest first)."""
     items = []
@@ -320,7 +326,8 @@ def as_proxy(case, proxy_at, impl_at, events=None, slot=IMPL, explorer_impl=IMPL
     WEB.rpc[(rpc, "eth_getStorageAt", json.dumps([addr, MOD.EIP1967_IMPL_SLOT, "latest"]))] = word
     for who, at, tx in ((addr, proxy_at, "0x" + "a1" * 32), (IMPL, impl_at, "0x" + "b2" * 32)):
         WEB.pages[base + "/api/v2/addresses/" + who] = (200, json.dumps({"creation_transaction_hash": tx}))
-        WEB.pages[base + "/api/v2/transactions/" + tx] = (200, json.dumps({"timestamp": B.iso(at)}))
+        WEB.pages[base + "/api/v2/transactions/" + tx] = (200, json.dumps({"timestamp": B.iso(at),
+                                                                           "block_number": block_of(at)}))
     if events is not None:
         WEB.pages[MOD.upgraded_logs_url(chain, addr)] = (logs_status, logs_page(addr, events))
 
@@ -377,17 +384,27 @@ class R3_Reg_ProxyChronology(unittest.TestCase):
         last = MOD.last_upgrade(text, proxy, 10 ** 9)
         self.assertEqual((last["block"], last["index"], last["impl"]),
                          (26048619, 780, "0x72b971717e088b59f26d4236be222adb6acd393b"))
-        self.assertEqual(MOD.last_upgrade(text, proxy, 26048618)["block"], 25397811,
-                         "logs above the leader-named block are not read")
+        # round-4 fix 4: a log above the slot block makes that block stale
+        self.assertEqual(MOD.last_upgrade(text, proxy, 26048618), {"above": True})
+
+        def upto(blk):
+            doc = json.loads(text)
+            doc["items"] = [it for it in doc["items"] if int(it["block_number"]) <= blk]
+            return json.dumps(doc)
+        self.assertEqual(MOD.last_upgrade(upto(26048618), proxy, 26048618)["block"], 25397811)
         # the same implementation set twice (22990599, then 23491328): the later one counts
-        same = MOD.last_upgrade(text, proxy, 23491328)
+        same = MOD.last_upgrade(upto(23491328), proxy, 23491328)
         self.assertEqual((same["block"], same["impl"]), (23491328, "0x33d1e8571a85a538ed3d5a4d88f46c112383439d"))
         self.assertEqual(MOD.last_upgrade(text, "0x" + "9" * 40, 10 ** 9), {}, "only the proxy's own logs")
 
-    def test_log_above_the_leader_block_is_ignored(self):
-        d, ch = self.run_case(BEFORE_FIX, BEFORE_FIX, [(19900000, 3, IMPL, BEFORE_FIX),
-                                                       (stub_head() + 50, 1, OTHER, AFTER_FIX)])
-        self.assertEqual((ch["switch_block"], d["verdict"]), (19900000, "PREDATES_FIX"))
+    def test_log_above_the_leader_block_refuses_the_filing(self):
+        # round-4 fix 4 (was: ignored): an upgrade the explorer has seen above
+        # the slot block makes that block stale; nothing is written
+        w = B.World()
+        as_proxy(self.case, BEFORE_FIX, BEFORE_FIX, [(19900000, 3, IMPL, BEFORE_FIX),
+                                                     (stub_head() + 50, 1, OTHER, AFTER_FIX)])
+        out = w.file(self.case)
+        self.assertEqual((out["status"], out["reason"]), ("REFUSED", "UPGRADED_AFTER_SLOT_BLOCK"))
 
     def test_no_upgraded_event_is_unknown_never_predates(self):
         d, ch = self.run_case(BEFORE_FIX, BEFORE_FIX, [])
@@ -420,16 +437,16 @@ class R3_Reg_ProxyChronology(unittest.TestCase):
     def test_chronology_matrix(self):
         f = MOD.chronology
         self.assertEqual(f("", BEFORE_FIX, 0, 0, AUDITED, FIX_AT),
-                         {"predates": False, "predates_fix": True, "unknown": False})
+                         {"predates": False, "predates_fix": True, "unknown": ""})
         self.assertEqual(f(IMPL, BEFORE_FIX, BEFORE_FIX, 0, AUDITED, FIX_AT),
-                         {"predates": False, "predates_fix": False, "unknown": True})
+                         {"predates": False, "predates_fix": False, "unknown": "UPGRADE_TIME_UNKNOWN"})
         self.assertEqual(f(IMPL, AFTER_FIX, BEFORE_FIX, 0, AUDITED, FIX_AT),
-                         {"predates": False, "predates_fix": False, "unknown": False})
-        self.assertEqual(f(IMPL, BEFORE_FIX, AFTER_FIX, 0, AUDITED, FIX_AT)["unknown"], False)
+                         {"predates": False, "predates_fix": False, "unknown": ""})
+        self.assertEqual(f(IMPL, BEFORE_FIX, AFTER_FIX, 0, AUDITED, FIX_AT)["unknown"], "")
         self.assertEqual(f(IMPL, BEFORE_FIX, BEFORE_FIX, AFTER_FIX, AUDITED, FIX_AT)["predates_fix"], False)
         old = epoch("2024-01-01T00:00:00Z")
         self.assertEqual(f(IMPL, old, old, old, AUDITED, FIX_AT),
-                         {"predates": True, "predates_fix": True, "unknown": False})
+                         {"predates": True, "predates_fix": True, "unknown": ""})
         self.assertEqual(MOD.code_decision("OK", "a", "a", "b", False, False, True),
                          {"verdict": "INCONCLUSIVE", "basis": "UPGRADE_TIME_UNKNOWN"})
 

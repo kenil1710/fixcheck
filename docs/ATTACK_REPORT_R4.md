@@ -60,3 +60,44 @@ FAILED (failures=2)
 ```
 
 After the fix: 18 tests, OK.
+
+## Step 3. The proxy chronology (round-3 fix 2), attacked from outside (round-4 fix 4)
+
+| Attack | Result on the round-3 code | Rule now |
+|---|---|---|
+| **Beacon proxy** the explorer resolves (EIP-1967 implementation slot empty, explorer names the beacon's implementation) | **Held**: `PROXY_UNRESOLVED`, INCONCLUSIVE | Same. |
+| **Beacon proxy** the explorer does not resolve, whose own verified source carries the audited function | **Failed** (`R4_P1`): judged as a plain contract and dated by the address's creation | The EIP-1967 beacon slot is read at the slot block. If it is set, `dep_status` is `BEACON_PROXY` → INCONCLUSIVE (`BEACON_PROXY`). By design: the code that runs is chosen by a second contract whose upgrades are its own log history. |
+| **UUPS**: `Upgraded` is emitted by the proxy (delegatecall), not by the implementation | **Held** (`R4_P2`): only logs the proxy's own address emitted are read; a log from the implementation's address is ignored | Same. |
+| **A → B → A** (rollback after the fix; and all before the fix) | **Held** (`R4_P3`): the last event at or below the slot block counts: NOT_FIXED, and PREDATES_FIX when every step is before the fix | Same. |
+| **Metamorphic / CREATE2**: code redeployed at the same address after the fix (the explorer's creation tx dates the FIRST code) | **Failed** (`R4_P4`): PREDATES_AUDIT for an implementation, and for a plain contract, whose code changed after creation | For the deployment and for its implementation: `eth_getCode` at the creation block minus 1 must be empty, at the creation block non-empty, and byte-identical to the code at the slot block. Otherwise the creation date does not count (`code_status` / `impl_code_status` = `CODE_CHANGED`, `NOT_CREATED_THERE` or `UNREADABLE`, stored). A later known date still decides (a proxy created after the fix is NOT_FIXED); otherwise INCONCLUSIVE (`DEPLOY_TIME_UNKNOWN`). |
+| **Slot read at a block before the last Upgraded event**, re-setting the same implementation after the fix (the slot does not change, so R4-L2 passes) | **Failed** (`R4_P5`): the switch was dated by the older event → PREDATES_AUDIT for code re-chosen after the fix | Any `Upgraded` log of the proxy above the slot block (including one the explorer has seen before the RPC) refuses the filing: `UPGRADED_AFTER_SLOT_BLOCK`, nothing written, file again once the RPC is past it. |
+
+Run before this fix (7 of 15 failed; the 8 that held are regressions now):
+
+```
+ERROR: test_not_created_in_the_block_the_explorer_names (__main__.R4_P4_CodeRedeployedAtTheSameAddress.test_not_created_in_the_block_the_explorer_names)
+KeyError: 'code_status'
+ERROR: test_unchanged_code_keeps_its_dates (__main__.R4_P4_CodeRedeployedAtTheSameAddress.test_unchanged_code_keeps_its_dates)
+KeyError: 'code_status'
+ERROR: test_explorer_ahead_of_the_rpc_refuses_then_files (__main__.R4_P5_SlotReadBeforeTheLastUpgrade.test_explorer_ahead_of_the_rpc_refuses_then_files)
+KeyError: 'reason'
+FAIL: test_beacon_proxy_the_explorer_does_not_resolve (__main__.R4_P1_BeaconProxies.test_beacon_proxy_the_explorer_does_not_resolve)
+AssertionError: Tuples differ: ('OK', 'OK') != ('OK', 'BEACON_PROXY')
+FAIL: test_implementation_redeployed_after_the_fix (__main__.R4_P4_CodeRedeployedAtTheSameAddress.test_implementation_redeployed_after_the_fix)
+AssertionError: 'PREDATES_AUDIT' unexpectedly found in ('PREDATES_AUDIT', 'PREDATES_FIX') : an implementation whose code changed after its creation was dated by that creation
+FAIL: test_plain_contract_redeployed (__main__.R4_P4_CodeRedeployedAtTheSameAddress.test_plain_contract_redeployed)
+AssertionError: Tuples differ: ('PREDATES_AUDIT', 'DEPLOYED_BEFORE_AUDIT') != ('INCONCLUSIVE', 'DEPLOY_TIME_UNKNOWN')
+FAIL: test_same_implementation_re_set_after_the_fix_above_the_slot_block (__main__.R4_P5_SlotReadBeforeTheLastUpgrade.test_same_implementation_re_set_after_the_fix_above_the_slot_block)
+AssertionError: 1 != 0 : a slot block below a later Upgraded event was accepted: {"check_id": 1, "protocol": "github:generationsoftware/pt-dev-docs", "dep_status": "OK", "code_says": "PREDATES_AUDIT",
+Ran 31 tests in 3.552s
+FAILED (failures=4, errors=3)
+```
+
+Changes to round-3 tests forced by this fix (no assertion about a vulnerability was weakened):
+
+- `test_log_above_the_leader_block_is_ignored` → `test_log_above_the_leader_block_refuses_the_filing`: an Upgraded log above the slot block now refuses the filing instead of being skipped.
+- `test_upgraded_twice_real_logs`: the unfiltered real list at a block below its last event is now `{"above": True}`; the ordering assertions run on the list cut at that block.
+- `test_chronology_matrix`: `unknown` is now the basis to report (`""`, `UPGRADE_TIME_UNKNOWN` or `DEPLOY_TIME_UNKNOWN`) instead of a boolean.
+- `as_proxy` gives each creation tx a `block_number`, as Blockscout's real answer does (the creation-block code check needs it).
+
+After the fix: 31 tests in `test_attacks_r4.py`, OK; all earlier suites OK.

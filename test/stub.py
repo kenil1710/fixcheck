@@ -13,6 +13,7 @@ before:
 """
 import ast
 import builtins
+import hashlib
 import json
 import sys
 import types
@@ -319,6 +320,7 @@ class _Web:
         self.rpc_down = set()   # rpc urls that fail
         self.headers = {}       # url -> response headers
         self.head = {}          # rpc url -> latest block number (default HEAD)
+        self.code = {}          # address -> [(from block, runtime code hex)]: an address's code history
 
     def get(self, url):
         self.log.append(url)
@@ -358,6 +360,9 @@ def _web_request(url, method="GET", body=None, headers=None, **_k):
         if latest in WEB.rpc:
             return _Response(200, json.dumps({"jsonrpc": "2.0", "id": 1, "result": WEB.rpc[latest]}))
         return _Response(200, json.dumps({"jsonrpc": "2.0", "id": 1, "result": "0x" + "0" * 64}))
+    if req["method"] == "eth_getCode":
+        return _Response(200, json.dumps({"jsonrpc": "2.0", "id": 1,
+                                          "result": code_at(req["params"][0], int(req["params"][1], 16))}))
     return _Response(200, json.dumps({"jsonrpc": "2.0", "id": 1, "error": {"code": -32000, "message": "not in fixtures"}}))
 
 
@@ -419,6 +424,58 @@ def _run_nondet(leader_fn, validator_fn):
     if not agreed:
         raise _Rolled("validators disagreed")
     return result
+
+
+def _page_json(url):
+    got = WEB.pages.get(url)
+    if not got or got[0] != 200:
+        return None
+    try:
+        return json.loads(got[1])
+    except Exception:
+        return None
+
+
+def born_block(address):
+    """The block the explorers' fixtures say `address` was created in (a
+    Blockscout creation tx's block_number, or Sourcify's deployment
+    blockNumber); None if no fixture says."""
+    a = address.lower()
+    for url in list(WEB.pages):
+        low = url.lower()
+        if low.endswith("/api/v2/addresses/" + a):
+            doc = _page_json(url) or {}
+            tx = str(doc.get("creation_transaction_hash") or "").lower()
+            base = url[:low.find("/api/v2/addresses/")]
+            t = _page_json(base + "/api/v2/transactions/" + tx) or {}
+            if isinstance(t.get("block_number"), int):
+                return t["block_number"]
+        if low.find("/" + a + "?fields=deployment") >= 0:
+            dep = (_page_json(url) or {}).get("deployment") or {}
+            if str(dep.get("blockNumber") or "").isdigit():
+                return int(dep["blockNumber"])
+    return None
+
+
+def fake_code(address):
+    return "0x6080604052" + hashlib.sha256(address.lower().encode()).hexdigest()
+
+
+def code_at(address, block):
+    """eth_getCode: a test's code history for the address if it set one, else
+    no code before the block the explorer fixtures name as its creation and
+    one unchanging runtime code from then on."""
+    hist = WEB.code.get(address.lower())
+    if hist is not None:
+        cur = "0x"
+        for frm, code in sorted(hist):
+            if frm <= block:
+                cur = code
+        return cur
+    born = born_block(address)
+    if born is not None and block < born:
+        return "0x"
+    return fake_code(address)
 
 
 class _Rolled(Exception):
