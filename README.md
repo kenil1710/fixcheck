@@ -78,7 +78,7 @@ Ledger invariant, checked after every call in the tests and shown live on `/bala
 | FixCheck — demo (90 s counter, 300 s decide) | `0x66E008fc08414ecF423e59482c20A046FAd7A01c` |
 | FixRegistry — read-only consumer | `0x90f8c37976D166364BD563f71156aEd187CAc9d2` |
 
-Deployed from commit `7efb699928b20cdd580b534a58609da1c1defe08` with the bytes of `git show <commit>:<file>`; `node tools/verify_source.mjs` reads the code back from the chain and confirms all three are byte-identical to HEAD. sha256 and deploy transactions: [`ADDRESSES.md`](ADDRESSES.md). Explorer: https://explorer-studio-dev.genlayer.com/
+Deployed from commit `93de7be2deb171cbb0a19b7b47fc280938da520b` with the bytes of `git show <commit>:<file>`; `node tools/verify_source.mjs` reads the code back from the chain and confirms all three are byte-identical to HEAD. sha256 and deploy transactions: [`ADDRESSES.md`](ADDRESSES.md). Explorer: https://explorer-studio-dev.genlayer.com/
 
 Other apps read verdicts with `FixRegistry.fix_status(chain, address, "<pinned report url>#<finding id>")` (or `is_fixed` / `is_known_unfixed`; `is_known_unfixed` is false for PREDATES AUDIT) — free cross-contract views, no payable methods. Earlier versions are listed in [`docs/superseded/`](docs/superseded/).
 
