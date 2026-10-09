@@ -1,0 +1,86 @@
+{
+  "address": "0x20a8c66B2636551bc25074f85186c0ADf892d875",
+  "tx": "0xe8f2cd8073e7ea5034cd326f72331199f512a611efbf1f73ad34658432822512",
+  "result": {
+    "https://github.com/sherlock-audit/2024-05-pooltogether-judging/issues/136": {
+      "\"login\":\"sherlock-admin2\"": "\"login\":\"sherlock-admin2\",\"avatarUrl\":\"https://avatars.githubusercontent.com/u/138802946?u",
+      "<updated>": "",
+      "attrs": [
+        "body",
+        "headers",
+        "status"
+      ],
+      "class=\"branch\"": "",
+      "defaultBranch": "",
+      "head": "\n\n\n\n  \n\n<!DOCTYPE html>\n<html\n  lang=\"en\"\n  \n  data-color-mode=\"auto\" data-light",
+      "headers": {
+        "accept-ranges": "b'bytes'",
+        "cache-control": "b'max-age=0, private, must-revalidate'",
+        "content-security-policy": "b\"default-src 'none'; base-uri 'self'; child-src github.githubassets.com github.com/assets-cdn/worker/ github.com/assets",
+        "content-type": "b'text/html; charset=utf-8'",
+        "date": "b'Fri, 09 Oct 2026 15:47:54 GMT'",
+        "referrer-policy": "b'no-referrer-when-downgrade'",
+        "server": "b'github.com'",
+        "server-timing": "b'issue_layout-fragment;desc=\"issue_layout fragment\";dur=239.456891,issue_conversation_content-fragment;desc=\"issue_conv",
+        "set-cookie": "b'logged_in=no; expires=Sat, 09 Oct 2027 15:48:01 GMT; domain=.github.com; path=/; HttpOnly; secure; SameSite=Lax'",
+        "strict-transport-security": "b'max-age=31536000; includeSubdomains; preload'",
+        "vary": "b'X-PJAX, X-PJAX-Container, Turbo-Visit, Turbo-Frame, X-Requested-With, X-GitHub-Client-Version, X-Issues-React-Relay-Ca",
+        "x-content-type-options": "b'nosniff'",
+        "x-frame-options": "b'deny'",
+        "x-github-edge-region": "b'iad'",
+        "x-github-request-id": "b'E22E:50A1A:4888C0:604FA9:6AC90CB1'",
+        "x-voltron-version": "b'c8822c3'",
+        "x-xss-protection": "b'0'"
+      },
+      "http": 200,
+      "len": 393381,
+      "mergeCommitSha": "",
+      "mergedTime": "",
+      "react-app.embeddedData": "react-app.embeddedData\">{\"payload\":{\"issueViewerRoute\":{\"data\":{\"repository\":{\"id\":\"R_kgDO"
+    },
+    "https://github.com/sherlock-audit/2025-07-cap-judging/issues/150": {
+      "\"login\":\"sherlock-admin2\"": "\"login\":\"sherlock-admin2\",\"avatarUrl\":\"https://avatars.githubusercontent.com/u/138802946?u",
+      "<updated>": "",
+      "attrs": [
+        "body",
+        "headers",
+        "status"
+      ],
+      "class=\"branch\"": "",
+      "defaultBranch": "",
+      "head": "\n\n\n\n  \n\n<!DOCTYPE html>\n<html\n  lang=\"en\"\n  \n  data-color-mode=\"auto\" data-light",
+      "headers": {
+        "accept-ranges": "b'bytes'",
+        "cache-control": "b'max-age=0, private, must-revalidate'",
+        "content-security-policy": "b\"default-src 'none'; base-uri 'self'; child-src github.githubassets.com github.com/assets-cdn/worker/ github.com/assets",
+        "content-type": "b'text/html; charset=utf-8'",
+        "date": "b'Fri, 09 Oct 2026 15:47:54 GMT'",
+        "referrer-policy": "b'no-referrer-when-downgrade'",
+        "server": "b'github.com'",
+        "server-timing": "b'issue_layout-fragment;desc=\"issue_layout fragment\";dur=214.048895,issue_conversation_content-fragment;desc=\"issue_conv",
+        "set-cookie": "b'logged_in=no; expires=Sat, 09 Oct 2027 15:48:01 GMT; domain=.github.com; path=/; HttpOnly; secure; SameSite=Lax'",
+        "strict-transport-security": "b'max-age=31536000; includeSubdomains; preload'",
+        "vary": "b'X-PJAX, X-PJAX-Container, Turbo-Visit, Turbo-Frame, X-Requested-With, X-GitHub-Client-Version, X-Issues-React-Relay-Ca",
+        "x-content-type-options": "b'nosniff'",
+        "x-frame-options": "b'deny'",
+        "x-github-edge-region": "b'iad'",
+        "x-github-request-id": "b'E22E:50A1A:4888D4:604FCC:6AC90CB1'",
+        "x-voltron-version": "b'c8822c3'",
+        "x-xss-protection": "b'0'"
+      },
+      "http": 200,
+      "len": 321627,
+      "mergeCommitSha": "",
+      "mergedTime": "",
+      "react-app.embeddedData": "react-app.embeddedData\">{\"payload\":{\"issueViewerRoute\":{\"data\":{\"repository\":{\"id\":\"R_kgDO"
+    },
+    "https://rpc.mevblocker.io": {
+      "16": "200 {\"jsonrpc\":\"2.0\",\"id\":1,\"result\":\"0x0000000000000000000000000000000000000000000000000000000000000000\"}",
+      "128": "200 {\"jsonrpc\":\"2.0\",\"id\":1,\"result\":\"0x0000000000000000000000000000000000000000000000000000000000000000\"}\n",
+      "600": "200 {\"jsonrpc\":\"2.0\",\"id\":1,\"result\":\"0x0000000000000000000000000000000000000000000000000000000000000000\"}\n",
+      "3000": "200 {\"jsonrpc\":\"2.0\",\"id\":1,\"result\":\"0x0000000000000000000000000000000000000000000000000000000000000000\"}",
+      "20000": "200 {\"jsonrpc\":\"2.0\",\"id\":1,\"result\":\"0x0000000000000000000000000000000000000000000000000000000000000000\"}\n",
+      "head": 26155849
+    }
+  }
+}

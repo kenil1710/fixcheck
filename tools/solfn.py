@@ -107,14 +107,14 @@ def _match(src: str, i: int, open_c: str, close_c: str) -> int:
     return -1
 
 
-def find_functions(src: str, name: str) -> list:
+def find_functions(src: str, name: str, key: str = "function") -> list:
     """Every implemented `function <name>(...)` in comment-stripped src, as the
     raw text from `function` through the closing brace. Declarations without a
     body (interfaces, abstract) are skipped. Returns None if a definition with
     this name could not be parsed (unbalanced), which callers treat as
-    UNPARSEABLE."""
+    UNPARSEABLE. key "modifier": the same for `modifier <name>` (whose
+    parameter list is optional)."""
     found = []
-    key = "function"
     i = 0
     n = len(src)
     while True:
@@ -137,11 +137,14 @@ def find_functions(src: str, name: str) -> list:
         p = e
         while p < n and src[p] in " \t\r\n":
             p += 1
-        if p >= n or src[p] != "(":
+        if p < n and src[p] == "(":
+            q = _match(src, p, "(", ")")
+            if q < 0:
+                return None
+        elif key == "modifier" and p < n:
+            q = p - 1
+        else:
             continue
-        q = _match(src, p, "(", ")")
-        if q < 0:
-            return None
         # header runs to the first `{` or `;` at paren depth 0 (returns (...))
         h = q
         while h < n and src[h] != "{" and src[h] != ";":
@@ -475,15 +478,16 @@ def _ancestry(graph: dict, node: str) -> list:
     return [out, bad]
 
 
-def _impls(units: dict, name: str) -> list:
-    """Every implemented `function name` in the bundle as [holder ("file:Name",
-    "" for a free function), canonical body, holder kind, file]."""
+def _impls(units: dict, name: str, key: str = "function") -> list:
+    """Every implemented `function name` (or `modifier name`) in the bundle as
+    [holder ("file:Name", "" for a free function), canonical body, holder
+    kind, file]."""
     out = []
     for p in sorted(units.keys()):
         u = units[p]
         if u["src"].find(name) < 0:
             continue
-        found = find_functions(u["src"], name)
+        found = find_functions(u["src"], name, key)
         if found is None:
             out.append(["", "", "", p])
             continue
@@ -526,6 +530,46 @@ def calls_in(code: str) -> list:
     return out
 
 
+HEADER_WORDS = ("public", "external", "internal", "private", "view", "pure", "payable", "virtual",
+                "override", "returns", "constant", "function")
+
+
+def modifiers_of(code: str) -> list:
+    """Round-4 fix 6: the modifiers a function's header applies (`onlyOwner`,
+    `nonReentrant`, `whenNotPaused(x)`), in comment-free code. Their bodies
+    run with the function, so an override of one changes what runs."""
+    p = code.find("(")
+    q = _match(code, p, "(", ")") if p >= 0 else -1
+    if q < 0:
+        return []
+    out = []
+    n = len(code)
+    i = q + 1
+    skip = False
+    while i < n and code[i] != "{" and code[i] != ";":
+        c = code[i]
+        if c == "(":
+            k = _match(code, i, "(", ")")
+            if k < 0:
+                return out
+            i = k + 1
+            skip = False
+            continue
+        if _word(c) and not c.isdigit():
+            j = i
+            while j < n and _word(code[j]):
+                j += 1
+            w = code[i:j]
+            if w in ("returns", "override"):
+                skip = True
+            elif w not in HEADER_WORDS and w not in out:
+                out.append(w)
+            i = j
+            continue
+        i += 1
+    return out
+
+
 def extract(files: dict, file_name: str, fn: str, target: str = "", calls: typing.Any = None) -> dict:
     """extract_plain() plus the implementation the contract actually runs.
 
@@ -536,7 +580,8 @@ def extract(files: dict, file_name: str, fn: str, target: str = "", calls: typin
     other contract in the compiled chain may implement `fn` unless ours
     overrides it (FUNCTION_OVERRIDDEN); and every function our function - or
     the fix (`calls`) - calls directly must run the implementation ours sees,
-    not one overridden below it (fix 6, HELPER_OVERRIDDEN).
+    not one overridden below it (fix 6, HELPER_OVERRIDDEN); round-4 fix 6:
+    so must every modifier its header applies.
 
     Without a target (a single audited or fix file, or offline research):
     another file implementing `fn` in a contract that derives from ours, in a
@@ -558,8 +603,10 @@ def extract(files: dict, file_name: str, fn: str, target: str = "", calls: typin
             break
     names = []
     for nm in calls_in(got["code"]) + (calls if isinstance(calls, list) else []):
-        if nm != fn and nm not in names:
-            names.append(nm)
+        if nm != fn and [nm, "function"] not in names:
+            names.append([nm, "function"])
+    for nm in modifiers_of(got["code"]):
+        names.append([nm, "modifier"])
     mine = _ancestry(graph, ours)[0] if ours != "" else []
     if target != "":
         if target not in graph or ours == "":
@@ -573,9 +620,9 @@ def extract(files: dict, file_name: str, fn: str, target: str = "", calls: typin
         for h in impl:
             if h[0] in scope and h[0] != ours and h[0] not in mine:
                 return {"ok": False, "why": "FUNCTION_OVERRIDDEN"}
-        for nm in names:
+        for nm, key in names:
             hs = []
-            for h in _impls(units, nm):
+            for h in _impls(units, nm, key):
                 if h[0] in scope and h[0] not in hs:
                     hs.append(h[0])
             top = ""
@@ -595,8 +642,8 @@ def extract(files: dict, file_name: str, fn: str, target: str = "", calls: typin
         if above[1] or (ours != "" and ours in above[0]):
             return {"ok": False, "why": "FUNCTION_OVERRIDDEN"}
     if ours != "":
-        for nm in names:
-            for h in _impls(units, nm):
+        for nm, key in names:
+            for h in _impls(units, nm, key):
                 if h[0] == "" or h[0] == ours:
                     continue
                 above = _ancestry(graph, h[0])

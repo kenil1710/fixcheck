@@ -26,6 +26,32 @@ for name, path in WANT.items():
     req = urllib.request.Request(GH + path, headers={"User-Agent": "fixcheck-fixtures"})
     with urllib.request.urlopen(req, timeout=30) as r:
         out[name] = {"url": GH + path, "final": r.geturl(), "status": r.status, "body": r.read().decode("utf-8")}
+# Round-4 fix 7: the GitHub issue page of every fixture case's finding (the
+# section's "Source:" link), cut to GitHub's embedded JSON - the part the
+# contract reads (comment authors and bodies). Real bytes, a substring of the
+# page.
+import re, sys
+sys.path.insert(0, str(ROOT / "test"))
+cases = json.loads((ROOT / "test/fixtures/cases.json").read_text())
+pages = json.loads((ROOT / "test/fixtures/pages.json").read_text())
+issues = {}
+TAG = '<script type="application/json" data-target="react-app.embeddedData">'
+for c in cases:
+    rep = next(v for k, v in pages.items() if k.lower() == c["report"].lower())
+    rep = rep if isinstance(rep, str) else rep[1]
+    k = rep.find("# Issue " + c["id"] + ":")
+    m = re.search(r"Source: (https://github.com/sherlock-audit/[^/\s]+/issues/\d+)", rep[k:k + 400])
+    url = m.group(1)
+    if url in issues:
+        continue
+    req = urllib.request.Request(url, headers={"User-Agent": "fixcheck-fixtures"})
+    html = urllib.request.urlopen(req, timeout=30).read().decode("utf-8")
+    a = html.index(TAG)
+    b = html.index("</script>", a)
+    issues[url.lower()] = html[a:b + len("</script>")]
+out["issues"] = issues
 (ROOT / "test/fixtures/pages_r4.json").write_text(json.dumps(out, indent=1))
+print("issues", {k: len(v) for k, v in issues.items()})
 for k, v in out.items():
-    print(k, v["status"], v["final"], len(v["body"]))
+    if k != "issues":
+        print(k, v["status"], v["final"], len(v["body"]))

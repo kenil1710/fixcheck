@@ -171,7 +171,43 @@ What such a case needs, all at once: (1) a proxy on Ethereum or OP Mainnet (the 
 Searched this round, beyond the 21 seeded findings:
 
 - **Exactly Protocol** (Sherlock `2024-07-exactly-stacking-contracts`, fixes in `exactly/protocol`, Market and StakedEXA proxies on OP Mainnet, hardhat deployment files pinned in the same account as the fix): a natural fit for (1) and (5). It fails (3): the report links the audited code only as `blob/main` (26 links, none at a commit SHA), so filing is refused `AUDITED_COMMIT_NOT_LINKED_BY_REPORT`. That is the rule that keeps an attacker from pointing "audited" at any commit.
-- The 99 Sherlock contests in `research_cache/fixed.json` (835 findings marked fixed) were screened by deployment chain and proxy pattern. The contests with upgradeable proxies are mostly on Arbitrum or Base (no log source: Perennial, Tapioca, Superfluid, Ethos), beacon-based (Arrakis: now `BEACON_PROXY`), or route through a dispatcher whose function is not in the compiled contract (Notional). None was checked to the point of a filing.
+- The 99 Sherlock contests in `research_cache/fixed.json` (835 findings marked fixed) were reviewed by name for deployment chain and proxy pattern (from what is publicly known about each protocol, not re-read on chain). Those with upgradeable proxies are mostly on Arbitrum or Base (no log source: Perennial, Tapioca, Superfluid, Ethos), beacon-based (Arrakis: now `BEACON_PROXY`), or route through a dispatcher whose function is not in the compiled contract (Notional). None was checked to the point of a filing.
 - Among the seeded findings the only proxies are Cap's Lender (two checks) and OP's DisputeGameFactory, all partial matches, so (2) fails; the live replay confirms their switches are dated and confirmed by both RPCs (`EVENT`).
 
 So the date-only path stays covered offline: `R3_Reg_ProxyChronology`, `R4_P3_RollbackABA`, `R4_P4_CodeRedeployedAtTheSameAddress` and `R4_P5_SlotReadBeforeTheLastUpgrade` serve the real Ethereum vault (deployed code == audited) as a proxy, with explorer and RPC logs. The live proxy case on the new demo shows the chronology fields stored and confirmed by both RPCs (docs/DEPLOYED_VERIFICATION.md).
+
+## Step 6. Known limitations: fixed now, or why they stay (round-4 fixes 6 and 7)
+
+Each README limitation was either fixed in this round or now states plainly why it stays (by design, or not possible on Studio Dev). Two were cheap enough to fix:
+
+| Limitation | Fix | Test |
+|---|---|---|
+| "Modifiers are not followed" | `modifiers_of()` reads the modifiers a function's header applies; each must run the implementation the function sees, exactly like a called helper (round-2 fix 6). A derived contract that overrides one (`modifier onlyOwner() override { _; }`) is `HELPER_OVERRIDDEN` → INCONCLUSIVE. Shared extractor updated in `tools/solfn.py` too. | `R4_K1_ModifiersAreFollowed` (2) |
+| "A participant who types a `sherlock-admin` line into their own comment could forge a status block" | The judging README is Sherlock's rendering of the GitHub issue; inside it an author is only text. The section's `Source:` line names its issue in the report's own judging repo; every validator reads that issue page, and the fix link must be in a comment that **GitHub** attributes to a `sherlock-admin*` user and that carries a fixed-status phrase. Missing source: `FINDING_SOURCE_MISSING`; not confirmed: `FIX_STATUS_NOT_ON_GITHUB_ISSUE`; page unreadable: `FINDING_ISSUE_UNREADABLE` (nothing written). The issue number is stored (`status_issue`). GenVM reads these pages (probe tx `0xe8f2cd8073e7ea5034cd326f72331199f512a611efbf1f73ad34658432822512`, [`research/probe_issue_r4.json`](research/probe_issue_r4.json)); all 22 seeds confirm in the live replay. | `R4_K2_StatusBlockAuthorFromGitHub` (5) |
+
+Run before these fixes:
+
+```
+FAIL: test_header_modifiers (__main__.R4_K1_ModifiersAreFollowed.test_header_modifiers)
+AssertionError: None != ['onlyOwner', 'whenNotPaused']
+FAIL: test_overridden_modifier_is_helper_overridden (__main__.R4_K1_ModifiersAreFollowed.test_overridden_modifier_is_helper_overridden)
+AssertionError: None != 'HELPER_OVERRIDDEN' : an overridden modifier was not followed
+Ran 44 tests in 5.715s
+FAILED (failures=2)
+FAIL: test_issue_page_unreadable_refuses (__main__.R4_K2_StatusBlockAuthorFromGitHub.test_issue_page_unreadable_refuses)
+AssertionError: None != 'FINDING_ISSUE_UNREADABLE'
+FAIL: test_real_status_comment_is_confirmed (__main__.R4_K2_StatusBlockAuthorFromGitHub.test_real_status_comment_is_confirmed)
+AssertionError: 'https://github.com/sherlock-audit/2024-05-pooltogether-judging/issues/136' not found in ['https://github.com/sherlock-audit/2024-05-pooltogether-judging/branch_commits/88298eacec6f178
+FAIL: test_source_issue_must_be_in_the_reports_own_repo (__main__.R4_K2_StatusBlockAuthorFromGitHub.test_source_issue_must_be_in_the_reports_own_repo)
+AssertionError: None != 'FINDING_SOURCE_MISSING'
+FAIL: test_status_comment_must_link_this_fix (__main__.R4_K2_StatusBlockAuthorFromGitHub.test_status_comment_must_link_this_fix)
+AssertionError: None != 'FIX_STATUS_NOT_ON_GITHUB_ISSUE'
+FAIL: test_status_comment_written_by_a_participant_is_refused (__main__.R4_K2_StatusBlockAuthorFromGitHub.test_status_comment_written_by_a_participant_is_refused)
+AssertionError: Tuples differ: ('OK', None) != ('REFUSED', 'FIX_STATUS_NOT_ON_GITHUB_ISSUE')
+Ran 49 tests in 6.788s
+FAILED (failures=5)
+```
+
+Earlier test helper changed: `sherlock_report()` (home-made reports) now renders a `Source:` line per issue and serves that issue's page with Sherlock's status comment, as Sherlock's bot does. The real fixture cases use their real issue pages (`test/fixtures/pages_r4.json`, GitHub's embedded JSON cut from the page).
+
+The rest stay, with the reason in the README: one function per finding, comments ignored, removal-only fixes and "not fixed is a code fact" (by design); one explorer per chain for verified source and undated switches on Base/Arbitrum/Polygon (no second source or log source reachable from GenVM); Sherlock only (each auditor needs its own authorship rule); `audits.sherlock.xyz` captures have no issue page to check; fix provenance from GitHub HTML (API rate limit); external calls not followed (another contract's code); identical-code metamorphic redeploys (needs history no RPC serves); Studio Dev.

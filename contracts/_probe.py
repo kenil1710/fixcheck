@@ -111,7 +111,7 @@ class Probe(gl.contract.Contract):
                     h = getattr(r, "headers", None)
                     row["headers"] = {str(k).lower(): str(h[k])[:120] for k in h} if isinstance(h, dict) else str(h)[:400]
                     t = b.decode("utf-8", errors="ignore")
-                    for needle in ["mergedTime", "mergeCommitSha", "defaultBranch", "class=\"branch\"", "<updated>"]:
+                    for needle in ["mergedTime", "mergeCommitSha", "defaultBranch", "class=\"branch\"", "<updated>", "react-app.embeddedData", "\"login\":\"sherlock-admin2\""]:
                         k = t.find(needle)
                         row[needle] = t[k:k + 90] if k >= 0 else ""
                     row["head"] = t[:80]

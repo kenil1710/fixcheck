@@ -40,6 +40,9 @@ RPCS = json.loads((HERE / "fixtures" / "rpc.json").read_text())
 # test gives the second URL an answer of its own
 stub.RPC_ALIAS.update({MOD.RPC_B[_c]: MOD.CHAINS[_c][3] for _c in MOD.CHAINS})
 CASES = {(c["protocol"], c["id"]): c for c in json.loads((HERE / "fixtures" / "cases.json").read_text())}
+# round-4 fix 7: the GitHub issue page of each case's finding (GitHub's
+# embedded JSON: comment authors and bodies), real bytes
+PAGES.update(json.loads((HERE / "fixtures" / "pages_r4.json").read_text())["issues"])
 # pages are keyed by the URL the contract fetches (normalised, fix 8); tests may
 # also look a case's URL up as written
 for _c in CASES.values():
@@ -72,7 +75,24 @@ def sherlock_report(c, text):
     """A home-made report served from a Sherlock judging-repo URL (round-2 fix
     2 accepts reports from Sherlock only)."""
     url = SHERLOCK_TEST + c * 40 + "/README.md"
+    # as Sherlock's bot renders it: each issue names its GitHub issue, whose
+    # page attributes the status comment to sherlock-admin2 (round-4 fix 7)
+    lines = []
+    n = 0
+    for ln in text.split("\n"):
+        lines.append(ln)
+        if ln.startswith("# Issue "):
+            n += 1
+            lines.append("")
+            lines.append("Source: https://github.com/sherlock-audit/test-contest-judging/issues/" + str(n))
+    text = "\n".join(lines)
     WEB.pages[url] = (200, text)
+    sections = ("\n" + text).split("\n# Issue ")[1:]
+    for k in range(1, n + 1):
+        body = MOD.status_block("# Issue " + sections[k - 1])
+        WEB.pages["https://github.com/sherlock-audit/test-contest-judging/issues/" + str(k)] = (200, (
+            MOD.ISSUE_JSON + json.dumps({"payload": {"issue": {"timelineItems": [{"__typename": "IssueComment",
+                "author": {"__typename": "User", "login": "sherlock-admin2"}, "body": body}]}}}) + "</script>"))
     on_branch("sherlock-audit", "test-contest-judging", c * 40)
     return url
 

@@ -770,14 +770,14 @@ def _match(src: str, i: int, open_c: str, close_c: str) -> int:
     return -1
 
 
-def find_functions(src: str, name: str) -> list:
+def find_functions(src: str, name: str, key: str = "function") -> list:
     """Every implemented `function <name>(...)` in comment-stripped src, as the
     raw text from `function` through the closing brace. Declarations without a
     body (interfaces, abstract) are skipped. Returns None if a definition with
     this name could not be parsed (unbalanced), which callers treat as
-    UNPARSEABLE."""
+    UNPARSEABLE. key "modifier": the same for `modifier <name>` (whose
+    parameter list is optional)."""
     found = []
-    key = "function"
     i = 0
     n = len(src)
     while True:
@@ -800,11 +800,14 @@ def find_functions(src: str, name: str) -> list:
         p = e
         while p < n and src[p] in " \t\r\n":
             p += 1
-        if p >= n or src[p] != "(":
+        if p < n and src[p] == "(":
+            q = _match(src, p, "(", ")")
+            if q < 0:
+                return None
+        elif key == "modifier" and p < n:
+            q = p - 1
+        else:
             continue
-        q = _match(src, p, "(", ")")
-        if q < 0:
-            return None
         # header runs to the first `{` or `;` at paren depth 0 (returns (...))
         h = q
         while h < n and src[h] != "{" and src[h] != ";":
@@ -1138,15 +1141,16 @@ def _ancestry(graph: dict, node: str) -> list:
     return [out, bad]
 
 
-def _impls(units: dict, name: str) -> list:
-    """Every implemented `function name` in the bundle as [holder ("file:Name",
-    "" for a free function), canonical body, holder kind, file]."""
+def _impls(units: dict, name: str, key: str = "function") -> list:
+    """Every implemented `function name` (or `modifier name`) in the bundle as
+    [holder ("file:Name", "" for a free function), canonical body, holder
+    kind, file]."""
     out = []
     for p in sorted(units.keys()):
         u = units[p]
         if u["src"].find(name) < 0:
             continue
-        found = find_functions(u["src"], name)
+        found = find_functions(u["src"], name, key)
         if found is None:
             out.append(["", "", "", p])
             continue
@@ -1189,6 +1193,46 @@ def calls_in(code: str) -> list:
     return out
 
 
+HEADER_WORDS = ("public", "external", "internal", "private", "view", "pure", "payable", "virtual",
+                "override", "returns", "constant", "function")
+
+
+def modifiers_of(code: str) -> list:
+    """Round-4 fix 6: the modifiers a function's header applies (`onlyOwner`,
+    `nonReentrant`, `whenNotPaused(x)`), in comment-free code. Their bodies
+    run with the function, so an override of one changes what runs."""
+    p = code.find("(")
+    q = _match(code, p, "(", ")") if p >= 0 else -1
+    if q < 0:
+        return []
+    out = []
+    n = len(code)
+    i = q + 1
+    skip = False
+    while i < n and code[i] != "{" and code[i] != ";":
+        c = code[i]
+        if c == "(":
+            k = _match(code, i, "(", ")")
+            if k < 0:
+                return out
+            i = k + 1
+            skip = False
+            continue
+        if _word(c) and not c.isdigit():
+            j = i
+            while j < n and _word(code[j]):
+                j += 1
+            w = code[i:j]
+            if w in ("returns", "override"):
+                skip = True
+            elif w not in HEADER_WORDS and w not in out:
+                out.append(w)
+            i = j
+            continue
+        i += 1
+    return out
+
+
 def extract(files: dict, file_name: str, fn: str, target: str = "", calls: typing.Any = None) -> dict:
     """extract_plain() plus the implementation the contract actually runs.
 
@@ -1199,7 +1243,8 @@ def extract(files: dict, file_name: str, fn: str, target: str = "", calls: typin
     other contract in the compiled chain may implement `fn` unless ours
     overrides it (FUNCTION_OVERRIDDEN); and every function our function - or
     the fix (`calls`) - calls directly must run the implementation ours sees,
-    not one overridden below it (fix 6, HELPER_OVERRIDDEN).
+    not one overridden below it (fix 6, HELPER_OVERRIDDEN); round-4 fix 6:
+    so must every modifier its header applies.
 
     Without a target (a single audited or fix file, or offline research):
     another file implementing `fn` in a contract that derives from ours, in a
@@ -1221,8 +1266,10 @@ def extract(files: dict, file_name: str, fn: str, target: str = "", calls: typin
             break
     names = []
     for nm in calls_in(got["code"]) + (calls if isinstance(calls, list) else []):
-        if nm != fn and nm not in names:
-            names.append(nm)
+        if nm != fn and [nm, "function"] not in names:
+            names.append([nm, "function"])
+    for nm in modifiers_of(got["code"]):
+        names.append([nm, "modifier"])
     mine = _ancestry(graph, ours)[0] if ours != "" else []
     if target != "":
         if target not in graph or ours == "":
@@ -1236,9 +1283,9 @@ def extract(files: dict, file_name: str, fn: str, target: str = "", calls: typin
         for h in impl:
             if h[0] in scope and h[0] != ours and h[0] not in mine:
                 return {"ok": False, "why": "FUNCTION_OVERRIDDEN"}
-        for nm in names:
+        for nm, key in names:
             hs = []
-            for h in _impls(units, nm):
+            for h in _impls(units, nm, key):
                 if h[0] in scope and h[0] not in hs:
                     hs.append(h[0])
             top = ""
@@ -1258,8 +1305,8 @@ def extract(files: dict, file_name: str, fn: str, target: str = "", calls: typin
         if above[1] or (ours != "" and ours in above[0]):
             return {"ok": False, "why": "FUNCTION_OVERRIDDEN"}
     if ours != "":
-        for nm in names:
-            for h in _impls(units, nm):
+        for nm, key in names:
+            for h in _impls(units, nm, key):
                 if h[0] == "" or h[0] == ours:
                     continue
                 above = _ancestry(graph, h[0])
@@ -1856,7 +1903,11 @@ def fix_links(section: str, pin: dict) -> dict:
     """The fix references for the fix file's repo in the finding's Sherlock
     status block (status_block): {"commits": [hex prefixes], "pulls":
     [numbers]}."""
-    low = status_block(section).lower()
+    return links_in(status_block(section).lower(), pin)
+
+
+def links_in(low: str, pin: dict) -> dict:
+    """The commit and pull request links to pin's repo in lowercase text."""
     base = "github.com/" + pin["owner"] + "/" + pin["repo"] + "/"
     commits = []
     pulls = []
@@ -1886,6 +1937,64 @@ def fix_links(section: str, pin: dict) -> dict:
                 pulls.append(d)
         i = k + 1
     return {"commits": commits, "pulls": pulls}
+
+
+def finding_issue(section: str, owner: str, repo: str) -> str:
+    """Round-4 fix 7: the number of the GitHub issue a finding's section was
+    rendered from ("Source: https://github.com/<owner>/<repo>/issues/<n>",
+    the report's own judging repo); "" if it names none."""
+    needle = "source: https://github.com/" + owner + "/" + repo + "/issues/"
+    low = section.lower()
+    k = low.find(needle)
+    if k < 0:
+        return ""
+    d = ""
+    for ch in low[k + len(needle):]:
+        if "0" <= ch <= "9":
+            d += ch
+        else:
+            break
+    return d if d != "" and len(d) <= 7 else ""
+
+
+ISSUE_JSON = '<script type="application/json" data-target="react-app.embeddedData">'
+
+
+def issue_status_text(page: str) -> str:
+    """Round-4 fix 7: the bodies of the comments on a GitHub issue page that
+    GitHub itself attributes to a Sherlock account (author login sherlock-admin
+    or sherlock-adminN, a User) and that carry a fixed-status phrase, read
+    from the page's embedded JSON. In the judging README an author is only a
+    bold line of text that a participant can type into their own comment."""
+    k = page.find(ISSUE_JSON)
+    if k < 0:
+        return ""
+    e = page.find("</script>", k)
+    if e < 0:
+        return ""
+    try:
+        doc = json.loads(page[k + len(ISSUE_JSON):e])
+    except Exception:
+        return ""
+    out = []
+    stack = [doc]
+    while stack:
+        o = stack.pop()
+        if isinstance(o, list):
+            stack.extend(o)
+            continue
+        if not isinstance(o, dict):
+            continue
+        a = o.get("author")
+        body = o.get("body")
+        if o.get("__typename") == "IssueComment" and isinstance(a, dict) and isinstance(body, str) \
+                and a.get("__typename") == "User" and _sherlock_account(str(a.get("login") or "")):
+            for phrase in STATUS_PHRASES:
+                if body.find(phrase) >= 0 and body not in out:
+                    out.append(body)
+                    break
+        stack.extend(o.values())
+    return "\n".join(out)
 
 
 def pr_facts(page: str, n: str) -> dict:
@@ -2060,9 +2169,10 @@ def memento(res: typing.Any) -> str:
 
 
 def allowed_url(url: str) -> bool:
-    """B9: every URL any validator fetches is on this list, plus three GitHub
-    pages: a commit's .atom feed (its date), a pull request (merged? when?)
-    and a commit's branch_commits fragment (on the default branch?)."""
+    """B9: every URL any validator fetches is on this list, plus four GitHub
+    pages: a commit's .atom feed (its date), a pull request (merged? when?),
+    a commit's branch_commits fragment (on the default branch?) and a Sherlock
+    judging repo's issue (who wrote the status comment?)."""
     for p in ALLOWED_PREFIXES:
         # round-4 fix 1: a prefix without a trailing slash is a whole origin
         # (or exact RPC URL), so https://mainnet.base.org never matches
@@ -2083,6 +2193,10 @@ def allowed_url(url: str) -> bool:
         return parts[3].isdigit() and len(parts[3]) <= 7
     if parts[2] == "branch_commits":
         return _is_hex(parts[3], 40)
+    if parts[2] == "issues":
+        # round-4 fix 7: a Sherlock judging repo's issue page
+        return parts[0] == REPORT_OWNER and parts[1].endswith(REPORT_REPO_SUFFIX) \
+            and parts[3].isdigit() and len(parts[3]) <= 7
     return False
 
 
@@ -2673,6 +2787,13 @@ def gather(p: dict, slot_block: int = -1) -> dict:
         return {"refused": "FUNCTION_NOT_NAMED_IN_FINDING"}
     if status_block(sec["text"]) == "":
         return {"refused": "FIXED_STATUS_NOT_FROM_SHERLOCK"}
+    # round-4 fix 7: the GitHub issue the section was rendered from
+    rrepo = pinned_commit(p["report_url"])
+    issue = ""
+    if rrepo and not rrepo.get("bad"):
+        issue = finding_issue(sec["text"], rrepo["owner"], rrepo["repo"])
+        if issue == "":
+            return {"refused": "FINDING_SOURCE_MISSING"}
     # --- fix 1: the audited commit and the fix are the finding's own
     binding = bind_audited(sec["text"], rep["text"], apin)
     if binding == "":
@@ -2695,6 +2816,17 @@ def gather(p: dict, slot_block: int = -1) -> dict:
                 break
     if fix_ref == "":
         return {"refused": "FIX_NOT_LINKED_IN_FINDING"}
+    # round-4 fix 7: GitHub, not the README's text, says a Sherlock account
+    # wrote the status comment that links this fix
+    if issue != "":
+        ip = fetch(GITHUB_WEB + rrepo["owner"] + "/" + rrepo["repo"] + "/issues/" + issue)
+        if not ip["ok"] or ip["http"] != 200:
+            return {"refused": "FINDING_ISSUE_UNREADABLE"}
+        conf = links_in(issue_status_text(ip["text"]).lower(), fpin)
+        ok = fix_ref[5:] in conf["pulls"] if fix_ref.startswith("pull/") else \
+            len([h for h in conf["commits"] if fpin["sha"].startswith(h)]) > 0
+        if not ok:
+            return {"refused": "FIX_STATUS_NOT_ON_GITHUB_ISSUE"}
     # --- round-2 fixes 1 + 9: merged into the default branch, and when
     prov = fix_provenance(fpin, fix_ref, cache)
     if "refused" in prov:
@@ -2790,6 +2922,7 @@ def gather(p: dict, slot_block: int = -1) -> dict:
         "impl_code_status": impl_code_st,
         "report_reach": report_reach,
         "docs_reach": docs_reach,
+        "status_issue": issue,
         "slot_block": d["slot_block"],
         "compiled": d["compiled"],
         "report_sha256": rep["sha256"],
@@ -2904,6 +3037,7 @@ class Check:
     impl_code_status: str
     report_reach: str
     docs_reach: str
+    status_issue: str
     slot_block: u64
     compiled: str
     report_sha256: str
@@ -3178,7 +3312,7 @@ class FixCheck(gl.contract.Contract):
             switch_status=str(ev["switch_status"]), switch_block=u64(int(ev["switch_block"])),
             switched_at=u64(int(ev["switched_at"])), code_status=str(ev["code_status"]),
             impl_code_status=str(ev["impl_code_status"]), report_reach=str(ev["report_reach"]),
-            docs_reach=str(ev["docs_reach"]),
+            docs_reach=str(ev["docs_reach"]), status_issue=str(ev["status_issue"]),
             slot_block=u64(int(ev["slot_block"])), compiled=str(ev["compiled"]),
             report_sha256=str(ev["report_sha256"]), docs_sha256=str(ev["docs_sha256"]),
             audited_sha256=str(ev["audited_sha256"]), fix_sha256=str(ev["fix_sha256"]),
@@ -3492,7 +3626,7 @@ class FixCheck(gl.contract.Contract):
             "code_born": code_born(c.implementation, proven(int(c.created_at), c.code_status),
                                    proven(int(c.impl_created_at), c.impl_code_status), int(c.switched_at)),
             "code_status": c.code_status, "impl_code_status": c.impl_code_status,
-            "report_reach": c.report_reach, "docs_reach": c.docs_reach,
+            "report_reach": c.report_reach, "docs_reach": c.docs_reach, "status_issue": c.status_issue,
             "report_sha256": c.report_sha256, "docs_sha256": c.docs_sha256,
             "audited_sha256": c.audited_sha256, "fix_sha256": c.fix_sha256,
             "source_sha256": c.source_sha256, "aud_canon_sha256": c.aud_canon_sha256,

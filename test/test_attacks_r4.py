@@ -656,5 +656,85 @@ class R4_C1_TwoIndependentRpcs(unittest.TestCase):
         self.assertIn(a, WEB.log)
         self.assertIn(b, WEB.log)
 
+
+# =============================================================================
+# Step 6. Known limitations fixed now
+# =============================================================================
+
+class R4_K1_ModifiersAreFollowed(unittest.TestCase):
+    """README limitation "modifiers are not followed": a modifier the
+    function's header applies runs with it. A derived contract that
+    overrides that modifier (`modifier onlyOwner() override { _; }`) changes
+    what runs while the function's own text is identical to the fix."""
+
+    BASE = ("pragma solidity ^0.8.0;\ncontract Vault {\n  address owner;\n"
+            "  modifier onlyOwner() virtual { require(msg.sender == owner, \"no\"); _; }\n"
+            "  function sweep(address to) external onlyOwner { payable(to).transfer(address(this).balance); }\n}\n")
+    LIVE = ("pragma solidity ^0.8.0;\nimport \"./Vault.sol\";\ncontract Live is Vault {\n"
+            "  modifier onlyOwner() override { _; }\n}\n")
+
+    def test_overridden_modifier_is_helper_overridden(self):
+        files = {"src/Vault.sol": self.BASE, "src/Live.sol": self.LIVE}
+        got = MOD.extract(files, "Vault.sol", "sweep", "src/Live.sol:Live")
+        self.assertEqual(got.get("why"), "HELPER_OVERRIDDEN", "an overridden modifier was not followed")
+        # without the override the function is judged
+        files = {"src/Vault.sol": self.BASE, "src/Live.sol": self.LIVE.replace(
+            "  modifier onlyOwner() override { _; }\n", "")}
+        self.assertTrue(MOD.extract(files, "Vault.sol", "sweep", "src/Live.sol:Live")["ok"])
+
+    def test_header_modifiers(self):
+        f = getattr(MOD, "modifiers_of", lambda c: None)
+        self.assertEqual(f("function a(uint x) external view onlyOwner whenNotPaused(x) returns (uint y) { return 1; }"),
+                         ["onlyOwner", "whenNotPaused"])
+        self.assertEqual(f("function b() public override(A, B) nonReentrant {}"), ["nonReentrant"])
+        self.assertEqual(f("function c() internal pure returns (uint) {}"), [])
+
+
+class R4_K2_StatusBlockAuthorFromGitHub(unittest.TestCase):
+    """README limitation "a participant who types a sherlock-admin line into
+    their own comment could forge a status block": the judging README is
+    Sherlock's rendering of the GitHub issue, and inside it an author is only
+    a bold line of text. GitHub's own issue page names each comment's
+    author. The status comment that links the fix must be there, written by a
+    sherlock-admin account."""
+
+    ISSUE = "https://github.com/sherlock-audit/2024-05-pooltogether-judging/issues/136"   # M-17
+
+    def test_real_status_comment_is_confirmed(self):
+        w = B.World()
+        self.assertEqual(w.file(B.VAULT_ETH)["status"], "OK")
+        self.assertIn(self.ISSUE, WEB.log, "the finding's GitHub issue was read")
+
+    def test_status_comment_written_by_a_participant_is_refused(self):
+        # the same text, posted on the issue by a participant: Sherlock's
+        # README renders it as a "**sherlock-admin2**" block inside their comment
+        w = B.World()
+        page = PAGES[self.ISSUE].replace('"login":"sherlock-admin2"', '"login":"watson-forger"')
+        self.assertNotEqual(page, PAGES[self.ISSUE])
+        WEB.pages[self.ISSUE] = (200, page)
+        out = w.file(B.VAULT_ETH)
+        self.assertEqual((out["status"], out.get("reason")), ("REFUSED", "FIX_STATUS_NOT_ON_GITHUB_ISSUE"),
+                         "a status block GitHub does not attribute to Sherlock was accepted")
+        self.assertEqual(int(w.c.checks_n), 0)
+
+    def test_status_comment_must_link_this_fix(self):
+        w = B.World()
+        WEB.pages[self.ISSUE] = (200, PAGES[self.ISSUE].replace("pt-v5-vault/pull/112", "pt-v5-vault/pull/113"))
+        self.assertEqual(w.file(B.VAULT_ETH).get("reason"), "FIX_STATUS_NOT_ON_GITHUB_ISSUE")
+
+    def test_issue_page_unreadable_refuses(self):
+        w = B.World()
+        WEB.pages[self.ISSUE] = (429, "rate limited")
+        self.assertEqual(w.file(B.VAULT_ETH).get("reason"), "FINDING_ISSUE_UNREADABLE")
+        self.assertEqual(int(w.c.checks_n), 0)
+
+    def test_source_issue_must_be_in_the_reports_own_repo(self):
+        w = B.World()
+        rep = PAGES[B.VAULT_ETH["report"]].replace(
+            "Source: https://github.com/sherlock-audit/2024-05-pooltogether-judging/issues/136",
+            "Source: https://github.com/someone/2024-05-pooltogether-judging/issues/136")
+        R3.serve(B.VAULT_ETH["report"], rep)
+        self.assertEqual(w.file(B.VAULT_ETH).get("reason"), "FINDING_SOURCE_MISSING")
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
