@@ -636,6 +636,19 @@ class R4_C1_TwoIndependentRpcs(unittest.TestCase):
             self.assertEqual((out["status"], out["reason"]), ("REFUSED", "RPC_UNREADABLE"))
             self.assertEqual(int(w.c.checks_n), 0)
 
+    def test_an_unanswered_read_is_not_a_fact(self):
+        # a throttled endpoint (HTTP 429, or a JSON-RPC error) refuses the
+        # filing - it is never stored as "unknown", so validators cannot split
+        # on who was throttled
+        w = B.World()
+        case = B.VAULT_OP
+        addr = case["address"].lower()
+        b = rpcs("optimism")[1]
+        WEB.rpc[(b, "eth_getCode", json.dumps([addr, hex(B.stub.born_block(addr))]))] = None
+        out = w.file(case)
+        self.assertEqual((out["status"], out["reason"]), ("REFUSED", "RPC_UNREADABLE"))
+        self.assertEqual(int(w.c.checks_n), 0)
+
     def test_both_endpoints_are_read(self):
         w = B.World()
         self.assertEqual(w.file(B.VAULT_OP)["status"], "OK")

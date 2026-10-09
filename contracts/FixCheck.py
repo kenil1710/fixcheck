@@ -182,7 +182,7 @@ B_BEACON_PROXY = "BEACON_PROXY"
 # Sourcify chains, for the creation block's timestamp (fix 7). Each RPC
 # serves recent state at a past block number (docs/research/probe_web2.json).
 CHAINS = {
-    "ethereum": ("blockscout", "https://eth.blockscout.com", 1, "https://eth.drpc.org"),
+    "ethereum": ("blockscout", "https://eth.blockscout.com", 1, "https://rpc.mevblocker.io"),
     "optimism": ("blockscout", "https://explorer.optimism.io", 10, "https://mainnet.optimism.io"),
     "base": ("sourcify", "https://sourcify.dev", 8453, "https://mainnet.base.org"),
     "arbitrum": ("sourcify", "https://sourcify.dev", 42161, "https://arb-pokt.nodies.app"),
@@ -238,7 +238,7 @@ ALLOWED_PREFIXES = (
     GITHUB_RAW, PATCH_BASE, ARCHIVE,
     "https://eth.blockscout.com/api/v2/", "https://explorer.optimism.io/api/v2/",
     "https://sourcify.dev/server/v2/contract/",
-    "https://eth.drpc.org", "https://mainnet.optimism.io", "https://mainnet.base.org",
+    "https://rpc.mevblocker.io", "https://mainnet.optimism.io", "https://mainnet.base.org",
     "https://arb-pokt.nodies.app", "https://polygon.drpc.org",
     "https://mainnet.gateway.tenderly.co", "https://optimism.gateway.tenderly.co",
     "https://base.gateway.tenderly.co", "https://arbitrum.gateway.tenderly.co",
@@ -2106,20 +2106,23 @@ def rpc(chain: str, method: str, params: list, second: bool = False) -> typing.A
     if not allowed_url(url):
         return None
     body = json.dumps({"jsonrpc": "2.0", "id": 1, "method": method, "params": params})
-    try:
-        res = gl.nondet.web.request(url, method="POST", body=body,
-                                    headers={"Content-Type": "application/json"})
-    except Exception:
-        return None
-    if _status(res) != 200:
-        return None
-    try:
-        doc = json.loads(_raw(res).decode("utf-8", errors="replace"))
-    except Exception:
-        return None
-    if not isinstance(doc, dict) or "error" in doc:
-        return None
-    return doc.get("result")
+    # round-4 fix 5: free public endpoints throttle bursts; one retry
+    for _attempt in range(2):
+        try:
+            res = gl.nondet.web.request(url, method="POST", body=body,
+                                        headers={"Content-Type": "application/json"})
+        except Exception:
+            continue
+        if _status(res) != 200:
+            continue
+        try:
+            doc = json.loads(_raw(res).decode("utf-8", errors="replace"))
+        except Exception:
+            continue
+        if not isinstance(doc, dict) or "error" in doc:
+            continue
+        return doc.get("result")
+    return None
 
 
 DISAGREE = "!"
@@ -2346,16 +2349,17 @@ def code_status(chain: str, address: str, born: int, block: int, at: int = -1) -
     exactly `at`, the explorer's creation time. "CODE_CHANGED": other code
     runs now. "NOT_CREATED_THERE": the address had code before born, or none
     at born. "SOURCES_DISAGREE": the RPCs (or the RPCs and the explorer)
-    differ. "UNREADABLE": the block is unknown or an RPC did not answer. Only
-    OK lets the creation date count."""
+    differ. "NO_CREATION_BLOCK": the explorer named no block. Only OK lets the
+    creation date count. An RPC that does not answer is not a fact:
+    "RPC_UNREADABLE", and the filing is refused (it can be filed again)."""
     if born <= 0:
-        return "UNREADABLE"
+        return "NO_CREATION_BLOCK"
     before = code_hex(chain, address, born - 1)
     then = code_hex(chain, address, born)
     now = code_hex(chain, address, block)
     ts = block_time(chain, born)
     if before is None or then is None or now is None or ts is None:
-        return "UNREADABLE"
+        return "RPC_UNREADABLE"
     if DISAGREE in (before, then, now, ts) or (at >= 0 and ts != at):
         return "SOURCES_DISAGREE"
     if before != "" or then == "":
@@ -2449,15 +2453,18 @@ def switch_time(chain: str, proxy: str, impl: str, block: int, head: int = -1) -
     # the event's block, and the same time for that block.
     if head > block:
         later = upgraded_logs(chain, proxy, block + 1, head)
-        if isinstance(later, list) and len(later) > 0:
+        if later is None:
+            return {"refused": "RPC_UNREADABLE"}
+        if later != DISAGREE and len(later) > 0:
             return {"refused": "UPGRADED_AFTER_SLOT_BLOCK"}
-        if later is None or later == DISAGREE:
+        if later == DISAGREE:
             return {"status": "UNCONFIRMED", "block": last["block"], "at": 0}
     there = upgraded_logs(chain, proxy, last["block"], last["block"])
-    if there is None or there == DISAGREE or [last["block"], last["index"], impl] not in there \
-            or there[-1] != [last["block"], last["index"], impl]:
-        return {"status": "UNCONFIRMED", "block": last["block"], "at": 0}
-    if block_time(chain, last["block"]) != last["at"]:
+    when = block_time(chain, last["block"])
+    if there is None or when is None:
+        return {"refused": "RPC_UNREADABLE"}
+    if there == DISAGREE or len(there) == 0 or there[-1] != [last["block"], last["index"], impl] \
+            or when != last["at"]:
         return {"status": "UNCONFIRMED", "block": last["block"], "at": 0}
     return {"status": "EVENT", "block": last["block"], "at": last["at"]}
 
@@ -2740,6 +2747,8 @@ def gather(p: dict, slot_block: int = -1) -> dict:
     sw = {"status": "", "block": 0, "at": 0}
     # round-4 fix 4: a creation date counts only for the code created then
     code_st = code_status(p["chain"], p["address"], born["block"], d["slot_block"], born["at"])
+    if code_st == "RPC_UNREADABLE":
+        return {"refused": code_st}
     impl_code_st = ""
     if d["impl"] != "":
         ib = creation_time(p["chain"], d["impl"])
@@ -2747,6 +2756,8 @@ def gather(p: dict, slot_block: int = -1) -> dict:
             return {"refused": "CREATION_DATE_UNREADABLE"}
         impl_at = ib["at"]
         impl_code_st = code_status(p["chain"], d["impl"], ib["block"], d["slot_block"], ib["at"])
+        if impl_code_st == "RPC_UNREADABLE":
+            return {"refused": impl_code_st}
         # round-3 fix 2: when the proxy switched to this implementation, read
         # at the same leader-named block as the slot
         sw = switch_time(p["chain"], p["address"], d["impl"], d["slot_block"], d["head"])

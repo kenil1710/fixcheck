@@ -106,11 +106,11 @@ After the fix: 31 tests in `test_attacks_r4.py`, OK; all earlier suites OK.
 
 On the round-3 code each chain fact came from ONE source: the implementation slot from one RPC endpoint, a Blockscout chain's creation time from Blockscout alone, a Sourcify chain's from Sourcify plus one RPC, and the switch from Blockscout's log list alone. One lying or broken endpoint could move a verdict.
 
-**Pairs** (different operators; all ten answer archive reads and logs from inside GenVM on Studio Dev, probe tx `0xe72ca8d4a95649c0c05b77f449d1f0889452dd92e15715c80f320ad57eab6851`, raw answers in [`research/probe_rpc_r4.json`](research/probe_rpc_r4.json)):
+**Pairs** (different operators; all ten answer archive reads and logs from inside GenVM on Studio Dev, probe txs `0xe72ca8d4a95649c0c05b77f449d1f0889452dd92e15715c80f320ad57eab6851` and `0xe2ce1771829f28a2fd11f377ca27ca76a98022d15505774fdcda2380b3297bf6`, raw answers in [`research/probe_rpc_r4.json`](research/probe_rpc_r4.json) and [`research/probe_rpc_r4b.json`](research/probe_rpc_r4b.json)). `eth.drpc.org` was tried first for Ethereum and answered HTTP 429 under a burst of reads during the live replay; each call is also retried once:
 
 | Chain | RPC A | RPC B |
 |---|---|---|
-| ethereum | `eth.drpc.org` (dRPC) | `mainnet.gateway.tenderly.co` (Tenderly) |
+| ethereum | `rpc.mevblocker.io` (MEV Blocker) | `mainnet.gateway.tenderly.co` (Tenderly) |
 | optimism | `mainnet.optimism.io` (OP Labs) | `optimism.gateway.tenderly.co` |
 | base | `mainnet.base.org` (Base) | `base.gateway.tenderly.co` |
 | arbitrum | `arb-pokt.nodies.app` (Nodies / Pocket) | `arbitrum.gateway.tenderly.co` |
@@ -127,7 +127,7 @@ The round-3 endpoints `ethereum-rpc.publicnode.com` and `arb1.arbitrum.io/rpc` w
 | code at creation block − 1, at the creation block and at the slot block (sha256) | step 3 | `code_status` `SOURCES_DISAGREE` → the creation date does not count |
 | the creation block's timestamp, which must also equal the explorer's creation time | PREDATES dates | same |
 | the switch's `Upgraded` log at its block (same index, same implementation, and the last one in that block) and that block's timestamp, which must equal Blockscout's | the switch date | `switch_status` `UNCONFIRMED` → the switch is undated (INCONCLUSIVE `UPGRADE_TIME_UNKNOWN` unless another date is after the fix) |
-| `Upgraded` logs from the slot block + 1 to the head | stale slot block | any log: refused `UPGRADED_AFTER_SLOT_BLOCK`; unreadable or differing: `UNCONFIRMED` |
+| `Upgraded` logs from the slot block + 1 to the head | stale slot block | any log: refused `UPGRADED_AFTER_SLOT_BLOCK`; differing: `UNCONFIRMED` |
 
 What stays single-source, by design: verified source and the creation tx hash come from one explorer per chain (Blockscout or Sourcify; a second explorer is not reachable from GenVM for most chains, round-1 research); completeness of Blockscout's Upgraded list before the slot block (both RPCs refuse `eth_getLogs` over a proxy's lifetime). Both are cross-checked where the RPCs can: the creation tx's block must hold the first code and the explorer's timestamp; the last listed event must be in both RPCs' logs with the slot's implementation.
 
@@ -161,3 +161,5 @@ FAILED (failures=9, errors=1)
 Changes to earlier tests forced by this fix: `test/fixtures/rpc.json` keys move from the two replaced endpoints to their successors (same chain answers); the stub's second RPC answers what the first does unless a test gives it its own answer; the two `rpc()` spies (`S11`, `R2_10`) accept the new `second` argument. Assertions unchanged.
 
 After the fix: 41 tests in `test_attacks_r4.py`, OK; all earlier suites OK.
+
+**Live replay.** `node`-free: `python3 tools/live_preview.py` runs the contract's own `gather()` and code decision for all 22 seeds against live GitHub, explorers and both RPCs ([`research/live_preview.json`](research/live_preview.json)). All 22 gather; every creation proof is `OK`; the three proxies' switches (Cap ×2, OP's DisputeGameFactory) are `EVENT`, confirmed by both RPCs; every predicted verdict equals the round-3 verdict. An RPC that does not answer (HTTP 429 from a throttled free endpoint) refuses the filing instead of being stored, so validators cannot split on who was throttled (`test_an_unanswered_read_is_not_a_fact`).

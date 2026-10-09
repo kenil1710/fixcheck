@@ -26,10 +26,11 @@ for i, s in enumerate(seeds, 1):
     ev = M.gather(p)
     if "refused" in ev:
         row = dict(n=i, refused=ev["refused"]); out.append(row); print(i, s["finding_id"], s["function"], "REFUSED", ev["refused"]); continue
-    predates = ev["impl"] == "" and 0 < ev["created_at"] < ev["audited_at"]
-    predates_fix = 0 < M.code_born(ev["impl"], ev["created_at"], ev["impl_created_at"]) < ev["fix_at"]
+    when = M.chronology(ev["impl"], ev["created_at"], ev["impl_created_at"], ev["switched_at"], ev["audited_at"],
+                        ev["fix_at"], ev["code_status"], ev["impl_code_status"])
     dec = M.code_decision(ev["dep_status"], M.canon(M.strip_comments(ev["dep_code"])) if ev["dep_code"] else "",
-                          M.canon(M.strip_comments(ev["aud_code"])), M.canon(M.strip_comments(ev["fix_code"])), predates, predates_fix)
+                          M.canon(M.strip_comments(ev["aud_code"])), M.canon(M.strip_comments(ev["fix_code"])),
+                          when["predates"], when["predates_fix"], when["unknown"])
     if not dec and M.contains_fix(ev["dep_code"], ev["aud_code"], ev["fix_code"]):
         dec = {"verdict": "FIXED", "basis": "CODE_CONTAINS_FIX"}
     import datetime
@@ -37,8 +38,9 @@ for i, s in enumerate(seeds, 1):
     row = dict(n=i, protocol=s["protocol"], fid=s["finding_id"], fn=s["function"], chain=s["chain"], binding=ev["audit_binding"], fix_ref=ev["fix_ref"],
                fix_reach=ev["fix_reach"], dep_status=ev["dep_status"], impl=ev["impl"], compiled=ev["compiled"], created=d(ev["created_at"]),
                impl_created=d(ev["impl_created_at"]), audited=d(ev["audited_at"]), fix_committed=d(ev["fix_committed_at"]),
-               fix_merged=d(ev["fix_merged_at"]), verdict=dec.get("verdict", "MODEL"), basis=dec.get("basis", "model decides"))
+               fix_merged=d(ev["fix_merged_at"]), code_status=ev["code_status"], impl_code_status=ev["impl_code_status"],
+               switch_status=ev["switch_status"], switched=d(ev["switched_at"]), verdict=dec.get("verdict", "MODEL"), basis=dec.get("basis", "model decides"))
     out.append(row)
     print(i, s["finding_id"], s["function"][:18], s["chain"][:4], row["fix_ref"], row["fix_reach"], row["dep_status"], "created", row["created"],
-          "impl", row["impl_created"], "aud", row["audited"], "fix", row["fix_committed"], row["fix_merged"], "->", row["verdict"], row["basis"])
+          "impl", row["impl_created"], row["code_status"], row["impl_code_status"], row["switch_status"], "aud", row["audited"], "fix", row["fix_committed"], row["fix_merged"], "->", row["verdict"], row["basis"])
 (ROOT / "docs/research/live_preview.json").write_text(json.dumps(out, indent=1))
