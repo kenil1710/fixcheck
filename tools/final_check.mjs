@@ -40,7 +40,7 @@ add("B2", "No trapped funds + ledger invariant", sumOk(ledC) && sumOk(ledD) && l
 // ---- B3 nothing pending forever
 const stuck = [...canon, ...demo].filter((x) => x.state === "OPEN" && now >= x.decide_deadline);
 add("B3", "No state can stay pending forever", true,
-  `Every check has a counter and a decide deadline set at filing; decide() and expire() are permissionless. Open checks past their decide deadline right now: ${stuck.length} (each can be expired by anyone; demo check #5 was expired that way). Deadlines tested at both windows (T13).`);
+  `Every check has a counter and a decide deadline set at filing; decide() and expire() are permissionless. Open checks past their decide deadline right now: ${stuck.length} (each can be expired by anyone; demo check #${JSON.parse(readFileSync(root + "docs/seed-demo.json", "utf8")).plan.D5} was expired that way). Deadlines tested at both windows (T13).`);
 
 // ---- B4 scan
 const scan = sh("python3", ["tools/scan_writes.py"]);

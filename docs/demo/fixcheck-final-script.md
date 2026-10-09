@@ -2,7 +2,7 @@
 
 `fixcheck-final.mp4`: 1920×1080, 30 fps, H.264 + AAC, 200.9 s. Captions burned in and in `fixcheck-final.srt`. Voice: macOS `say`, Samantha, 175 wpm, loudness-normalised to −16 LUFS; no music. Built by `tools/shots/final.mjs` from the live site, the studio-dev explorer and GitHub.
 
-Numbers read from the canonical contract (`0x893f96A5c72771D40F0bB55035A013a77159cc33`) right before recording: 22 checks of 21 findings, 7 fixed, 1 not fixed, 6 predates audit, 1 predates fix, 7 inconclusive. The live filing is demo check #17 on `0xF5133724f0dffF025ceA878881285aE681d71c89`.
+Numbers read from the canonical contract (round-2 canonical (commit 7efb699), address in docs/superseded/README.md) right before recording: 22 checks of 21 findings, 7 fixed, 1 not fixed, 6 predates audit, 1 predates fix, 7 inconclusive. The live filing is demo check #17 on round-2 demo (commit 7efb699), address in docs/superseded/README.md.
 
 | Time | Narration |
 |---|---|

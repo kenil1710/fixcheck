@@ -38,7 +38,7 @@ Fix direction (not applied): require the pinned report commit and docs commit to
 
 ## Item 6: re-read from the chain (Studio Dev, 2026-10-07)
 
-Canonical FixCheck `0x893f96A5c72771D40F0bB55035A013a77159cc33`, `get_checks(0, 100)` and `get_stats()`:
+Canonical FixCheck round-2 canonical (commit 7efb699), address in docs/superseded/README.md, `get_checks(0, 100)` and `get_stats()`:
 
 | FIXED | NOT_FIXED | PREDATES_AUDIT | PREDATES_FIX | INCONCLUSIVE | total |
 |---|---|---|---|---|---|
@@ -50,9 +50,9 @@ Canonical FixCheck `0x893f96A5c72771D40F0bB55035A013a77159cc33`, `get_checks(0, 
 
 | Address | File | sha256 (chain = HEAD) | Equal |
 |---|---|---|---|
-| `0x893f96A5c72771D40F0bB55035A013a77159cc33` | contracts/FixCheck.py | `9ecaac1f…270db65c6` | yes |
-| `0xF5133724f0dffF025ceA878881285aE681d71c89` | contracts/FixCheck.py | `9ecaac1f…270db65c6` | yes |
-| `0x50a60867153d3C63F322340dcEfe492bdd0d8D04` | contracts/FixRegistry.py | `6d99a876…b97330a` | yes |
+| round-2 canonical (commit 7efb699), address in docs/superseded/README.md | contracts/FixCheck.py | `9ecaac1f…270db65c6` | yes |
+| round-2 demo (commit 7efb699), address in docs/superseded/README.md | contracts/FixCheck.py | `9ecaac1f…270db65c6` | yes |
+| round-2 FixRegistry (commit 7efb699), address in docs/superseded/README.md | contracts/FixRegistry.py | `6d99a876…b97330a` | yes |
 
 https://fixcheck-ledger.vercel.app shows 22 checks of 21 findings: 7 confirmed in deployed code, 1 not in deployed code, 6 deployed before the audit, 1 deployed before the fix and 7 inconclusive. These **match** the chain.
 

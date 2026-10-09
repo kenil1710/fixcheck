@@ -10,7 +10,7 @@ Results so far, read from the contract: 22 checks of 21 real Sherlock findings. 
 
 App: https://fixcheck-ledger.vercel.app
 Code: https://github.com/kenil1710/fixcheck
-Contracts (GenLayer Studio Dev): FixCheck 0x893f96A5c72771D40F0bB55035A013a77159cc33 · demo 0xF5133724f0dffF025ceA878881285aE681d71c89 · FixRegistry 0x50a60867153d3C63F322340dcEfe492bdd0d8D04
+Contracts (GenLayer Studio Dev): FixCheck 0x65Fe440d63437e14fB9e990D1D0Dc283EE40bb56 · demo 0x66E008fc08414ecF423e59482c20A046FAd7A01c · FixRegistry 0x90f8c37976D166364BD563f71156aEd187CAc9d2 (recorded on the previous deployment; addresses in docs/superseded/README.md; the flow is unchanged)
 
 **Chapters:**
 

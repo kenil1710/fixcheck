@@ -222,9 +222,9 @@ Everyone was refunded. No model answer moved money.
 
 | Contract | Address |
 |---|---|
-| FixCheck (canonical, 1 h / 24 h) | `0x893f96A5c72771D40F0bB55035A013a77159cc33` |
-| FixCheck (demo, 90 s / 300 s) | `0xF5133724f0dffF025ceA878881285aE681d71c89` |
-| FixRegistry | `0x50a60867153d3C63F322340dcEfe492bdd0d8D04` |
+| FixCheck (canonical, 1 h / 24 h) | round-2 canonical (commit 7efb699), address in docs/superseded/README.md |
+| FixCheck (demo, 90 s / 300 s) | round-2 demo (commit 7efb699), address in docs/superseded/README.md |
+| FixRegistry | round-2 FixRegistry (commit 7efb699), address in docs/superseded/README.md |
 
 * **Deploy commit:** `7efb699928b20cdd580b534a58609da1c1defe08`. `tools/verify_source.mjs` reads all three back from studio-dev: each is byte-identical to the deploy commit and to HEAD, since no later commit touches `contracts/`.
 * **Previous addresses:** in `docs/superseded/README.md`, each with a one-line reason.
