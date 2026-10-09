@@ -126,7 +126,7 @@ Full table with links, stakes, dates and the demo paths: [`docs/SEEDS.md`](docs/
 | `test/deploy.mjs`, `test/seed_*.mjs` | HEAD-only deploy, resumable seeding |
 | `tools/` | research pipeline, source verification, docs generators, screenshots, video |
 | `frontend/` | Next.js app (Vercel Root Directory) |
-| `docs/` | research, threat model, attack report, seeds, screenshots, demo video |
+| `docs/` | research, threat model, four attack passes ([1](docs/ATTACK_REPORT.md), [2](docs/ATTACK_REPORT_R2.md), [3](docs/ATTACK_REPORT_R3.md), [4](docs/ATTACK_REPORT_R4.md): 9 + 12 + 3 + 11 issues, all fixed), deployed verification, seeds, final check, screenshots, demo video |
 
 ## Known limitations
 
