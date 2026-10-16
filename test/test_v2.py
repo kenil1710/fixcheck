@@ -298,6 +298,42 @@ class V2_04_Code4rena(unittest.TestCase):
                           out["unmarked"]), (36, 27, 7, 1, 1))
         self.assertEqual(w.c.get_scorecard(1)["auditor"], "code4rena")
 
+    def test_c4_real_filing_fixed_by_code(self):
+        # PoolTogether's TwabController on OP Mainnet, C4 2023-07 H-06: the fix
+        # PR is read from C4's own Individual PRs table, merged on the
+        # protocol's default branch; the deployed _delegate equals the fix
+        p = V2["cases"]["c4_h06"]
+        w = c4_world()
+        out = w.call(B.CHALLENGER, "file_check", p["report_url"], p["fid"], p["fn"], p["audited_url"],
+                     p["fix_url"], p["chain"], p["address"], p["docs_url"], value=GEN)
+        self.assertEqual((out["status"], out["code_says"]), ("OK", "FIXED"), out)
+        ch = w.c.get_check(1)
+        self.assertEqual((ch["auditor"], ch["firm"], ch["status_issue"]), ("code4rena", "github:code-423n4", ""))
+        self.assertTrue(ch["fix_ref"].startswith("pull/"))
+        w.at(T0 + 3600)
+        d = w.call(B.ANYONE, "decide", 1)
+        self.assertEqual((d["verdict"], d["basis"]), ("FIXED", "CODE_MATCH_FIX"))
+        aud = {a["auditor"]: a for a in w.c.get_auditors()}
+        self.assertEqual((aud["code4rena"]["checks"], aud["code4rena"]["fixed"], aud["sherlock"]["checks"]), (1, 1, 0))
+
+    def test_c4_scorecard_slot(self):
+        p = V2["cases"]["c4_h06"]
+        w = c4_world()
+        w.call(B.ANYONE, "import_report", C4_REPORT, p["docs_url"])
+        out = w.call(B.CHALLENGER, "file_slot", 1, "H-06", p["fn"], p["audited_url"], p["fix_url"], p["chain"],
+                     p["address"], value=GEN)
+        self.assertEqual(out["code_says"], "FIXED", out)
+        nm = w.call(B.CHALLENGER, "file_slot", 1, "H-05", p["fn"], p["audited_url"], p["fix_url"], p["chain"],
+                    p["address"], value=GEN)
+        self.assertEqual(nm["reason"], "FINDING_NOT_MARKED_FIXED")
+        w.at(T0 + 3600)
+        w.call(B.ANYONE, "decide", 1)
+        w.at(T0 + 86400)
+        self.assertEqual(w.call(B.ANYONE, "close_scorecard", 1)["not_checked"], 26)
+        card = w.c.get_scorecard(1)
+        self.assertEqual((card["findings"], card["marked_fixed"], card["verdicts"]["fixed"], card["not_checked"]),
+                         (36, 27, 1, 26))
+
     def test_c4_finding_not_mitigated_cannot_be_filed(self):
         w = c4_world()
         a = B.args_of(B.CLAIMER, report_url=C4_REPORT, finding_id="H-05")
@@ -305,7 +341,10 @@ class V2_04_Code4rena(unittest.TestCase):
         self.assertEqual(out["status"], "REFUSED")
 
     def test_c4_report_on_a_fork_commit_is_refused(self):
-        w = B.World()          # no branch answer for the pinned commit
+        w = B.World()
+        pin = MOD.github_pin(C4_REPORT)
+        # GitHub lists no branch of code-423n4's repo for the commit (fork-only)
+        B.on_branch(pin["owner"], pin["repo"], pin["sha"], href="/someone/fork", name="main")
         with self.assertRaises(MOD.gl.vm.UserError) as e:
             w.call(B.ANYONE, "import_report", C4_REPORT, PT_DOCS)
         self.assertIn("REPORT_", e.exception.message)
