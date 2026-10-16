@@ -8,9 +8,12 @@
  * chain is byte-identical to the pushed commit. tools/verify_source.mjs reads
  * the code back from the chain and compares.
  *
- *   CANONICAL  FixCheck("CANONICAL", 3600, 86400, 200, deployer)  1 h to counter-stake, 24 h to decide
- *   DEMO       FixCheck("DEMO", 90, 300, 200, deployer)           minutes (same source)
- *   REGISTRY   FixRegistry(<canonical>)                           read-only consumer
+ *   node deploy.mjs --canonical | --demo | --status | --gate   (v2; --registry is v1 only)
+ *
+ *   CANONICAL  FixCheck("CANONICAL", 3600, 86400, 200, deployer, 28800)  1 h to counter-stake, 24 h to decide, 8 h to file scorecard slots
+ *   DEMO       FixCheck("DEMO", 90, 300, 200, deployer, 600)             minutes (same source)
+ *   STATUS     FixStatus(<canonical>)                                     read-only consumer: is_fixed / protocol_score
+ *   GATE       FixGate(<FixStatus>)                                       demo consumer: refuses NOT_FIXED / REGRESSED
  */
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { execFileSync } from "node:child_process";
@@ -52,8 +55,18 @@ async function one(name, file, args, extra = {}) {
   persist();
 }
 
-if (process.argv.includes("--canonical")) await one("FixCheck", "contracts/FixCheck.py", ["CANONICAL", 3600, 86400, 200, account.address], { mode: "CANONICAL" });
-if (process.argv.includes("--demo")) await one("FixCheckDemo", "contracts/FixCheck.py", ["DEMO", 90, 300, 200, account.address], { mode: "DEMO" });
+if (process.argv.includes("--canonical")) await one("FixCheck", "contracts/FixCheck.py", ["CANONICAL", 3600, 86400, 200, account.address, 28800], { mode: "CANONICAL" });
+if (process.argv.includes("--demo")) await one("FixCheckDemo", "contracts/FixCheck.py", ["DEMO", 90, 300, 200, account.address, 600], { mode: "DEMO" });
+if (process.argv.includes("--status")) {
+  const target = doc.contracts.FixCheck?.address;
+  if (!target) throw new Error("deploy the canonical first");
+  await one("FixStatus", "contracts/FixStatus.py", [target], { reads: target });
+}
+if (process.argv.includes("--gate")) {
+  const target = doc.contracts.FixStatus?.address;
+  if (!target) throw new Error("deploy FixStatus first");
+  await one("FixGate", "contracts/FixGate.py", [target], { reads: target });
+}
 if (process.argv.includes("--registry")) {
   const target = doc.contracts.FixCheck?.address;
   if (!target) throw new Error("deploy the canonical first");

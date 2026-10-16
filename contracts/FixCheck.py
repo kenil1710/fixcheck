@@ -89,6 +89,26 @@ import typing
 #   two identical grounded answers is INCONCLUSIVE. Validators repeat all of
 #   it and must agree.
 #
+# v2 (VERSION 2.0.0; docs/MILESTONE.md, docs/ATTACK_REPORT_V2.md)
+#   SECOND AUDITOR. Code4rena's report.md in its own code-423n4/*-findings
+#     repo, at a commit on a branch of that repo. A finding is marked fixed
+#     only by Code4rena's mitigation review: its "**Status**:" line and its
+#     rows in every "Mitigation Review Summary" and "Individual PRs" table
+#     must agree; the fix PR is read from that row only.
+#   WHOLE-REPORT SCORECARDS (import_report, file_slot, close_scorecard).
+#     Code enumerates EVERY finding of a pinned report and its class
+#     (fixed / acknowledged / not mitigated / unmarked); Sherlock's "fixed"
+#     is confirmed on GitHub's issue page; a report that cannot be read
+#     completely is refused whole. The report must name the protocol (an
+#     auditor fix link in the docs owner's account). Each finding marked
+#     fixed is a slot any deployment can be filed into (each once, every
+#     check counted); slots with no check by the filing deadline are
+#     NOT_CHECKED when anyone closes the scorecard.
+#   REGRESSION WATCH (file_regression). A latest-FIXED check on a proxy is
+#     re-filed against the implementation the proxy runs after an upgrade;
+#     the audited function deployed again is REGRESSED (paid as NOT_FIXED).
+#   COUNTS per auditor, per scorecard and per protocol are stored counters.
+#
 # WHERE THE LINE IS
 #   code    URL pinning and normalisation, fetch + hash, binding the evidence
 #           to the finding, dates, proxy resolution, function extraction and
