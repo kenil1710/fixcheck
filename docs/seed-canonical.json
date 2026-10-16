@@ -2054,14 +2054,14 @@
       {
         "acknowledged": 0,
         "auditor": "sherlock",
-        "closed_at": 0,
+        "closed_at": 1792173189,
         "docs_reach": "default:main",
         "docs_url": "https://raw.githubusercontent.com/mellow-finance/docs/3905b75a0f5b649b2dc5906f8b9b670f20c57944/core-vaults/core-deployments.mdx",
         "file_deadline": 1792172966,
         "filed": 8,
         "findings": 15,
         "marked_fixed": 13,
-        "not_checked": 0,
+        "not_checked": 5,
         "not_mitigated": 0,
         "opened_at": 1792144166,
         "protocol": "github:mellow-finance/docs",
@@ -2069,7 +2069,7 @@
         "report_sha256": "c1d8aebed1ceec8a609c4d4e3f317da2442ad6b2d8bd3cbac03d6374fd480d5c",
         "report_url": "https://raw.githubusercontent.com/sherlock-audit/2025-07-mellow-flexible-vaults-judging/4bcbdcfe643761c67d7dd862ca5909168c3ad859/README.md",
         "scorecard_id": 3,
-        "state": "OPEN",
+        "state": "CLOSED",
         "unmarked": 2,
         "verdicts": {
           "checks": 9,
@@ -2086,14 +2086,14 @@
       {
         "acknowledged": 1,
         "auditor": "code4rena",
-        "closed_at": 0,
+        "closed_at": 1792173206,
         "docs_reach": "default:main",
         "docs_url": "https://raw.githubusercontent.com/generationsoftware/pt-dev-docs/9f3322e7280f2e91346cabfc2512046c6cfcd2a8/docs/deployments/optimism.md",
         "file_deadline": 1792172923,
         "filed": 5,
         "findings": 36,
         "marked_fixed": 27,
-        "not_checked": 0,
+        "not_checked": 22,
         "not_mitigated": 7,
         "opened_at": 1792144123,
         "protocol": "github:generationsoftware/pt-dev-docs",
@@ -2101,7 +2101,7 @@
         "report_sha256": "02f7c040f0a242b527d1b75a6b7f0f6918f6e1f7d0255c08d854974fe81d8e36",
         "report_url": "https://raw.githubusercontent.com/code-423n4/2023-07-pooltogether-findings/ec193297735caa64d472a6d89ef7d77a7cb6196c/report.md",
         "scorecard_id": 2,
-        "state": "OPEN",
+        "state": "CLOSED",
         "unmarked": 1,
         "verdicts": {
           "checks": 5,
@@ -2118,14 +2118,14 @@
       {
         "acknowledged": 8,
         "auditor": "sherlock",
-        "closed_at": 0,
+        "closed_at": 1792173242,
         "docs_reach": "default:main",
         "docs_url": "https://raw.githubusercontent.com/generationsoftware/pt-dev-docs/9f3322e7280f2e91346cabfc2512046c6cfcd2a8/docs/deployments/optimism.md",
         "file_deadline": 1792172903,
         "filed": 10,
         "findings": 22,
         "marked_fixed": 14,
-        "not_checked": 0,
+        "not_checked": 4,
         "not_mitigated": 0,
         "opened_at": 1792144103,
         "protocol": "github:generationsoftware/pt-dev-docs",
@@ -2133,7 +2133,7 @@
         "report_sha256": "8742f813cfcb320b3806d041afaacd9ff5d446d791d8bf87b3e16ad6746ddfb7",
         "report_url": "https://raw.githubusercontent.com/sherlock-audit/2024-05-pooltogether-judging/88298eacec6f178fd0b5f9f13e4605c58aa58072/README.md",
         "scorecard_id": 1,
-        "state": "OPEN",
+        "state": "CLOSED",
         "unmarked": 0,
         "verdicts": {
           "checks": 11,
@@ -2160,7 +2160,7 @@
           "cls": "FIXED_MARKED",
           "finding_id": "H-1",
           "index": 0,
-          "outcome": "",
+          "outcome": "NOT_CHECKED",
           "title": "Issue H-1: Vault portion calculation in `PrizePool::getVaultPortion()` is incorrect as `_startDrawId"
         },
         {
@@ -2169,7 +2169,7 @@
           "cls": "FIXED_MARKED",
           "finding_id": "H-2",
           "index": 1,
-          "outcome": "",
+          "outcome": "NOT_CHECKED",
           "title": "Issue H-2: Unfair Manipulation of Winning Chances Due to Stolen Yield on `Blast`"
         },
         {
@@ -2222,7 +2222,7 @@
           "cls": "FIXED_MARKED",
           "finding_id": "M-2",
           "index": 4,
-          "outcome": "",
+          "outcome": "NOT_CHECKED",
           "title": "Issue M-2: `drawTimeoutAt()` causes the prize pool to shutdown one draw earlier"
         },
         {
@@ -2276,7 +2276,7 @@
           "cls": "FIXED_MARKED",
           "finding_id": "M-7",
           "index": 9,
-          "outcome": "",
+          "outcome": "NOT_CHECKED",
           "title": "Issue M-7: Potential ETH Loss Due to transfer Usage in Requestor Contract on `zkSync`"
         },
         {
@@ -2463,7 +2463,7 @@
           "cls": "FIXED_MARKED",
           "finding_id": "H-01",
           "index": 0,
-          "outcome": "",
+          "outcome": "NOT_CHECKED",
           "title": "[[H-01] The `_currentExchangeRate` of the Vault contract can't increase and will always be lower tha"
         },
         {
@@ -2472,7 +2472,7 @@
           "cls": "FIXED_MARKED",
           "finding_id": "H-02",
           "index": 1,
-          "outcome": "",
+          "outcome": "NOT_CHECKED",
           "title": "[[H-02] A malicious user can steal other user's deposits from Vault.sol](https://github.com/code-423"
         },
         {
@@ -2481,7 +2481,7 @@
           "cls": "FIXED_MARKED",
           "finding_id": "H-03",
           "index": 2,
-          "outcome": "",
+          "outcome": "NOT_CHECKED",
           "title": "[[H-03] `_amountOut` is representing assets and shares at the same time in the `liquidate` function]"
         },
         {
@@ -2490,7 +2490,7 @@
           "cls": "FIXED_MARKED",
           "finding_id": "H-04",
           "index": 3,
-          "outcome": "",
+          "outcome": "NOT_CHECKED",
           "title": "[[H-04] `Vault.mintYieldFee` function can be called by anyone to mint `Vault Shares` to any recipien"
         },
         {
@@ -2526,7 +2526,7 @@
           "cls": "FIXED_MARKED",
           "finding_id": "H-07",
           "index": 6,
-          "outcome": "",
+          "outcome": "NOT_CHECKED",
           "title": "[[H-07] `_requireVaultCollateralized()` is called at the beginning of the functions `mintYieldFee()`"
         },
         {
@@ -2535,7 +2535,7 @@
           "cls": "FIXED_MARKED",
           "finding_id": "H-08",
           "index": 7,
-          "outcome": "",
+          "outcome": "NOT_CHECKED",
           "title": "[[H-08] Increasing reserves breaks PrizePool accounting](https://github.com/code-423n4/2023-07-poolt"
         },
         {
@@ -2589,7 +2589,7 @@
           "cls": "FIXED_MARKED",
           "finding_id": "M-04",
           "index": 12,
-          "outcome": "",
+          "outcome": "NOT_CHECKED",
           "title": "[[M-04] The deposit function does not check for the `maxMint` amount](https://github.com/code-423n4/"
         },
         {
@@ -2634,7 +2634,7 @@
           "cls": "FIXED_MARKED",
           "finding_id": "M-07",
           "index": 15,
-          "outcome": "",
+          "outcome": "NOT_CHECKED",
           "title": "[[M-07] In important libraries of PoolTogether, the `pow()` function of PRBMath is used, which exhib"
         },
         {
@@ -2643,7 +2643,7 @@
           "cls": "FIXED_MARKED",
           "finding_id": "M-08",
           "index": 16,
-          "outcome": "",
+          "outcome": "NOT_CHECKED",
           "title": "[[M-08] An attacker can front-run `deployVault` to deploy at the same address](https://github.com/co"
         },
         {
@@ -2661,7 +2661,7 @@
           "cls": "FIXED_MARKED",
           "finding_id": "M-10",
           "index": 18,
-          "outcome": "",
+          "outcome": "NOT_CHECKED",
           "title": "[[M-10] `PrizePool` -> Winners wouldn't be able to claim prize correctly in `claimPrize` function ]("
         },
         {
@@ -2670,7 +2670,7 @@
           "cls": "FIXED_MARKED",
           "finding_id": "M-11",
           "index": 19,
-          "outcome": "",
+          "outcome": "NOT_CHECKED",
           "title": "[[M-11] `Vault.mintWithPermit()` can be DoS'd ](https://github.com/code-423n4/2023-07-pooltogether-f"
         },
         {
@@ -2679,7 +2679,7 @@
           "cls": "FIXED_MARKED",
           "finding_id": "M-12",
           "index": 20,
-          "outcome": "",
+          "outcome": "NOT_CHECKED",
           "title": "[[M-12] The tier odds in `TieredLiquidityDistributor` are incorrect](https://github.com/code-423n4/2"
         },
         {
@@ -2688,7 +2688,7 @@
           "cls": "FIXED_MARKED",
           "finding_id": "M-13",
           "index": 21,
-          "outcome": "",
+          "outcome": "NOT_CHECKED",
           "title": "[[M-13] Users can manipulate the observation creation](https://github.com/code-423n4/2023-07-pooltog"
         },
         {
@@ -2697,7 +2697,7 @@
           "cls": "FIXED_MARKED",
           "finding_id": "M-14",
           "index": 22,
-          "outcome": "",
+          "outcome": "NOT_CHECKED",
           "title": "[[M-14] Number of prize tiers always increases if just 1 canary prize is claimed](https://github.com"
         },
         {
@@ -2706,7 +2706,7 @@
           "cls": "FIXED_MARKED",
           "finding_id": "M-15",
           "index": 23,
-          "outcome": "",
+          "outcome": "NOT_CHECKED",
           "title": "[[M-15] Tiers can be maintained active to give unfair advantage to user through DoS](https://github."
         },
         {
@@ -2760,7 +2760,7 @@
           "cls": "FIXED_MARKED",
           "finding_id": "M-20",
           "index": 28,
-          "outcome": "",
+          "outcome": "NOT_CHECKED",
           "title": "[[M-20] Improper handling of cases when withdrawable assets = 0](https://github.com/code-423n4/2023-"
         },
         {
@@ -2769,7 +2769,7 @@
           "cls": "FIXED_MARKED",
           "finding_id": "M-21",
           "index": 29,
-          "outcome": "",
+          "outcome": "NOT_CHECKED",
           "title": "[[M-21] Vault contribution calculations wrongly include the current round when claiming prizes](http"
         },
         {
@@ -2787,7 +2787,7 @@
           "cls": "FIXED_MARKED",
           "finding_id": "M-23",
           "index": 31,
-          "outcome": "",
+          "outcome": "NOT_CHECKED",
           "title": "[[M-23] Vault does not conform to ERC4626](https://github.com/code-423n4/2023-07-pooltogether-findin"
         },
         {
@@ -2796,7 +2796,7 @@
           "cls": "FIXED_MARKED",
           "finding_id": "M-24",
           "index": 32,
-          "outcome": "",
+          "outcome": "NOT_CHECKED",
           "title": "[[M-24] `Claimer.claimPrizes` can be front-runned in order to make losses for the claim bot](https:/"
         },
         {
@@ -2805,7 +2805,7 @@
           "cls": "FIXED_MARKED",
           "finding_id": "M-25",
           "index": 33,
-          "outcome": "",
+          "outcome": "NOT_CHECKED",
           "title": "[[M-25] `depositWithPermit` and `mintWithPermit` are allowed to be called by the permit creator only"
         },
         {
@@ -2814,7 +2814,7 @@
           "cls": "FIXED_MARKED",
           "finding_id": "M-26",
           "index": 34,
-          "outcome": "",
+          "outcome": "NOT_CHECKED",
           "title": "[[M-26] Transfer of Vault tokens can cause accounting errors in other contracts](https://github.com/"
         },
         {
@@ -2823,7 +2823,7 @@
           "cls": "FIXED_MARKED",
           "finding_id": "M-27",
           "index": 35,
-          "outcome": "",
+          "outcome": "NOT_CHECKED",
           "title": "[[M-27] Inconsistent behavior for canary claims in the `claimer`](https://github.com/code-423n4/2023"
         }
       ],
@@ -2937,7 +2937,7 @@
           "cls": "FIXED_MARKED",
           "finding_id": "H-6",
           "index": 5,
-          "outcome": "",
+          "outcome": "NOT_CHECKED",
           "title": "Issue H-6: Redeems through RedeemQueue avoid paying management and performance fee."
         },
         {
@@ -2964,7 +2964,7 @@
           "cls": "FIXED_MARKED",
           "finding_id": "M-2",
           "index": 7,
-          "outcome": "",
+          "outcome": "NOT_CHECKED",
           "title": "Issue M-2: ETH redemptions via `SignatureRedeemQueue` are broken due to missing `receive` function"
         },
         {
@@ -3018,7 +3018,7 @@
           "cls": "FIXED_MARKED",
           "finding_id": "M-6",
           "index": 11,
-          "outcome": "",
+          "outcome": "NOT_CHECKED",
           "title": "Issue M-6: Targeted-lockup bypass: freshly minted shares can be transferred immediately in the same "
         },
         {
@@ -3027,7 +3027,7 @@
           "cls": "FIXED_MARKED",
           "finding_id": "M-7",
           "index": 12,
-          "outcome": "",
+          "outcome": "NOT_CHECKED",
           "title": "Issue M-7: DoS in Redemption Due to Unchecked Asset Support in Subvaults"
         },
         {
@@ -3036,7 +3036,7 @@
           "cls": "FIXED_MARKED",
           "finding_id": "M-8",
           "index": 13,
-          "outcome": "",
+          "outcome": "NOT_CHECKED",
           "title": "Issue M-8: Malicious Users Can Perpetually Lock `feeRecipient` Shares via Targeted Lockup Reset"
         },
         {

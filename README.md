@@ -27,7 +27,7 @@ FixCheck checks it, using the real report, the real commits and the verified cod
 ## What it found
 
 <!-- RESULTS:BEGIN -->
-On the canonical contract (read from chain by `tools/seeds_md.mjs`): **28 checks**, **3 whole-report scorecards** (PoolTogether V5 · Sherlock: 22 findings, 14 marked fixed, 10 checked, 3 confirmed fixed, 1 not fixed; PoolTogether V5 · Code4rena: 36 findings, 27 marked fixed, 5 checked, 3 confirmed fixed, 0 not fixed; Mellow Flexible Vaults · Sherlock: 15 findings, 13 marked fixed, 8 checked, 5 confirmed fixed, 0 not fixed).
+On the canonical contract (read from chain by `tools/seeds_md.mjs`): **28 checks**, **3 whole-report scorecards** (PoolTogether V5 · Sherlock: 22 findings, 14 marked fixed, 10 checked, 3 confirmed fixed, 1 not fixed, 4 not checked; PoolTogether V5 · Code4rena: 36 findings, 27 marked fixed, 5 checked, 3 confirmed fixed, 0 not fixed, 22 not checked; Mellow Flexible Vaults · Sherlock: 15 findings, 13 marked fixed, 8 checked, 5 confirmed fixed, 0 not fixed, 5 not checked).
 
 * **Fixed in deployed code** — 11 checks: the deployed function is the fix's, or holds the fix in place (incl. Code4rena findings and a real Mellow proxy, now watched for upgrades).
 * **Not fixed** — 1: the deployed function is still the audited version on code deployed *after the fix existed* (PoolTogether's Ethereum vault, created 2024-08-19; its fix was merged on 2024-06-28).

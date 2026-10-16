@@ -1,6 +1,6 @@
 # Seeds
 
-Read from the chain by `tools/seeds_md.mjs` on 2026-10-16T13:24Z. Every value comes from contract state.
+Read from the chain by `tools/seeds_md.mjs` on 2026-10-16T17:55Z. Every value comes from contract state.
 
 ## Canonical — 0x0ed096B1888ebbE08F268b42d528326aD65cA065
 
@@ -16,22 +16,22 @@ Report: https://raw.githubusercontent.com/sherlock-audit/2024-05-pooltogether-ju
 
 | Findings in the report | Marked fixed | Acknowledged | Not fully mitigated | No status | Checked | Not checked | State |
 |---|---|---|---|---|---|---|---|
-| 22 | 14 | 8 | 0 | 0 | 10 | 4 (until close) | OPEN |
+| 22 | 14 | 8 | 0 | 0 | 10 | 4 | CLOSED 2026-10-16T17:54Z |
 
 Checks filed into its slots, by verdict: **3 fixed**, **1 not fixed**, 0 regressed, 6 predates audit, 1 predates fix, 0 inconclusive, 0 expired, 0 open (11 checks).
 
 | Finding | Report says | Checks |
 |---|---|---|
-| H-1 | FIXED_MARKED | no check yet |
-| H-2 | FIXED_MARKED | no check yet |
+| H-1 | FIXED_MARKED | NOT_CHECKED |
+| H-2 | FIXED_MARKED | NOT_CHECKED |
 | H-3 | FIXED_MARKED | [#10](https://fixcheck-ledger.vercel.app/checks/10) PREDATES_AUDIT (optimism) |
 | M-1 | FIXED_MARKED | [#7](https://fixcheck-ledger.vercel.app/checks/7) PREDATES_AUDIT (optimism), [#8](https://fixcheck-ledger.vercel.app/checks/8) FIXED (arbitrum) |
-| M-2 | FIXED_MARKED | no check yet |
+| M-2 | FIXED_MARKED | NOT_CHECKED |
 | M-3 | ACKNOWLEDGED | — |
 | M-4 | ACKNOWLEDGED | — |
 | M-5 | FIXED_MARKED | [#1](https://fixcheck-ledger.vercel.app/checks/1) FIXED (optimism) |
 | M-6 | ACKNOWLEDGED | — |
-| M-7 | FIXED_MARKED | no check yet |
+| M-7 | FIXED_MARKED | NOT_CHECKED |
 | M-8 | FIXED_MARKED | [#2](https://fixcheck-ledger.vercel.app/checks/2) FIXED (base) |
 | M-9 | FIXED_MARKED | [#3](https://fixcheck-ledger.vercel.app/checks/3) PREDATES_AUDIT (optimism) |
 | M-10 | ACKNOWLEDGED | — |
@@ -51,48 +51,48 @@ Report: https://raw.githubusercontent.com/code-423n4/2023-07-pooltogether-findin
 
 | Findings in the report | Marked fixed | Acknowledged | Not fully mitigated | No status | Checked | Not checked | State |
 |---|---|---|---|---|---|---|---|
-| 36 | 27 | 1 | 7 | 1 | 5 | 22 (until close) | OPEN |
+| 36 | 27 | 1 | 7 | 1 | 5 | 22 | CLOSED 2026-10-16T17:53Z |
 
 Checks filed into its slots, by verdict: **3 fixed**, **0 not fixed**, 0 regressed, 0 predates audit, 0 predates fix, 2 inconclusive, 0 expired, 0 open (5 checks).
 
 | Finding | Report says | Checks |
 |---|---|---|
-| H-01 | FIXED_MARKED | no check yet |
-| H-02 | FIXED_MARKED | no check yet |
-| H-03 | FIXED_MARKED | no check yet |
-| H-04 | FIXED_MARKED | no check yet |
+| H-01 | FIXED_MARKED | NOT_CHECKED |
+| H-02 | FIXED_MARKED | NOT_CHECKED |
+| H-03 | FIXED_MARKED | NOT_CHECKED |
+| H-04 | FIXED_MARKED | NOT_CHECKED |
 | H-05 | NOT_MITIGATED | — |
 | H-06 | FIXED_MARKED | [#20](https://fixcheck-ledger.vercel.app/checks/20) FIXED (optimism) |
-| H-07 | FIXED_MARKED | no check yet |
-| H-08 | FIXED_MARKED | no check yet |
+| H-07 | FIXED_MARKED | NOT_CHECKED |
+| H-08 | FIXED_MARKED | NOT_CHECKED |
 | H-09 | NOT_MITIGATED | — |
 | M-01 | ACKNOWLEDGED | — |
 | M-02 | NOT_MITIGATED | — |
 | M-03 | FIXED_MARKED | [#22](https://fixcheck-ledger.vercel.app/checks/22) FIXED (optimism) |
-| M-04 | FIXED_MARKED | no check yet |
+| M-04 | FIXED_MARKED | NOT_CHECKED |
 | M-05 | FIXED_MARKED | [#21](https://fixcheck-ledger.vercel.app/checks/21) FIXED (optimism) |
 | M-06 | FIXED_MARKED | [#24](https://fixcheck-ledger.vercel.app/checks/24) INCONCLUSIVE (optimism) |
-| M-07 | FIXED_MARKED | no check yet |
-| M-08 | FIXED_MARKED | no check yet |
+| M-07 | FIXED_MARKED | NOT_CHECKED |
+| M-08 | FIXED_MARKED | NOT_CHECKED |
 | M-09 | NOT_MITIGATED | — |
-| M-10 | FIXED_MARKED | no check yet |
-| M-11 | FIXED_MARKED | no check yet |
-| M-12 | FIXED_MARKED | no check yet |
-| M-13 | FIXED_MARKED | no check yet |
-| M-14 | FIXED_MARKED | no check yet |
-| M-15 | FIXED_MARKED | no check yet |
+| M-10 | FIXED_MARKED | NOT_CHECKED |
+| M-11 | FIXED_MARKED | NOT_CHECKED |
+| M-12 | FIXED_MARKED | NOT_CHECKED |
+| M-13 | FIXED_MARKED | NOT_CHECKED |
+| M-14 | FIXED_MARKED | NOT_CHECKED |
+| M-15 | FIXED_MARKED | NOT_CHECKED |
 | M-16 | NOT_MITIGATED | — |
 | M-17 | UNMARKED | — |
 | M-18 | NOT_MITIGATED | — |
 | M-19 | FIXED_MARKED | [#23](https://fixcheck-ledger.vercel.app/checks/23) INCONCLUSIVE (optimism) |
-| M-20 | FIXED_MARKED | no check yet |
-| M-21 | FIXED_MARKED | no check yet |
+| M-20 | FIXED_MARKED | NOT_CHECKED |
+| M-21 | FIXED_MARKED | NOT_CHECKED |
 | M-22 | NOT_MITIGATED | — |
-| M-23 | FIXED_MARKED | no check yet |
-| M-24 | FIXED_MARKED | no check yet |
-| M-25 | FIXED_MARKED | no check yet |
-| M-26 | FIXED_MARKED | no check yet |
-| M-27 | FIXED_MARKED | no check yet |
+| M-23 | FIXED_MARKED | NOT_CHECKED |
+| M-24 | FIXED_MARKED | NOT_CHECKED |
+| M-25 | FIXED_MARKED | NOT_CHECKED |
+| M-26 | FIXED_MARKED | NOT_CHECKED |
+| M-27 | FIXED_MARKED | NOT_CHECKED |
 
 ### Scorecard #3 — Mellow Flexible Vaults, Sherlock ([page](https://fixcheck-ledger.vercel.app/scorecards/3))
 
@@ -100,7 +100,7 @@ Report: https://raw.githubusercontent.com/sherlock-audit/2025-07-mellow-flexible
 
 | Findings in the report | Marked fixed | Acknowledged | Not fully mitigated | No status | Checked | Not checked | State |
 |---|---|---|---|---|---|---|---|
-| 15 | 13 | 0 | 0 | 2 | 8 | 5 (until close) | OPEN |
+| 15 | 13 | 0 | 0 | 2 | 8 | 5 | CLOSED 2026-10-16T17:53Z |
 
 Checks filed into its slots, by verdict: **5 fixed**, **0 not fixed**, 0 regressed, 0 predates audit, 0 predates fix, 4 inconclusive, 0 expired, 0 open (9 checks).
 
@@ -111,15 +111,15 @@ Checks filed into its slots, by verdict: **5 fixed**, **0 not fixed**, 0 regress
 | H-3 | FIXED_MARKED | [#13](https://fixcheck-ledger.vercel.app/checks/13) INCONCLUSIVE (ethereum) |
 | H-4 | FIXED_MARKED | [#14](https://fixcheck-ledger.vercel.app/checks/14) INCONCLUSIVE (ethereum) |
 | H-5 | FIXED_MARKED | [#15](https://fixcheck-ledger.vercel.app/checks/15) FIXED (ethereum), [#28](https://fixcheck-ledger.vercel.app/checks/28) FIXED (ethereum) |
-| H-6 | FIXED_MARKED | no check yet |
+| H-6 | FIXED_MARKED | NOT_CHECKED |
 | M-1 | FIXED_MARKED | [#16](https://fixcheck-ledger.vercel.app/checks/16) INCONCLUSIVE (ethereum) |
-| M-2 | FIXED_MARKED | no check yet |
+| M-2 | FIXED_MARKED | NOT_CHECKED |
 | M-3 | UNMARKED | — |
 | M-4 | FIXED_MARKED | [#17](https://fixcheck-ledger.vercel.app/checks/17) FIXED (ethereum) |
 | M-5 | FIXED_MARKED | [#18](https://fixcheck-ledger.vercel.app/checks/18) FIXED (ethereum) |
-| M-6 | FIXED_MARKED | no check yet |
-| M-7 | FIXED_MARKED | no check yet |
-| M-8 | FIXED_MARKED | no check yet |
+| M-6 | FIXED_MARKED | NOT_CHECKED |
+| M-7 | FIXED_MARKED | NOT_CHECKED |
+| M-8 | FIXED_MARKED | NOT_CHECKED |
 | M-9 | UNMARKED | — |
 
 ## The 22 v1 checks, re-run on v2 (before / after)
