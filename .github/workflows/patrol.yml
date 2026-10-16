@@ -1,0 +1,33 @@
+name: patrol
+# The v2 regression watch (tools/patrol.mjs): every FIXED proxy check is
+# watched for an upgrade and re-filed on one; the bot decides or expires its
+# own filings after their deadlines and closes scorecards past their filing
+# deadline. Without the PATROL_KEY secret it runs read-only.
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+concurrency:
+  group: patrol
+  cancel-in-progress: false
+jobs:
+  patrol:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci --prefix test
+      - name: patrol
+        env:
+          PATROL_KEY: ${{ secrets.PATROL_KEY }}
+          PATROL_REPORT: patrol-report.json
+        run: node tools/patrol.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: patrol-report
+          path: patrol-report.json
+          if-no-files-found: ignore

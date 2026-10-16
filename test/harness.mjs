@@ -377,12 +377,14 @@ export function accounts() {
 }
 
 /** Builds the read/wallet client pair plus a settle-aware, fee-estimating `send`. */
-export function connect({ networkName = argOf("network", "studiodev"), address, role = "client" } = {}) {
+export function connect({ networkName = argOf("network", "studiodev"), address, role = "client", key = null } = {}) {
   const chain = CHAINS[networkName];
   if (!chain) throw new Error(`unknown network ${networkName}`);
-  const acc = accounts();
-  if (!acc[role]?.key) throw new Error(`no key for role ${role} — run: node accounts.mjs`);
-  const account = createAccount(acc[role].key);
+  // key: a signing key handed in by the caller (the patrol bot reads it from
+  // its CI secret); otherwise the role's key from test/.accounts.json
+  const acc = key ? {} : accounts();
+  if (!key && !acc[role]?.key) throw new Error(`no key for role ${role} — run: node accounts.mjs`);
+  const account = createAccount(key ?? acc[role].key);
   const wallet = createClient({ chain, account });
   const read = createClient({ chain });
   /**
