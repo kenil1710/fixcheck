@@ -2003,6 +2003,7 @@ CLS_NOT_MITIGATED = "NOT_MITIGATED"
 CLS_UNMARKED = "UNMARKED"
 CLS_AMBIGUOUS = "AMBIGUOUS"
 MAX_FINDINGS = 80                   # a larger report is refused, never cut
+SLOT_CHECKS_SHOWN = 4               # checks per slot in the slot list (get_slot_checks pages them all)
 SHERLOCK_ACK = "The protocol has acknowledged this issue."
 
 
@@ -2035,9 +2036,10 @@ def _link_text(cell: str) -> str:
     return cell[k + 1:e].strip()
 
 
-def _md_table(report: str, heading: str) -> list:
-    """Every row (as cells, header and separator dropped) of every table that
-    follows a markdown heading whose text is exactly `heading`."""
+def _md_tables(report: str, heading: str) -> list:
+    """One list of rows (as cells, header and separator dropped) per markdown
+    heading whose text is exactly `heading`, holding the table that follows
+    it (an empty list when no table follows)."""
     lines = report.split("\n")
     out = []
     for i in range(len(lines)):
@@ -2053,12 +2055,30 @@ def _md_table(report: str, heading: str) -> list:
         while j < len(lines) and lines[j].strip() == "":
             j += 1
         rows = 0
+        table = []
         while j < len(lines) and _md_cells(lines[j]):
             rows += 1
             if rows > 2:
-                out.append(_md_cells(lines[j]))
+                table.append(_md_cells(lines[j]))
             j += 1
+        out.append(table)
     return out
+
+
+def _rows_for(tables: list, col: int, fid: str) -> dict:
+    """v2 attack fix M3: the rows naming fid in column col of each table.
+    {"n": tables, "rows": [row per table naming fid], "ok": every table names
+    fid exactly once}. A table planted inside a finding's text adds a table
+    that does not name the real findings (and the real tables do not name a
+    planted one), so neither can read as consistent."""
+    rows = []
+    each = True
+    for t in tables:
+        mine = [r for r in t if len(r) > col and _link_text(r[col]) == fid]
+        if len(mine) != 1:
+            each = False
+        rows.extend(mine)
+    return {"n": len(tables), "rows": rows, "ok": each and len(tables) > 0}
 
 
 def _c4_status_lines(section: str) -> list:
@@ -2086,12 +2106,23 @@ def c4_status(report: str, fid: str) -> dict:
     sec = finding_section(report, fid, False)
     if not sec["ok"]:
         return {"cls": "", "why": sec["why"]}
-    summary = [r for r in _md_table(report, "Mitigation Review Summary") if len(r) >= 2 and _link_text(r[0]) == fid]
-    prs = [r for r in _md_table(report, "Individual PRs") if len(r) >= 2 and _link_text(r[1]) == fid]
-    out_of_scope = [r for r in _md_table(report, "Out of Scope") if len(r) >= 2 and _link_text(r[0]) == fid]
+    st = _rows_for(_md_tables(report, "Mitigation Review Summary"), 0, fid)
+    pt = _rows_for(_md_tables(report, "Individual PRs"), 1, fid)
+    ot = _rows_for(_md_tables(report, "Out of Scope"), 0, fid)
     lines = _c4_status_lines(sec["text"])
-    if len(summary) > 1 or len(prs) > 1 or len(out_of_scope) > 1:
-        return {"cls": CLS_AMBIGUOUS, "why": "C4_ROWS_AMBIGUOUS"}
+    # every table under a heading must name the finding once, or none may
+    for t in (st, pt, ot):
+        if len(t["rows"]) > 0 and not t["ok"]:
+            return {"cls": CLS_AMBIGUOUS, "why": "C4_ROWS_AMBIGUOUS"}
+    summary = st["rows"][:1]
+    prs = pt["rows"]
+    out_of_scope = ot["rows"][:1]
+    for r in st["rows"]:
+        if len(r) < 2 or _c4_class_of(r[1]) != _c4_class_of(st["rows"][0][1]):
+            return {"cls": CLS_AMBIGUOUS, "why": "C4_ROWS_AMBIGUOUS"}
+    for r in prs:
+        if r[0] != prs[0][0]:
+            return {"cls": CLS_AMBIGUOUS, "why": "C4_ROWS_AMBIGUOUS"}
     if len(summary) == 1:
         cls = _c4_class_of(summary[0][1])
         if cls == "":
@@ -2105,7 +2136,7 @@ def c4_status(report: str, fid: str) -> dict:
             return {"cls": CLS_AMBIGUOUS, "why": "C4_ROWS_AMBIGUOUS"}
         if cls != CLS_FIXED:
             return {"cls": cls}
-        if len(prs) != 1:
+        if len(prs) == 0:
             return {"cls": CLS_AMBIGUOUS, "why": "C4_FIX_ROW_MISSING"}
         return {"cls": CLS_FIXED, "row": prs[0][0]}
     if len(lines) > 0:
@@ -2115,11 +2146,13 @@ def c4_status(report: str, fid: str) -> dict:
     return {"cls": CLS_UNMARKED}
 
 
-def sherlock_class(section: str) -> str:
+def sherlock_class(section: str, confirmed: typing.Any = None) -> str:
     """A Sherlock finding's class from its README section: FIXED_MARKED when
-    a sherlock-admin status block marks it fixed (status_block), ACKNOWLEDGED
-    when Sherlock's bot line stands between the heading and "## Found by"
-    (before any watson-written text), both = AMBIGUOUS, neither = UNMARKED."""
+    a sherlock-admin status block marks it fixed (status_block) - and, when
+    `confirmed` is given (v2 attack fix M2), GitHub's issue page confirms a
+    Sherlock account wrote it - ACKNOWLEDGED when Sherlock's bot line stands
+    between the heading and "## Found by" (before any watson-written text),
+    both = AMBIGUOUS, neither = UNMARKED."""
     head = section
     k = head.find("\n## Found by")
     if k >= 0:
@@ -2129,6 +2162,8 @@ def sherlock_class(section: str) -> str:
         if ln.strip() == SHERLOCK_ACK:
             ack = True
     fixed = status_block(section) != ""
+    if confirmed is not None:
+        fixed = fixed and bool(confirmed)
     if fixed and ack:
         return CLS_AMBIGUOUS
     if fixed:
@@ -2166,7 +2201,44 @@ def _c4_declared(report: str) -> dict:
     return out
 
 
-def enumerate_findings(report: str, auditor: str) -> dict:
+def sherlock_readme_fixed(report: str) -> list:
+    """The ids of every finding whose README section carries a sherlock-admin
+    status block (each to be confirmed on GitHub's issue page)."""
+    out = []
+    for fid in _heading_ids(report, "sherlock"):
+        sec = finding_section(report, fid, False)
+        if sec["ok"] and status_block(sec["text"]) != "":
+            out.append(fid)
+    return out
+
+
+def fix_owners(report: str, auditor: str, items: list) -> list:
+    """v2 attack fix H1: the GitHub accounts the auditor's own fix links name,
+    over every finding it marks fixed (Sherlock status blocks, Code4rena's
+    Individual PRs rows)."""
+    out = []
+    for it in items:
+        if it[1] != CLS_FIXED:
+            continue
+        if auditor == "code4rena":
+            text = str(c4_status(report, it[0]).get("row") or "")
+        else:
+            text = status_block(finding_section(report, it[0], False)["text"])
+        low = text.lower()
+        i = 0
+        while True:
+            k = low.find("github.com/", i)
+            if k < 0:
+                break
+            parts = low[k + 11:].split("/")
+            if len(parts) >= 4 and (parts[2] == "pull" or parts[2] == "commit") and parts[0] not in out \
+                    and github_name_ok(parts[0], "x"):
+                out.append(parts[0])
+            i = k + 1
+    return out
+
+
+def enumerate_findings(report: str, auditor: str, confirmed: typing.Any = None) -> dict:
     """Round v2: EVERY finding of a pinned report, each with its class, read
     by code. {"items": [[fid, cls, title]]} or {"refused"}. Nothing is
     skipped: an id that is malformed, duplicated, out of sequence (Sherlock:
@@ -2200,7 +2272,10 @@ def enumerate_findings(report: str, auditor: str) -> dict:
         sec = finding_section(report, fid, False)
         if not sec["ok"]:
             return {"refused": "FINDING_SECTION_UNREADABLE"}
-        cls = c4_status(report, fid)["cls"] if auditor == "code4rena" else sherlock_class(sec["text"])
+        if auditor == "code4rena":
+            cls = c4_status(report, fid)["cls"]
+        else:
+            cls = sherlock_class(sec["text"], None if confirmed is None else confirmed.get(fid, False))
         if cls == CLS_AMBIGUOUS or cls == "":
             return {"refused": "FINDING_STATUS_AMBIGUOUS"}
         t = sec["title"]
@@ -3217,9 +3292,29 @@ def gather_import(p: dict) -> dict:
     rep = fetch(p["report_url"])
     if not rep["ok"] or rep["http"] != 200:
         return {"refused": "REPORT_UNREADABLE"}
-    en = enumerate_findings(rep["text"], p["auditor"])
+    confirmed = None
+    if p["auditor"] == "sherlock":
+        # v2 attack fix M2: README author lines are text anyone can type; a
+        # finding is marked fixed only if GitHub's issue page shows a
+        # Sherlock account wrote the fixed status (round-4 fix 7)
+        rp = pinned_commit(p["report_url"])
+        confirmed = {}
+        for fid in sherlock_readme_fixed(rep["text"]):
+            n = finding_issue(finding_section(rep["text"], fid, False)["text"], rp["owner"], rp["repo"])
+            if n == "":
+                confirmed[fid] = False
+                continue
+            ip = fetch(GITHUB_WEB + rp["owner"] + "/" + rp["repo"] + "/issues/" + n)
+            if not ip["ok"] or ip["http"] != 200:
+                return {"refused": "FINDING_ISSUE_UNREADABLE"}
+            confirmed[fid] = issue_status_text(ip["text"]) != ""
+    en = enumerate_findings(rep["text"], p["auditor"], confirmed)
     if "refused" in en:
         return en
+    # v2 attack fix H1: the report must name the protocol whose docs bind the
+    # scorecard - one of the auditor's own fix links is in its GitHub account
+    if docs_repo(p["docs_url"])["owner"] not in fix_owners(rep["text"], p["auditor"], en["items"]):
+        return {"refused": "PROTOCOL_NOT_IN_REPORT"}
     return {"report_sha256": rep["sha256"], "report_reach": report_reach, "docs_reach": got["proof"],
             "items": en["items"]}
 
@@ -3434,7 +3529,7 @@ class Scorecard:
     file_deadline: u64
     state: str              # OPEN until file_deadline, then CLOSED by anyone
     closed_at: u64
-    filed: u32              # FIXED_MARKED slots that got a check
+    filed: u32              # FIXED_MARKED slots that got at least one check
     not_checked: u32        # FIXED_MARKED slots with no check at close
 
 
@@ -3444,8 +3539,8 @@ class Slot:
     finding_id: str
     cls: str                # FIXED_MARKED | ACKNOWLEDGED | NOT_MITIGATED | UNMARKED
     title: str
-    check_id: u32           # 0 until a check is filed for it
-    outcome: str            # "" | a verdict | EXPIRED | NOT_CHECKED
+    checks: u32             # checks filed for it (v2 attack fix M1: each deployment once)
+    outcome: str            # "" | NOT_CHECKED (set at close for a FIXED_MARKED slot with no check)
 
 
 class FixCheck(gl.contract.Contract):
@@ -3478,6 +3573,8 @@ class FixCheck(gl.contract.Contract):
     slots: gl.storage.TreeMap[str, Slot]            # "sid:i" -> slot
     slot_of: gl.storage.TreeMap[str, u32]           # "sid:fid" -> i + 1
     slot_by_check: gl.storage.TreeMap[str, str]     # "cid" -> "sid:i"
+    slot_checks: gl.storage.TreeMap[str, u32]       # "sid:i:n" -> check id
+    slot_deployment: gl.storage.TreeMap[str, u32]   # "sid:i:" + check key -> check id
     proto_cards_n: gl.storage.TreeMap[str, u32]     # protocol -> scorecards
     proto_cards: gl.storage.TreeMap[str, u32]       # "protocol#n" -> scorecard id
     regressions_n: u32
@@ -3815,7 +3912,7 @@ class FixCheck(gl.contract.Contract):
             fid, cls, title = str(items[i][0]), str(items[i][1]), str(items[i][2])
             n[cls] = n.get(cls, 0) + 1
             self.slots[str(sid) + ":" + str(i)] = Slot(finding_id=fid, cls=cls, title=title[:TITLE_CAP],
-                                                       check_id=u32(0), outcome="")
+                                                       checks=u32(0), outcome="")
             self.slot_of[str(sid) + ":" + fid] = u32(i + 1)
         self.scorecards[u32(sid)] = Scorecard(
             scorecard_id=u32(sid), key=key, auditor=auditor, report_url=rep, docs_url=docs, protocol=proto,
@@ -3858,8 +3955,11 @@ class FixCheck(gl.contract.Contract):
         sl = self.slots[sk]
         if sl.cls != CLS_FIXED:
             return self._refuse("FINDING_NOT_MARKED_FIXED")
-        if int(sl.check_id) != 0:
-            return self._refuse("SLOT_ALREADY_FILED_AS_CHECK_" + str(int(sl.check_id)))
+        # v2 attack fix M1: any deployment may be filed into the slot, each
+        # once; one filer's choice of deployment can never block another's
+        ck = check_key(card.report_url, fid, str(chain).strip().lower(), _addr(address))
+        if int(self.slot_deployment.get(sk + ":" + ck) or 0) != 0:
+            return self._refuse("DEPLOYMENT_ALREADY_IN_SLOT")
         return self._file(value, card.report_url, fid, function_name, audited_url, fix_url, chain, address,
                           card.docs_url, sid, sk)
 
@@ -3881,7 +3981,7 @@ class FixCheck(gl.contract.Contract):
         empty = 0
         for i in range(int(card.findings)):
             sl = self.slots[str(sid) + ":" + str(i)]
-            if sl.cls == CLS_FIXED and int(sl.check_id) == 0:
+            if sl.cls == CLS_FIXED and int(sl.checks) == 0:
                 sl.outcome = "NOT_CHECKED"
                 empty += 1
         card.not_checked = u32(empty)
@@ -4080,11 +4180,15 @@ class FixCheck(gl.contract.Contract):
         if slot_key == "":
             return
         sl = self.slots[slot_key]
-        sl.check_id = u32(cid)
+        c = self.checks[u32(cid)]
+        self.slot_checks[slot_key + ":" + str(int(sl.checks))] = u32(cid)
+        self.slot_deployment[slot_key + ":" + c.key] = u32(cid)
+        sl.checks = u32(int(sl.checks) + 1)
         self.slot_by_check[str(cid)] = slot_key
         sid = slot_key[:slot_key.find(":")]
         card = self.scorecards[u32(int(sid))]
-        card.filed = u32(int(card.filed) + 1)
+        if int(sl.checks) == 1:
+            card.filed = u32(int(card.filed) + 1)
         cs = self.card_scores[sid]
         cs.checks = u32(int(cs.checks) + 1)
         cs.open = u32(int(cs.open) + 1)
@@ -4120,7 +4224,6 @@ class FixCheck(gl.contract.Contract):
         self._tally(self._auditor_score(c.auditor), state, verdict)
         sk = str(self.slot_by_check.get(str(int(c.check_id))) or "")
         if sk != "":
-            self.slots[sk].outcome = S_EXPIRED if state == S_EXPIRED else verdict
             self._tally(self.card_scores[sk[:sk.find(":")]], state, verdict)
 
     @gl.public.write
@@ -4445,9 +4548,32 @@ class FixCheck(gl.contract.Contract):
         items = []
         for i in range(off, min(n, off + lim)):
             sl = self.slots[sid + ":" + str(i)]
+            k = int(sl.checks)
+            first = []
+            for j in range(min(k, SLOT_CHECKS_SHOWN)):
+                c = self.checks[self.slot_checks[sid + ":" + str(i) + ":" + str(j)]]
+                first.append({"check_id": int(c.check_id), "chain": c.chain, "address": c.address,
+                              "state": c.state, "verdict": c.verdict, "basis": c.basis})
             items.append({"index": i, "finding_id": sl.finding_id, "cls": sl.cls, "title": sl.title,
-                          "check_id": int(sl.check_id), "outcome": sl.outcome})
+                          "checks_n": k, "checks": first, "outcome": sl.outcome})
         return {"scorecard_id": int(card.scorecard_id), "total": n, "offset": off, "items": items}
+
+    @gl.public.view
+    def get_slot_checks(self, scorecard_id: typing.Any, finding_id: str, offset: typing.Any,
+                        limit: typing.Any) -> typing.Any:
+        """Every check filed into one slot, oldest first."""
+        card = self._card(scorecard_id)
+        sid = str(int(card.scorecard_id))
+        k = int(self.slot_of.get(sid + ":" + str(finding_id).strip()) or 0)
+        if k == 0:
+            raise gl.vm.UserError("no finding " + str(finding_id) + " in scorecard #" + sid)
+        sk = sid + ":" + str(k - 1)
+        n = int(self.slots[sk].checks)
+        off = max(_as_int(offset, 0), 0)
+        lim = min(max(_as_int(limit, 20), 1), MAX_PAGE)
+        items = [self._check_view(self.checks[self.slot_checks[sk + ":" + str(j)]])
+                 for j in range(off, min(n, off + lim))]
+        return {"total": n, "offset": off, "items": items}
 
     @gl.public.view
     def get_scorecards(self, offset: typing.Any, limit: typing.Any) -> typing.Any:
@@ -4463,10 +4589,15 @@ class FixCheck(gl.contract.Contract):
         return {"total": n, "offset": off, "items": out}
 
     @gl.public.view
-    def get_protocol_scorecards(self, protocol: str) -> typing.Any:
+    def get_protocol_scorecards(self, protocol: str, offset: typing.Any, limit: typing.Any) -> typing.Any:
+        """v2 attack fix L1: paged, with the total."""
         k = str(protocol)
-        n = min(int(self.proto_cards_n.get(k) or 0), MAX_PAGE)
-        return [self._card_view(self.scorecards[self.proto_cards[k + "#" + str(i)]]) for i in range(n)]
+        n = int(self.proto_cards_n.get(k) or 0)
+        off = max(_as_int(offset, 0), 0)
+        lim = min(max(_as_int(limit, 20), 1), MAX_PAGE)
+        items = [self._card_view(self.scorecards[self.proto_cards[k + "#" + str(i)]])
+                 for i in range(off, min(n, off + lim))]
+        return {"total": n, "offset": off, "items": items}
 
     @gl.public.view
     def get_auditors(self) -> typing.Any:

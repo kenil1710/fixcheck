@@ -217,7 +217,7 @@ class V2_03_ScorecardLifecycle(unittest.TestCase):
         self.assertEqual((f["status"], f["code_says"]), ("OK", "FIXED"), f)
         self.assertEqual(w.c.get_check(1)["scorecard"], 1)
         again = w.call(B.CHALLENGER, "file_slot", value=GEN, **slot_args)
-        self.assertEqual(again["reason"], "SLOT_ALREADY_FILED_AS_CHECK_1")
+        self.assertEqual(again["reason"], "DEPLOYMENT_ALREADY_IN_SLOT")
         ack = w.call(B.CHALLENGER, "file_slot", value=GEN, **dict(slot_args, finding_id="M-3"))
         self.assertEqual(ack["reason"], "FINDING_NOT_MARKED_FIXED")
         nope = w.call(B.CHALLENGER, "file_slot", value=GEN, **dict(slot_args, finding_id="M-99"))
@@ -241,15 +241,17 @@ class V2_03_ScorecardLifecycle(unittest.TestCase):
         # exact counts: every one of the 22 findings is in exactly one bucket
         slots = w.c.get_scorecard_slots(1, 0, 100)["items"]
         self.assertEqual(len(slots), 22)
-        self.assertEqual(sorted(set(s["outcome"] for s in slots)), ["", "FIXED", "NOT_CHECKED"])
-        self.assertEqual(len([s for s in slots if s["outcome"] == ""]), 8)          # the acknowledged ones
+        self.assertEqual(sorted(set(s["outcome"] for s in slots)), ["", "NOT_CHECKED"])
+        self.assertEqual(len([s for s in slots if s["outcome"] == ""]), 9)          # 8 acknowledged + M-5
+        m5 = [s for s in slots if s["finding_id"] == "M-5"][0]
+        self.assertEqual((m5["checks_n"], m5["checks"][0]["verdict"]), (1, "FIXED"))
         self.assertEqual(card["acknowledged"] + card["not_checked"] + card["verdicts"]["fixed"], 22)
         with self.assertRaises(MOD.gl.vm.UserError):
             w.call(B.ANYONE, "close_scorecard", 1)
         aud = {a["auditor"]: a for a in w.c.get_auditors()}
         self.assertEqual((aud["sherlock"]["scorecards"], aud["sherlock"]["fixed"], aud["code4rena"]["checks"]),
                          (1, 1, 0))
-        self.assertEqual(len(w.c.get_protocol_scorecards("github:generationsoftware/pt-dev-docs")), 1)
+        self.assertEqual(w.c.get_protocol_scorecards("github:generationsoftware/pt-dev-docs", 0, 10)["total"], 1)
         # the ledger drains to exactly 0
         w.call(B.ANYONE, "sweep_fees")
         for who in (B.CHALLENGER, B.FEE_TO):
@@ -267,7 +269,8 @@ class V2_03_ScorecardLifecycle(unittest.TestCase):
         card = w.c.get_scorecard(1)
         self.assertEqual((card["verdicts"]["expired"], card["verdicts"]["open"]), (1, 0))
         m5 = [x for x in w.c.get_scorecard_slots(1, 0, 100)["items"] if x["finding_id"] == "M-5"][0]
-        self.assertEqual(m5["outcome"], "EXPIRED")
+        self.assertEqual(m5["checks"][0]["state"], "EXPIRED")
+        self.assertEqual(w.c.get_slot_checks(1, "M-5", 0, 10)["items"][0]["state"], "EXPIRED")
 
     def test_slot_views_are_paged(self):
         w = B.World()
