@@ -1435,7 +1435,7 @@ class S02_ReportAllowlist(unittest.TestCase):
         w = World()
         for bad in ["https://raw.githubusercontent.com/attacker/fake-audit/" + "9" * 40 + "/README.md",
                     "https://raw.githubusercontent.com/sherlock-audit/2024-05-pooltogether/" + "9" * 40 + "/README.md",
-                    "https://raw.githubusercontent.com/code-423n4/2024-01-x-findings/" + "9" * 40 + "/report.md",
+                    "https://raw.githubusercontent.com/code-423n4/2024-01-x-findings/" + "9" * 40 + "/README.md",
                     "https://web.archive.org/web/20240101000000/https://sherlock-audits.example/report",
                     "https://web.archive.org/web/20240101000000/https://raw.githubusercontent.com/attacker/x-judging/main/README.md"]:
             WEB.log.clear()

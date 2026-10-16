@@ -675,7 +675,7 @@ def _id_at(line: str, fid: str) -> bool:
         i = k + 1
 
 
-def finding_section(report: str, fid: str) -> dict:
+def finding_section(report: str, fid: str, need_status: bool = True) -> dict:
     """The report section for finding `fid`: from the first markdown heading
     line naming fid as a whole token, to the next heading of the same or a
     higher level. {"ok": True, "title": heading text, "text": section,
@@ -711,8 +711,10 @@ def finding_section(report: str, fid: str) -> dict:
         if text.find(phrase) >= 0:
             status = k
             break
-    if status < 0:
+    if status < 0 and need_status:
         return {"ok": False, "why": "FIXED_STATUS_NOT_IN_FINDING"}
+    if status < 0:
+        status = 0
     title = lines[start][level:].strip()
     return {"ok": True, "title": title, "text": text, "status": status}
 

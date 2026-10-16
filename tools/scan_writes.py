@@ -14,8 +14,9 @@ A method passes if no revert appears after its first write.
 import ast, sys
 from pathlib import Path
 SRC = Path(sys.argv[1]) if len(sys.argv) > 1 else Path(__file__).resolve().parent.parent / "contracts" / "FixCheck.py"
-WRITERS = {"_bank", "_credit", "_to_stake", "_release", "_release_fee", "_settle", "_close", "_score", "_refuse", "_ok"}
-RAISERS = {"_check"}
+WRITERS = {"_bank", "_credit", "_to_stake", "_release", "_release_fee", "_settle", "_close", "_score", "_refuse", "_ok",
+           "_file", "_opened", "_tally", "_auditor_score"}
+RAISERS = {"_check", "_card"}
 tree = ast.parse(SRC.read_text())
 cls = next(n for n in tree.body if isinstance(n, ast.ClassDef) and n.name == "FixCheck")
 
