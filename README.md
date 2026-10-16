@@ -27,6 +27,16 @@ FixCheck checks it, using the real report, the real commits and the verified cod
 ## What it found
 
 <!-- RESULTS:BEGIN -->
+On the canonical contract (read from chain by `tools/seeds_md.mjs`): **28 checks**, **3 whole-report scorecards** (PoolTogether V5 · Sherlock: 22 findings, 14 marked fixed, 10 checked, 3 confirmed fixed, 1 not fixed; PoolTogether V5 · Code4rena: 36 findings, 27 marked fixed, 5 checked, 3 confirmed fixed, 0 not fixed; Mellow Flexible Vaults · Sherlock: 15 findings, 13 marked fixed, 8 checked, 5 confirmed fixed, 0 not fixed).
+
+* **Fixed in deployed code** — 11 checks: the deployed function is the fix's, or holds the fix in place (incl. Code4rena findings and a real Mellow proxy, now watched for upgrades).
+* **Not fixed** — 1: the deployed function is still the audited version on code deployed *after the fix existed* (PoolTogether's Ethereum vault, created 2024-08-19; its fix was merged on 2024-06-28).
+* **Predates audit** — 6; **Predates fix** — 1: the audited code runs on contracts deployed before the audit (or before the fix existed) and not upgradeable, so the fix could not be there. FixCheck says so instead of calling them "not fixed".
+* **Inconclusive** — 9: code could not prove which function runs (partially verified source) or the model's answers did not point at the fix. Everyone is refunded.
+* **Regressed** — 0: no watched proxy has been upgraded back to the audited code.
+* **Not checked** — every finding a report marks fixed that nobody filed a check for, counted per scorecard.
+
+The 22 checks of v1 were re-run on v2: 22 of 22 unchanged ([before/after](docs/SEEDS.md#the-22-v1-checks-re-run-on-v2-before--after)).
 <!-- RESULTS:END -->
 
 These are code facts, not claims about exploitability or anyone's intent.
@@ -117,6 +127,38 @@ Other apps read verdicts with `FixStatus.is_fixed(finding_id, chain, address)` (
 ## Seeds
 
 <!-- SEEDS:BEGIN -->
+Every canonical check, read from chain:
+
+| # | Auditor | Protocol | Finding | Function | Chain | Verdict | Basis |
+|---|---|---|---|---|---|---|---|
+| [1](https://fixcheck-ledger.vercel.app/checks/1) | Sherlock | PoolTogether V5 | M-5 | `claimPrizes` | optimism | **FIXED** | CODE_MATCH_FIX |
+| [2](https://fixcheck-ledger.vercel.app/checks/2) | Sherlock | PoolTogether V5 | M-8 | `_computeFeePerClaim` | base | **FIXED** | CODE_MATCH_FIX |
+| [3](https://fixcheck-ledger.vercel.app/checks/3) | Sherlock | PoolTogether V5 | M-9 | `liquidatableBalanceOf` | optimism | **PREDATES_AUDIT** | DEPLOYED_BEFORE_AUDIT |
+| [4](https://fixcheck-ledger.vercel.app/checks/4) | Sherlock | PoolTogether V5 | M-16 | `maxDeposit` | arbitrum | **PREDATES_FIX** | DEPLOYED_BEFORE_FIX |
+| [5](https://fixcheck-ledger.vercel.app/checks/5) | Sherlock | PoolTogether V5 | M-17 | `_convertToShares` | ethereum | **NOT_FIXED** | CODE_MATCH_VULNERABLE |
+| [6](https://fixcheck-ledger.vercel.app/checks/6) | Sherlock | PoolTogether V5 | M-19 | `claimPrize` | base | **PREDATES_AUDIT** | DEPLOYED_BEFORE_AUDIT |
+| [7](https://fixcheck-ledger.vercel.app/checks/7) | Sherlock | PoolTogether V5 | M-1 | `isRequestComplete` | optimism | **PREDATES_AUDIT** | DEPLOYED_BEFORE_AUDIT |
+| [8](https://fixcheck-ledger.vercel.app/checks/8) | Sherlock | PoolTogether V5 | M-1 | `isRequestComplete` | arbitrum | **FIXED** | CODE_MATCH_FIX |
+| [9](https://fixcheck-ledger.vercel.app/checks/9) | Sherlock | PoolTogether V5 | M-14 | `canStartDraw` | optimism | **PREDATES_AUDIT** | DEPLOYED_BEFORE_AUDIT |
+| [10](https://fixcheck-ledger.vercel.app/checks/10) | Sherlock | PoolTogether V5 | H-3 | `startDrawReward` | optimism | **PREDATES_AUDIT** | DEPLOYED_BEFORE_AUDIT |
+| [11](https://fixcheck-ledger.vercel.app/checks/11) | Sherlock | Mellow Flexible Vaults | H-1 | `checkSignatures` | ethereum | **FIXED** | CODE_MATCH_FIX |
+| [12](https://fixcheck-ledger.vercel.app/checks/12) | Sherlock | Mellow Flexible Vaults | H-2 | `_handleReport` | ethereum | **INCONCLUSIVE** | MODEL_UNGROUNDED |
+| [13](https://fixcheck-ledger.vercel.app/checks/13) | Sherlock | Mellow Flexible Vaults | H-3 | `callHook` | ethereum | **INCONCLUSIVE** | PARTIAL_MATCH |
+| [14](https://fixcheck-ledger.vercel.app/checks/14) | Sherlock | Mellow Flexible Vaults | H-4 | `calculateFee` | ethereum | **INCONCLUSIVE** | MODEL_UNGROUNDED |
+| [15](https://fixcheck-ledger.vercel.app/checks/15) | Sherlock | Mellow Flexible Vaults | H-5 | `calculateFee` | ethereum | **FIXED** | CODE_MATCH_FIX |
+| [16](https://fixcheck-ledger.vercel.app/checks/16) | Sherlock | Mellow Flexible Vaults | M-1 | `updateChecks` | ethereum | **INCONCLUSIVE** | MODEL_UNGROUNDED |
+| [17](https://fixcheck-ledger.vercel.app/checks/17) | Sherlock | Mellow Flexible Vaults | M-4 | `handleReport` | ethereum | **FIXED** | CODE_MATCH_FIX |
+| [18](https://fixcheck-ledger.vercel.app/checks/18) | Sherlock | Mellow Flexible Vaults | M-5 | `cancelDepositRequest` | ethereum | **FIXED** | CODE_CONTAINS_FIX |
+| [19](https://fixcheck-ledger.vercel.app/checks/19) | Sherlock | Cap | M-3 | `realizeRestakerInterest` | ethereum | **INCONCLUSIVE** | PARTIAL_MATCH |
+| [20](https://fixcheck-ledger.vercel.app/checks/20) | Code4rena | PoolTogether V5 | H-06 | `_delegate` | optimism | **FIXED** | CODE_MATCH_FIX |
+| [21](https://fixcheck-ledger.vercel.app/checks/21) | Code4rena | PoolTogether V5 | M-05 | `_transferBalance` | optimism | **FIXED** | CODE_MATCH_FIX |
+| [22](https://fixcheck-ledger.vercel.app/checks/22) | Code4rena | PoolTogether V5 | M-03 | `getTwabBetween` | optimism | **FIXED** | CODE_CONTAINS_FIX |
+| [23](https://fixcheck-ledger.vercel.app/checks/23) | Code4rena | PoolTogether V5 | M-19 | `getVaultPortion` | optimism | **INCONCLUSIVE** | MODEL_UNGROUNDED |
+| [24](https://fixcheck-ledger.vercel.app/checks/24) | Code4rena | PoolTogether V5 | M-06 | `setDrawManager` | optimism | **INCONCLUSIVE** | MODEL_UNGROUNDED |
+| [25](https://fixcheck-ledger.vercel.app/checks/25) | Sherlock | PoolTogether V5 | M-15 | `shutdownAt` | optimism | **PREDATES_AUDIT** | DEPLOYED_BEFORE_AUDIT |
+| [26](https://fixcheck-ledger.vercel.app/checks/26) | Sherlock | Cap | M-1 | `liquidate` | ethereum | **INCONCLUSIVE** | PARTIAL_MATCH |
+| [27](https://fixcheck-ledger.vercel.app/checks/27) | Sherlock | OP Stack fault proofs | M-3 | `create` | ethereum | **INCONCLUSIVE** | PARTIAL_MATCH |
+| [28](https://fixcheck-ledger.vercel.app/checks/28) | Sherlock | Mellow Flexible Vaults | H-5 | `calculateFee` | ethereum | **FIXED** | CODE_MATCH_FIX |
 <!-- SEEDS:END -->
 
 Full table with links, stakes, dates and the demo paths: [`docs/SEEDS.md`](docs/SEEDS.md).
