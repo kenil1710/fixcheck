@@ -69,7 +69,7 @@ export default async function Home() {
         <h2 id="how" className="t-h2">How a finding gets checked</h2>
         <ol className="mt-8 grid gap-8 md:grid-cols-3">
           {[
-            ["Point at the evidence", "A pinned Sherlock report, the finding, the function it names, the audited commit and the fix Sherlock links — plus the protocol’s own page listing the deployed address."],
+            ["Point at the evidence", "A pinned Sherlock or Code4rena report, the finding, the function it names, the audited commit and the fix the auditor links — plus the protocol’s own page listing the deployed address."],
             ["Validators read it all", "Each GenLayer validator fetches every source itself, pulls the function out of the audited, fixed and deployed code, and they must agree byte for byte."],
             ["Code decides first", "Identical to the fix: fixed. Identical to the audited code: not fixed — unless the contract was deployed before the audit or before the fix existed. Only when it’s neither does a model weigh in, and it must quote real deployed lines."],
           ].map(([t, d], i) => (
@@ -82,8 +82,29 @@ export default async function Home() {
             </li>
           ))}
         </ol>
-        <p className="mt-8 t-small text-ink-2">Supports Sherlock contest reports; other auditors are future work.</p>
+        <p className="mt-8 t-small text-ink-2">Reads Sherlock judging reports and Code4rena reports (their mitigation review).</p>
         <p className="mt-3"><Link className="link" href="/how-it-works">What the model never decides</Link></p>
+      </section>
+
+      <section aria-labelledby="v2" className="border-t hair py-14">
+        <h2 id="v2" className="t-h2">Whole reports, watched after upgrades</h2>
+        <div className="mt-8 grid gap-6 md:grid-cols-3">
+          <Link href="/scorecards" className="sheet block p-5 no-underline hover:border-ink-3">
+            <p className="t-num text-[2.2rem] leading-none">{s.scorecards}</p>
+            <h3 className="t-h3 mt-3">whole-report scorecards</h3>
+            <p className="t-small mt-2 text-ink-2">Code reads every finding in a pinned report and the auditor’s own status; nobody picks which findings count, and every finding marked fixed but never checked is counted.</p>
+          </Link>
+          <Link href="/regressions" className="sheet block p-5 no-underline hover:border-ink-3">
+            <p className="t-num text-[2.2rem] leading-none">{s.regressions}</p>
+            <h3 className="t-h3 mt-3">regression re-checks</h3>
+            <p className="t-small mt-2 text-ink-2">A patrol bot watches every proxy whose latest verdict is Fixed. After an upgrade it re-files the check; the audited code deployed again is <strong>Regressed</strong>{s.regressed > 0 ? ` (${s.regressed} so far)` : ""}.</p>
+          </Link>
+          <Link href="/status" className="sheet block p-5 no-underline hover:border-ink-3">
+            <p className="t-num text-[2.2rem] leading-none mono">is_fixed()</p>
+            <h3 className="t-h3 mt-3">for other contracts</h3>
+            <p className="t-small mt-2 text-ink-2">FixStatus answers on chain; FixGate refuses to interact with a deployment whose finding is Not fixed or Regressed. Also as a JSON API and a badge.</p>
+          </Link>
+        </div>
       </section>
 
       <section aria-labelledby="protocols" className="border-t hair py-14">

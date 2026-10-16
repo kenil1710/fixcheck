@@ -160,7 +160,7 @@ function idAt(line: string, fid: string): boolean {
 
 export type Section = { ok: true; title: string; text: string; status: number } | { ok: false; why: string };
 
-export function findingSection(report: string, fid: string): Section {
+export function findingSection(report: string, fid: string, needStatus = true): Section {
   const lines = report.split("\n");
   let start = -1;
   let level = 0;
@@ -183,8 +183,8 @@ export function findingSection(report: string, fid: string): Section {
   }
   const text = lines.slice(start, end).join("\n");
   const status = STATUS_PHRASES.findIndex((p) => text.includes(p));
-  if (status < 0) return { ok: false, why: "FIXED_STATUS_NOT_IN_FINDING" };
-  return { ok: true, title: lines[start].slice(level).trim(), text, status };
+  if (status < 0 && needStatus) return { ok: false, why: "FIXED_STATUS_NOT_IN_FINDING" };
+  return { ok: true, title: lines[start].slice(level).trim(), text, status: Math.max(status, 0) };
 }
 
 const UNRESERVED = /^[A-Za-z0-9\-._~]$/;
@@ -244,9 +244,10 @@ export function archivePin(url: string, now = -1): { ts: string; target: string;
   const host = target.split("//")[1]?.split(/[/?]/)[0]?.toLowerCase() ?? "";
   return host ? { ts: stamp, target, host } : null;
 }
-/** Same rule as contracts/FixCheck.py report_source_ok: Sherlock only. */
+/** Same rule as contracts/FixCheck.py report_source_ok: Sherlock, or Code4rena's report.md (v2). */
 export function reportSourceOk(url: string): boolean {
   const g = githubPin(url);
+  if (g && g.owner === "code-423n4") return g.repo.endsWith("-findings") && g.path === "report.md";
   if (g) return g.owner === "sherlock-audit" && g.repo.endsWith("-judging");
   const a = archivePin(url);
   if (!a) return false;

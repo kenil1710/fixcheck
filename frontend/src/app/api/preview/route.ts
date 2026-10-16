@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { view } from "@/lib/reads";
+import { auditorOf, c4Status } from "@/lib/enumerate";
 import { archivePin, basename, containsFix, extract, findingSection, githubPin, isPinned, normUrl, percentInPath, reportSourceOk, statusBlock, STATUS_PHRASES } from "@/lib/solfn";
 
 /**
@@ -98,7 +99,8 @@ export async function POST(req: Request) {
   add("pin", "Every link is pinned", !pct && !future && isPinned(report) && isPinned(docs) && Boolean(ap) && Boolean(fp),
     pct ? "Write the links without %-escapes." : !isPinned(report) ? "The report link isn’t pinned to a commit or snapshot." : !isPinned(docs) ? "The docs link isn’t pinned." : future ? "An archive timestamp is in the future; use the timestamp of an existing capture." : !ap ? "The audited file must be GitHub raw at a 40-character commit SHA." : !fp ? "The fix file is required: GitHub raw at the fix PR’s head commit." : `Report ${githubPin(report) ? "at commit " + githubPin(report)!.sha.slice(0, 7) : "archived " + archivePin(report)!.ts}; audited code at ${ap.sha.slice(0, 7)}; fix at ${fp.sha.slice(0, 7)}.`);
   if (!steps[0].ok || !ap || !fp) return done();
-  add("sherlock", "The report is Sherlock’s", reportSourceOk(report), reportSourceOk(report) ? "A Sherlock judging report." : "FixCheck supports Sherlock contest reports only (a sherlock-audit …-judging repo, or a capture of one); other auditors are future work.");
+  const auditor = auditorOf(report);
+  add("sherlock", "The report is the auditor’s own", reportSourceOk(report), reportSourceOk(report) ? (auditor === "code4rena" ? "Code4rena’s report.md in its findings repository." : "A Sherlock judging report.") : "FixCheck reads Sherlock judging reports (a sherlock-audit …-judging repo, or a capture of one) and Code4rena’s report.md (a code-423n4 …-findings repo), pinned at a commit.");
   add("owner", "The fix is in the protocol’s own repository", Boolean(dp && dp.owner === fp.owner), dp && dp.owner === fp.owner ? `${fp.owner}/${fp.repo}, the same account as the docs.` : "The fix must be in the same GitHub account as the protocol’s pinned docs.");
   if (steps.some((x) => x.ok === false)) return done();
   if (!/^0x[0-9a-f]{40}$/.test(addr) || !CHAINS[chain] || !/^[A-Za-z_$][\w$]{0,63}$/.test(fn) || !/^[A-Za-z0-9-]{2,16}$/.test(fid)) {
@@ -108,8 +110,10 @@ export async function POST(req: Request) {
 
   const [rep, dpage, apage, fpage, feed] = await Promise.all([get(report), get(docs), get(aud), get(fix), get(`https://github.com/${ap.owner}/${ap.repo}/commits/${ap.sha}.atom`)]);
   const sec = rep?.status === 200 ? findingSection(rep.text, fid) : null;
-  const status = sec?.ok ? statusBlock(sec.text) : "";
-  add("report", `Sherlock marks finding ${fid} fixed`, Boolean(sec?.ok && status), !rep || rep.status !== 200 ? "The report couldn’t be read." : sec && !sec.ok ? (sec.why === "FINDING_NOT_IN_REPORT" ? "No heading in the report names that finding." : "That finding has no “fixed” status phrase.") : !status ? "Only Sherlock’s own status block can mark a finding fixed, and this finding has none." : `“${STATUS_PHRASES[(sec as { status: number }).status]}”, in Sherlock’s status block.`);
+  const c4 = auditor === "code4rena" && rep?.status === 200 ? c4Status(rep.text, fid) : null;
+  const status = c4 ? (c4.cls === "FIXED_MARKED" ? c4.row ?? "" : "") : sec?.ok ? statusBlock(sec.text) : "";
+  const who = auditor === "code4rena" ? "Code4rena" : "Sherlock";
+  add("report", `${who} marks finding ${fid} fixed`, Boolean(sec?.ok && status), !rep || rep.status !== 200 ? "The report couldn’t be read." : sec && !sec.ok ? (sec.why === "FINDING_NOT_IN_REPORT" ? "No heading in the report names that finding." : "That finding has no “fixed” status phrase.") : !status ? (c4 ? "Only Code4rena’s mitigation review (the finding’s status line and its rows in the summary and Individual PRs tables, all agreeing) marks a finding fixed; this one is not." : "Only Sherlock’s own status block can mark a finding fixed, and this finding has none.") : c4 ? "Mitigation confirmed, in Code4rena’s own mitigation review." : `“${STATUS_PHRASES[(sec as { status: number }).status]}”, in Sherlock’s status block.`);
   if (!sec?.ok || !status) return done();
   const named = sec.text.includes(fn);
   add("named", `The finding mentions ${fn}()`, named, named ? "The function is named in the finding’s text." : "The function name doesn’t appear in the finding.");
@@ -127,7 +131,8 @@ export async function POST(req: Request) {
     const heads = (pg?.text ?? "").split("\n").filter((l) => /^From [0-9a-f]{40} /.test(l)).map((l) => l.slice(5, 45));
     if (heads[heads.length - 1] === fp.sha) fixRef = `PR #${n}`;
   }
-  add("bind-fix", "The fix is the one Sherlock links", Boolean(fixRef), fixRef ? `Head commit of ${fixRef === "commit" ? "a commit" : fixRef} linked in Sherlock’s status block.` : `Sherlock’s status block links ${pulls.length ? "PR " + pulls.map((n) => "#" + n).join(", ") : "no PR"} in this repository, and this commit isn’t its head.`);
+  const where = c4 ? "Code4rena’s Individual PRs row" : "Sherlock’s status block";
+  add("bind-fix", `The fix is the one ${who} links`, Boolean(fixRef), fixRef ? `Head commit of ${fixRef === "commit" ? "a commit" : fixRef} linked in ${where}.` : `${where} links ${pulls.length ? "PR " + pulls.map((n) => "#" + n).join(", ") : "no PR"} in this repository, and this commit isn’t its head.`);
   // merged into the default branch, and when the fix existed
   const gw = `https://github.com/${fp.owner}/${fp.repo}`;
   const onDefault = (html: string) => html.toLowerCase().includes(`<li class="branch"><a href="/${fp.owner}/${fp.repo}">`);

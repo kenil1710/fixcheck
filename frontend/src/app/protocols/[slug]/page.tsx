@@ -1,6 +1,8 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { getProtocol } from "@/lib/reads";
+import { getProtocol, getProtocolScorecards } from "@/lib/reads";
+import { auditorName } from "@/lib/classes";
+import { ScoreBar } from "@/components/ScoreBar";
 import { CHAIN_EXPLORERS, CHAIN_NAMES, PROTOCOLS, firmName, protocolKeyFromSlug, protocolMeta } from "@/lib/catalog";
 import { commit7 } from "@/lib/format";
 import { Ring } from "@/components/Ring";
@@ -19,8 +21,8 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 export default async function ProtocolPage({ params }: { params: Promise<{ slug: string }> }) {
   const key = protocolKeyFromSlug((await params).slug);
   const meta = protocolMeta(key);
-  const res = await getProtocol(key);
-  if (!res.ok) return <Busy what={meta.name} />;
+  const [res, cards] = await Promise.all([getProtocol(key), getProtocolScorecards(key)]);
+  if (!res.ok || !cards.ok) return <Busy what={meta.name} />;
   const p = res.data;
   if (p.checks === 0) return <Empty title={`${meta.name} hasn’t been checked`}><p>No finding from this protocol has been filed. <Link className="link" href="/check">Check one</Link>.</p></Empty>;
 
@@ -50,8 +52,28 @@ export default async function ProtocolPage({ params }: { params: Promise<{ slug:
             </div>
           </dl>
         </div>
-        <div className="sheet self-start p-5"><Ring s={p} /></div>
+        <div className="sheet self-start p-5">
+          <Ring s={p} />
+          {/* eslint-disable-next-line @next/next/no-img-element -- live SVG from /badge */}
+          <p className="t-small mt-4 text-ink-3">Badge (read from chain): <img src={`/badge/${meta.slug}.svg`} alt={`FixCheck badge for ${meta.name}`} className="inline h-5 w-auto align-middle" /></p>
+        </div>
       </div>
+
+      {cards.data.total > 0 && (
+        <section aria-labelledby="cards" className="mt-10">
+          <h2 id="cards" className="t-label">Whole-report scorecards</h2>
+          <ul className="mt-2 grid gap-3 sm:grid-cols-2">
+            {cards.data.items.map((c) => (
+              <li key={c.scorecard_id}>
+                <Link href={`/scorecards/${c.scorecard_id}`} className="sheet block p-4 no-underline hover:border-ink-3">
+                  <span className="font-medium">{auditorName(c.auditor)} report</span> <span className="t-small text-ink-3">#{c.scorecard_id} · {c.findings} findings · {c.marked_fixed} marked fixed · {c.filed} checked · {c.verdicts.fixed} confirmed fixed</span>
+                  <ScoreBar s={c.verdicts} className="mt-3" />
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <section aria-labelledby="deps" className="mt-10">
         <h2 id="deps" className="t-label">Deployed contracts checked</h2>
