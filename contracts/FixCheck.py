@@ -3955,10 +3955,12 @@ class FixCheck(gl.contract.Contract):
 
     @gl.public.write.payable
     def file_slot(self, scorecard_id: typing.Any, finding_id: str, function_name: str,
-                  audited_url: str, fix_url: str, chain: str, address: str) -> typing.Any:
-        """File the check for one FIXED_MARKED finding of an open scorecard -
-        exactly a file_check() on the scorecard's report and docs, linked to
-        the slot. One check per slot. Refusals never raise."""
+                  audited_url: str, fix_url: str, chain: str, address: str, docs_url: str) -> typing.Any:
+        """File a check for one FIXED_MARKED finding of an open scorecard -
+        exactly a file_check() on the scorecard's report, linked to the slot.
+        docs_url is any pinned page of the scorecard's protocol (the same
+        docs repository: a protocol lists each chain on its own page). Each
+        deployment once per slot. Refusals never raise."""
         value = self._bank()
         sid = _as_int(scorecard_id, -1)
         card = self.scorecards.get(u32(sid)) if 0 < sid <= int(self.scorecards_n) else None
@@ -3980,8 +3982,10 @@ class FixCheck(gl.contract.Contract):
         ck = check_key(card.report_url, fid, str(chain).strip().lower(), _addr(address))
         if int(self.slot_deployment.get(sk + ":" + ck) or 0) != 0:
             return self._refuse("DEPLOYMENT_ALREADY_IN_SLOT")
+        if percent_in_path(docs_url) or protocol_key(_clean_url(docs_url)) != card.protocol:
+            return self._refuse("DOCS_NOT_THE_SCORECARDS_PROTOCOL")
         return self._file(value, card.report_url, fid, function_name, audited_url, fix_url, chain, address,
-                          card.docs_url, sid, sk)
+                          docs_url, sid, sk)
 
     @gl.public.write
     def close_scorecard(self, scorecard_id: typing.Any) -> typing.Any:

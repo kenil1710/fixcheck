@@ -42,7 +42,8 @@ def attacker_docs(address=None):
 def slot_args(case, finding=None, **over):
     a = B.args_of(case)
     out = dict(scorecard_id=1, finding_id=finding or case["id"], function_name=a["function_name"],
-               audited_url=a["audited_url"], fix_url=a["fix_url"], chain=a["chain"], address=a["address"])
+               audited_url=a["audited_url"], fix_url=a["fix_url"], chain=a["chain"], address=a["address"],
+               docs_url=a["docs_url"])
     out.update(over)
     return out
 

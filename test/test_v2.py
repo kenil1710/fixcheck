@@ -212,7 +212,8 @@ class V2_03_ScorecardLifecycle(unittest.TestCase):
             w.call(B.ANYONE, "import_report", PT_REPORT, PT_DOCS)       # one scorecard per report + protocol
         a = B.args_of(B.CLAIMER)
         slot_args = dict(scorecard_id=1, finding_id="M-5", function_name=a["function_name"],
-                         audited_url=a["audited_url"], fix_url=a["fix_url"], chain=a["chain"], address=a["address"])
+                         audited_url=a["audited_url"], fix_url=a["fix_url"], chain=a["chain"], address=a["address"],
+                         docs_url=a["docs_url"])
         f = w.call(B.CHALLENGER, "file_slot", value=GEN, **slot_args)
         self.assertEqual((f["status"], f["code_says"]), ("OK", "FIXED"), f)
         self.assertEqual(w.c.get_check(1)["scorecard"], 1)
@@ -258,12 +259,25 @@ class V2_03_ScorecardLifecycle(unittest.TestCase):
             w.call(who, "withdraw")
         self.assertEqual(int(w.c.balance_wei), 0)
 
+    def test_slot_takes_any_docs_page_of_the_protocol_and_no_other(self):
+        # PoolTogether lists each chain on its own page of the same docs repo
+        w = B.World()
+        w.call(B.ANYONE, "import_report", PT_REPORT, PT_DOCS)            # optimism.md
+        a = B.args_of(B.VAULT_ETH)                                          # ethereum.md
+        out = w.call(B.CHALLENGER, "file_slot", 1, "M-17", a["function_name"], a["audited_url"], a["fix_url"],
+                     a["chain"], a["address"], a["docs_url"], value=GEN)
+        self.assertEqual((out["status"], out["code_says"]), ("OK", "NOT_FIXED"), out)
+        m = B.args_of(B.CONSENSUS)                                          # another protocol's docs
+        bad = w.call(B.CHALLENGER, "file_slot", 1, "M-5", a["function_name"], a["audited_url"], a["fix_url"],
+                     "optimism", B.CLAIMER["address"], m["docs_url"], value=GEN)
+        self.assertEqual(bad["reason"], "DOCS_NOT_THE_SCORECARDS_PROTOCOL")
+
     def test_expired_slot_counts_as_expired(self):
         w = B.World()
         w.call(B.ANYONE, "import_report", PT_REPORT, PT_DOCS)
         a = B.args_of(B.CLAIMER)
         w.call(B.CHALLENGER, "file_slot", 1, "M-5", a["function_name"], a["audited_url"], a["fix_url"],
-               a["chain"], a["address"], value=GEN)
+               a["chain"], a["address"], a["docs_url"], value=GEN)
         w.at(T0 + 3600 + 86400)
         w.call(B.ANYONE, "expire", 1)
         card = w.c.get_scorecard(1)
@@ -324,10 +338,10 @@ class V2_04_Code4rena(unittest.TestCase):
         w = c4_world()
         w.call(B.ANYONE, "import_report", C4_REPORT, p["docs_url"])
         out = w.call(B.CHALLENGER, "file_slot", 1, "H-06", p["fn"], p["audited_url"], p["fix_url"], p["chain"],
-                     p["address"], value=GEN)
+                     p["address"], p["docs_url"], value=GEN)
         self.assertEqual(out["code_says"], "FIXED", out)
         nm = w.call(B.CHALLENGER, "file_slot", 1, "H-05", p["fn"], p["audited_url"], p["fix_url"], p["chain"],
-                    p["address"], value=GEN)
+                    p["address"], p["docs_url"], value=GEN)
         self.assertEqual(nm["reason"], "FINDING_NOT_MARKED_FIXED")
         w.at(T0 + 3600)
         w.call(B.ANYONE, "decide", 1)
