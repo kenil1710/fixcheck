@@ -23,6 +23,17 @@ Kept on studio-dev and readable; nothing in the app or the docs outside this fol
 | FixCheckDemo | `0x66E008fc08414ecF423e59482c20A046FAd7A01c` | `93de7be` | eleven issues of the fourth attack pass (docs/ATTACK_REPORT_R4.md: six Medium, five Low): the leader could pick the slot block; chain facts came from one source; a metamorphic redeploy kept its first creation date; beacon proxies and an Upgraded event above the slot block were not handled; a pull ref could count as a branch; the status block's author was read from README text; modifiers were not followed |
 | FixRegistry | `0x90f8c37976D166364BD563f71156aEd187CAc9d2` | `93de7be` | eleven issues of the fourth attack pass (docs/ATTACK_REPORT_R4.md: six Medium, five Low): the leader could pick the slot block; chain facts came from one source; a metamorphic redeploy kept its first creation date; beacon proxies and an Upgraded event above the slot block were not handled; a pull ref could count as a branch; the status block's author was read from README text; modifiers were not followed |
 
+
+## v1 (accepted submission, kept untouched)
+
+The deployment the accepted submission was reviewed on (BASE `27f30c0`, deployed from `8519168`). Never written to by v2 work; its code is byte-identical to `contracts/` at BASE ([`docs/MILESTONE.md`](../MILESTONE.md), `node tools/base_proof.mjs`).
+
+| Contract | Address | Commit | Status |
+|---|---|---|---|
+| FixCheck (canonical) | `0x263C6a42B98E9133CF85A00A436b05C3573B88fe` | `8519168` | v1, superseded by v2 |
+| FixCheckDemo | `0x19bc7Cb16Ce1B4F328f33d0FDfeA61297dA04f68` | `8519168` | v1, superseded by v2 |
+| FixRegistry | `0xA37F98977f023D8C0bd17aCF1A7983E5d328d9A4` | `8519168` | v1, superseded by v2 |
+
 * `seed-canonical-v1.0.json`, `seed-demo-v1.0.json` — every check and decision on the first deployment.
 * `seed-canonical-v1.1.json`, `seed-demo-v1.1.json` — every check and decision on the second deployment.
 * `seed-canonical-v1.2.json`, `seed-demo-v1.2.json` — every check and decision on the third deployment (commit `0c20168`).
