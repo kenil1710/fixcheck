@@ -123,16 +123,18 @@ async function fileOne(p) {
   return id;
 }
 // the scorecard's slots are filed together inside its 600 s window, then decided
-const slotted = PLAN.filter((p) => p.slot);
+const card0 = await tr.view("get_scorecard", [sid]);
+const batch = card0.state === "OPEN" && Date.now() / 1000 < Number(card0.file_deadline) - 120;
+const slotted = batch ? PLAN.filter((p) => p.slot) : [];
 for (const p of slotted) await fileOne(p);
 for (const p of slotted) if (state[p.tag]) await decideOne(p, state[p.tag]);
-for (const p of PLAN.filter((x) => !x.slot)) {
+for (const p of PLAN.filter((x) => !slotted.includes(x))) {
   const id = await fileOne(p);
   if (id && !p.expire) await decideOne(p, id);
 }
 // R1 / R2 regression watch paths
 for (const [tag, prior] of [["R1", state.D11], ["R2a", state.D4], ["R2b", state.D1]]) {
-  if (txs.some((t) => t.tag === tag)) continue;
+  if (!prior || txs.some((t) => t.tag === tag && t.result?.reason !== "NO_SUCH_CHECK" && (t.prior === prior))) continue;
   const o = await ch.send("file_regression", [prior], GEN / 10n);
   const r = await last(ch);
   rec(tag, "file_regression", o, { prior, result: r });
@@ -153,7 +155,7 @@ if (!txs.some((t) => t.tag === "I1")) {
   log("I1 import refusal", o.status, o.ok, o.hash, o.revertReason?.slice(0, 120));
 }
 // D5 expiry
-{
+if (state.D5) {
   const id = state.D5;
   let c = await tr.view("get_check", [id]);
   if (c.state === "OPEN") {
