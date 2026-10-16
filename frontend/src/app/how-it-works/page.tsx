@@ -8,7 +8,10 @@ export const metadata: Metadata = { title: "How it works", description: "What Fi
 
 const CODE = [
   "Whether every link is pinned to a commit or to an exact archived capture taken before the filing, with no %-escapes",
-  "Whether the report is Sherlock’s own: a sherlock-audit judging repo or a capture of it (other auditors are future work)",
+  "Whether the report is the auditor’s own: a sherlock-audit judging repo (or a capture of it), or Code4rena’s report.md in a code-423n4 findings repo",
+  "Which findings a whole report contains and the auditor’s status for each (fixed, acknowledged, not mitigated, none) — every one, read by code; a report that can’t be enumerated completely is refused",
+  "For Code4rena: only the mitigation review marks a finding fixed — its status line and its rows in every summary and Individual PRs table must agree; the fix PR is read from that row",
+  "When a Fixed proxy is upgraded: which implementation runs now, and whether the function is the audited version again (Regressed)",
   "Fetching every source — each validator does it itself — and hashing every byte",
   "Whether the finding is in the report, marked fixed, and names the function",
   "Whether the protocol’s own docs list the address",
@@ -65,6 +68,7 @@ export default async function How() {
             ["Decide", "After the window, anyone can ask validators to decide. Code compares the functions; the model is consulted only if they differ from both versions."],
             ["Pay out", "Not fixed: the challenger takes every defender’s stake. Fixed: defenders split the challenger’s stake; with no defender, the challenger gets it back minus a 2% fee. Inconclusive, predates the audit or predates the fix: everyone refunded."],
             ["Withdraw", "Payouts sit in your balance until you withdraw. If nobody decides before the deadline, anyone can expire the check and every stake goes back."],
+            ["Whole reports", "Anyone can import a pinned report. Code lists every finding with the auditor’s status; each finding marked fixed is a slot any deployment can be filed into. After the filing window anyone closes the scorecard and every slot with no check is counted as not checked. Regressed pays like not fixed."],
           ].map(([t, d], i) => (
             <li key={t} className="grid grid-cols-[2.25rem_1fr] gap-x-3 border-t hair pt-5">
               <span className="t-num text-[1.5rem] leading-none text-ink-3" aria-hidden="true">{i + 1}</span>
@@ -80,7 +84,9 @@ export default async function How() {
           <li><strong className="text-ink">“Not fixed” is a code fact,</strong> not an exploit claim: the deployed function is the one the auditors reviewed, on code deployed after the fix existed. Whether it can be exploited depends on how the contract is configured.</li>
           <li><strong className="text-ink">“Predates the audit”</strong> means the deployed code matches the pre-audit version and the contract was deployed before the audit and can’t be upgraded, so the fix could not be applied there.</li>
           <li><strong className="text-ink">“Predates the fix”</strong> means this contract was deployed before the fix existed, so it could not contain it. The fix date is the later of the fix commit and the merge of its pull request; for a proxy, the implementation’s deployment counts.</li>
-          <li><strong className="text-ink">Supports Sherlock contest reports;</strong> other auditors are future work.</li>
+          <li><strong className="text-ink">Reads Sherlock and Code4rena reports.</strong> Cantina and Spearbit publish their reports as PDFs with no text source a contract can read deterministically, so they are not added.</li>
+          <li><strong className="text-ink">“Regressed”</strong> means a proxy whose latest verdict was fixed now runs the audited function again after an upgrade. It is decided by exact code match only.</li>
+          <li><strong className="text-ink">A scorecard counts what was checked.</strong> “Not checked” means nobody filed a check for that finding before the deadline — not that the fix is missing.</li>
           <li><strong className="text-ink">Only fully verified source counts.</strong> A partial explorer match, an override elsewhere in the source or an unresolved proxy ends inconclusive.</li>
           <li><strong className="text-ink">One function per finding.</strong> If a fix lives in a different function than the one the finding names, the model is told to answer inconclusive.</li>
           <li><strong className="text-ink">Comments and whitespace are ignored;</strong> a renamed variable is a change and goes to the model.</li>
