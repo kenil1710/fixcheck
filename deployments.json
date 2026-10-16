@@ -4,55 +4,70 @@
   "explorer": "https://explorer-studio-dev.genlayer.com/",
   "contracts": {
     "FixCheck": {
-      "address": "0x263C6a42B98E9133CF85A00A436b05C3573B88fe",
-      "deploy_tx": "0x610ba7d18d88c431c2c5c96d3a301a1829a8daa44182992f9292e546061a3052",
+      "address": "0xDc494719D5E29Ac26f23d7064128640C8E2863a3",
+      "deploy_tx": "0xe739bf4d3475e5741b6c2fea4e6bc134cc49b8750633c671fbfbb97c0d973dfe",
       "file": "contracts/FixCheck.py",
-      "commit": "8519168641d560b7528f3a23640c7722598c16fe",
-      "bytes": 154740,
-      "sha256": "bea3960114625bbb53e6d7313dcc6a63aa8bcf67469067916f56f58db9ce31a0",
+      "commit": "c0a2410f9a9ac7b3b30fe333ebe1d54cabbecde8",
+      "bytes": 198868,
+      "sha256": "0a50766fe7922e76a7fb492bc60b4aee2f845ae4a3823b06d8ef05f2bee765b5",
       "constructor_args": [
         "CANONICAL",
         3600,
         86400,
         200,
-        "0x8bfB2761bA064D3F829F382f444867EE10294b1C"
+        "0x8bfB2761bA064D3F829F382f444867EE10294b1C",
+        28800
       ],
       "deployer": "0x8bfB2761bA064D3F829F382f444867EE10294b1C",
-      "deployed_at": "2026-10-09T15:51:14.166Z",
+      "deployed_at": "2026-10-16T09:25:20.545Z",
       "mode": "CANONICAL"
     },
     "FixCheckDemo": {
-      "address": "0x19bc7Cb16Ce1B4F328f33d0FDfeA61297dA04f68",
-      "deploy_tx": "0x25b0862fb14f3a1dfb1d83ad0324256340accef4d799d263e96bfcd1aeb90cec",
+      "address": "0x5016957BEb2E8f8904Dfe8f9a968c23dca8151B6",
+      "deploy_tx": "0x284afa08ee895c46d0032c1510f3d55f0aebfe2fecc0e35ea9c23eb24237dede",
       "file": "contracts/FixCheck.py",
-      "commit": "8519168641d560b7528f3a23640c7722598c16fe",
-      "bytes": 154740,
-      "sha256": "bea3960114625bbb53e6d7313dcc6a63aa8bcf67469067916f56f58db9ce31a0",
+      "commit": "c0a2410f9a9ac7b3b30fe333ebe1d54cabbecde8",
+      "bytes": 198868,
+      "sha256": "0a50766fe7922e76a7fb492bc60b4aee2f845ae4a3823b06d8ef05f2bee765b5",
       "constructor_args": [
         "DEMO",
         90,
         300,
         200,
-        "0x8bfB2761bA064D3F829F382f444867EE10294b1C"
+        "0x8bfB2761bA064D3F829F382f444867EE10294b1C",
+        600
       ],
       "deployer": "0x8bfB2761bA064D3F829F382f444867EE10294b1C",
-      "deployed_at": "2026-10-09T15:51:25.160Z",
+      "deployed_at": "2026-10-16T09:25:34.363Z",
       "mode": "DEMO"
     },
-    "FixRegistry": {
-      "address": "0xA37F98977f023D8C0bd17aCF1A7983E5d328d9A4",
-      "deploy_tx": "0xbe6ba14e0ce79638cca04ec726f154278e271ac37d1bf92c37586ed1ee2a2525",
-      "file": "contracts/FixRegistry.py",
-      "commit": "8519168641d560b7528f3a23640c7722598c16fe",
-      "bytes": 3229,
-      "sha256": "6d99a876d5dadfd4bc4f9e6864dd2ade203af9a49839d100adb793cb7b97330a",
+    "FixStatus": {
+      "address": "0x50b1756dE161955Fd19b817F9CC5c0b11157f2be",
+      "deploy_tx": "0xd017b400158fa3cdda7ada148be5ce3645ab0da3ae8550515cfae3630812af9e",
+      "file": "contracts/FixStatus.py",
+      "commit": "c0a2410f9a9ac7b3b30fe333ebe1d54cabbecde8",
+      "bytes": 3765,
+      "sha256": "fc573fbf81dbf2d502d2fde6891428d748f66dbff8a5af69935899c63c5b617d",
       "constructor_args": [
-        "0x263C6a42B98E9133CF85A00A436b05C3573B88fe"
+        "0xDc494719D5E29Ac26f23d7064128640C8E2863a3"
       ],
       "deployer": "0x8bfB2761bA064D3F829F382f444867EE10294b1C",
-      "deployed_at": "2026-10-09T15:51:34.138Z",
-      "reads": "0x263C6a42B98E9133CF85A00A436b05C3573B88fe"
+      "deployed_at": "2026-10-16T09:25:43.703Z",
+      "reads": "0xDc494719D5E29Ac26f23d7064128640C8E2863a3"
+    },
+    "FixGate": {
+      "address": "0x3c546811AB2b53b284131A35bE105bc937e425CE",
+      "deploy_tx": "0xa61d9f8ee6bcbd88350b7f0463d2e21ab60d55da891b4dbb2f9cc51d63421af1",
+      "file": "contracts/FixGate.py",
+      "commit": "c0a2410f9a9ac7b3b30fe333ebe1d54cabbecde8",
+      "bytes": 3272,
+      "sha256": "66f0117810acda22c16177f0e9feaa21634f463000641869fe24272bcf244a83",
+      "constructor_args": [
+        "0x50b1756dE161955Fd19b817F9CC5c0b11157f2be"
+      ],
+      "deployer": "0x8bfB2761bA064D3F829F382f444867EE10294b1C",
+      "deployed_at": "2026-10-16T09:25:49.530Z",
+      "reads": "0x50b1756dE161955Fd19b817F9CC5c0b11157f2be"
     }
-  },
-  "superseded": []
+  }
 }
