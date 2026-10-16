@@ -34,10 +34,24 @@ The deployment the accepted submission was reviewed on (BASE `27f30c0`, deployed
 | FixCheckDemo | `0x19bc7Cb16Ce1B4F328f33d0FDfeA61297dA04f68` | `8519168` | v1, superseded by v2 |
 | FixRegistry | `0xA37F98977f023D8C0bd17aCF1A7983E5d328d9A4` | `8519168` | v1, superseded by v2 |
 
+## v2 deployments replaced before use
+
+| Contract | Address | Commit | Why it was replaced |
+|---|---|---|---|
+| FixCheck | `0xDc494719D5E29Ac26f23d7064128640C8E2863a3` | `c0a2410` | never seeded: file_slot could only use the scorecard's own docs page (PoolTogether lists each chain on its own page) |
+| FixCheckDemo | `0x5016957BEb2E8f8904Dfe8f9a968c23dca8151B6` | `c0a2410` | never seeded: file_slot could only use the scorecard's own docs page (PoolTogether lists each chain on its own page) |
+| FixStatus | `0x50b1756dE161955Fd19b817F9CC5c0b11157f2be` | `c0a2410` | never seeded: file_slot could only use the scorecard's own docs page (PoolTogether lists each chain on its own page) |
+| FixGate | `0x3c546811AB2b53b284131A35bE105bc937e425CE` | `c0a2410` | never seeded: file_slot could only use the scorecard's own docs page (PoolTogether lists each chain on its own page) |
+| FixCheck | `0xAE0e6f85D9C41027F5d0B03E4ED4Ae5A07B903e6` | `4cf0bc4` | Studio Dev's receipt limit: a filing whose evidence exceeded it ended UNDETERMINED (PoolTogether M-8 on Base); 3 scorecards and 4 checks were on it |
+| FixCheckDemo | `0xa2d6fCf5006e912197618c529C8612C4204B5A2a` | `4cf0bc4` | Studio Dev's receipt limit: a filing whose evidence exceeded it ended UNDETERMINED (PoolTogether M-8 on Base); 3 scorecards and 4 checks were on it |
+| FixStatus | `0x30dF4Fb5A884645a07D56F0202DeD370D5195046` | `4cf0bc4` | Studio Dev's receipt limit: a filing whose evidence exceeded it ended UNDETERMINED (PoolTogether M-8 on Base); 3 scorecards and 4 checks were on it |
+| FixGate | `0xa84D869b9Cd82fB247A5d5c2A9F375627DC7BCB8` | `4cf0bc4` | Studio Dev's receipt limit: a filing whose evidence exceeded it ended UNDETERMINED (PoolTogether M-8 on Base); 3 scorecards and 4 checks were on it |
+
 * `seed-canonical-v1.0.json`, `seed-demo-v1.0.json` — every check and decision on the first deployment.
 * `seed-canonical-v1.1.json`, `seed-demo-v1.1.json` — every check and decision on the second deployment.
 * `seed-canonical-v1.2.json`, `seed-demo-v1.2.json` — every check and decision on the third deployment (commit `0c20168`).
 * `seed-canonical-v1.3.json`, `seed-demo-v1.3.json` — every check and decision on the fourth deployment (commit `7efb699`; the submitted demo video was recorded on it).
+* `seed-canonical-v1.5.json`, `seed-demo-v1.5.json` — the accepted v1 deployment's chain state as committed at BASE `27f30c0` (the "before" column of the v2 re-run).
 * `seed-canonical-v1.4.json`, `seed-demo-v1.4.json` — every check and decision on the fifth deployment (commit `93de7be`, round 3).
 * [`DEPLOYED_VERIFICATION-r3.md`](DEPLOYED_VERIFICATION-r3.md), `live-r3.json` — the round-3 live verification on that deployment's demo.
 * `preview-before-round-2.json` — the live `gather()` preview of the 22 seeds under the third deployment's rules.
