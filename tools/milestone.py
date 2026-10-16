@@ -43,7 +43,7 @@ def line_of(commit, path, needle):
 
 def pin(path, needle, label=None):
     n = line_of(FINAL, path, needle)
-    return f"[{label or path.split('/')[-1]}#L{n}]({REPO}/blob/{FINAL}/{path}#L{n})"
+    return f"[{label or path.split('/')[-1]}#L{n}]({REPO}/blob/{FINAL}/{path.replace('[', '%5B').replace(']', '%5D')}#L{n})"
 
 
 def absent(path, *needles):
