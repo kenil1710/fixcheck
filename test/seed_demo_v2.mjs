@@ -37,7 +37,7 @@ const log = (...a) => console.log(new Date().toISOString().slice(11, 19), ...a);
 const OUT = new URL("../docs/seed-demo.json", import.meta.url);
 const prev = existsSync(OUT) ? JSON.parse(readFileSync(OUT, "utf8")) : {};
 const txs = prev.contract === address ? prev.txs ?? [] : [];
-const rec = (tag, fn, o, extra = {}) => { txs.push({ tag, fn, hash: o.hash, status: o.status, ok: o.ok, ...extra }); writeFileSync(OUT, JSON.stringify({ ...prev, contract: address, txs }, null, 2) + "\n"); };
+const rec = (tag, fn, o, extra = {}) => { txs.push({ tag, fn, hash: o.hash, status: o.status, ok: o.ok, ...extra }); writeFileSync(OUT, JSON.stringify({ contract: address, plan: state, txs }, null, 2) + "\n"); };
 const last = async (c) => JSON.parse((await c.view("get_last_result", [c.account.address])) || "{}");
 const find = (p, id, fn, chain) => seeds.find((s) => s.protocol.startsWith(p) && s.finding_id === id && s.function === fn && (!chain || s.chain === chain));
 const PT_REPORT = seeds.find((s) => s.protocol.startsWith("PoolTogether")).report_url;
@@ -58,7 +58,7 @@ const PLAN = [
   { tag: "D11", s: { ...find("Mellow", "H-5", "calculateFee"), address: "0x24fd64eb4766d91fd79a4d5e8086b2460debcae7" } },
   { tag: "D5", s: find("Cap", "M-1", "liquidate"), expire: true },
 ];
-const state = prev.contract === address ? prev.plan ?? {} : {};
+const state = {};   // ids are always re-read from the chain (fix_status)
 const idOf = async (s) => { const st = await tr.view("fix_status", [s.chain, s.address, s.report_url, s.finding_id]); return Number(st.open_check_id || st.check_id || 0); };
 const decideOne = async (p, id) => {
   for (let attempt = 1; attempt <= 4; attempt++) {
