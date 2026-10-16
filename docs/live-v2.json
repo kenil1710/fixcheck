@@ -1,0 +1,28 @@
+{
+  "gate_refused": "0xa1767a07ccadb2fa6628ae98732537b23896d5cf43fa0521273cd5a2305441e9",
+  "_gate": {
+    "gate_refused": {
+      "check_id": 5,
+      "outcome": {
+        "address": "0x9ee31e845ff1358bf6b1f914d3918c6223c75573",
+        "call": 1,
+        "chain": "ethereum",
+        "check_id": 5,
+        "result": "REFUSED",
+        "why": "FINDING_NOT_FIXED"
+      }
+    },
+    "gate_allowed": {
+      "check_id": 22,
+      "outcome": {
+        "address": "0xcb0672de558ad8f122c0e081f0d35480ab3be167",
+        "call": 2,
+        "chain": "optimism",
+        "check_id": 22,
+        "result": "ALLOWED",
+        "why": "FIXED"
+      }
+    }
+  },
+  "gate_allowed": "0x22a04d8cfb59d4d6b183fe2fb765562c6527aea9a878dda17ee5fff80ce851f2"
+}
