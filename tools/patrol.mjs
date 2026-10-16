@@ -73,9 +73,9 @@ async function upgradedSince(chain, proxy, fromBlock) {
 }
 
 const report = { at: new Date().toISOString(), dry: DRY || !key, contracts: [] };
-for (const name of ["FixCheck", "FixCheckDemo"]) {
-  if (!dep[name] || (ONLY && ONLY !== name)) continue;
+async function patrol(name) {
   const address = dep[name].address;
+  const rec = { name, address, checks: 0, watched: [], filed: [], closed: [], scorecards_closed: [], withdrawn: null };
   const reader = createClient({ chain: H.CHAINS.studiodev });
   const view = async (fn, args = []) => plain(await H.retry(() => reader.readContract({ address, functionName: fn, args }), { label: fn }));
   const c = key ? H.connect({ address, key }) : null;
@@ -89,7 +89,7 @@ for (const name of ["FixCheck", "FixCheckDemo"]) {
   }
   const latest = {};
   for (const x of checks) if (x.state !== "EXPIRED" && (!latest[x.key] || x.check_id > latest[x.key].check_id)) latest[x.key] = x;
-  const rec = { name, address, checks: checks.length, watched: [], filed: [], closed: [], scorecards_closed: [], withdrawn: null };
+  rec.checks = checks.length;
   // 1 + 2: watch and re-file
   for (const x of Object.values(latest)) {
     if (x.state !== "DECIDED" || x.verdict !== "FIXED" || !x.implementation) continue;
@@ -133,7 +133,17 @@ for (const name of ["FixCheck", "FixCheckDemo"]) {
       log(name, "withdraw", bal.claimable_wei, o.status);
     }
   }
-  report.contracts.push(rec);
+  return rec;
+}
+for (const name of ["FixCheck", "FixCheckDemo"]) {
+  if (!dep[name] || (ONLY && ONLY !== name)) continue;
+  try {
+    report.contracts.push(await patrol(name));
+  } catch (e) {
+    // a network failure ends this contract's pass; the next scheduled run retries
+    report.contracts.push({ name, error: String(e?.shortMessage ?? e?.message ?? e).slice(0, 200) });
+    log(name, "pass ended early:", String(e?.message ?? e).slice(0, 120));
+  }
 }
 const out = JSON.stringify(report);
 if (process.env.PATROL_REPORT) writeFileSync(process.env.PATROL_REPORT, JSON.stringify(report, null, 1) + "\n");
