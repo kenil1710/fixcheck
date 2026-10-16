@@ -85,12 +85,28 @@ if (!sid) {
 state.S0 = sid;
 async function fileOne(p) {
   let id = state[p.tag] ?? await idOf(p.s);
+  let refile = false;
+  if (id && !p.expire) {
+    // a check whose decide window passed before it was decided (slow network) is
+    // expired, then the same evidence is filed again as a new check
+    let c = await tr.view("get_check", [id]);
+    if (c.state === "OPEN" && Date.now() / 1000 >= Number(c.decide_deadline)) {
+      const o = await tr.send("expire", [id]);
+      rec(p.tag, "expire (missed window)", o, { check_id: id });
+      log(p.tag, "expire stale", id, o.status, o.hash);
+      c = await tr.view("get_check", [id]);
+    }
+    if (c.state === "EXPIRED") { id = 0; refile = true; }
+  }
   if (!id) {
-    const o = p.slot && sid
+    const card = sid ? await tr.view("get_scorecard", [sid]) : null;
+    // a deployment fills a slot once: a re-file after an expiry is a plain check
+    const slotOpen = !refile && card && card.state === "OPEN" && Date.now() / 1000 < Number(card.file_deadline) - 30;
+    const o = p.slot && slotOpen
       ? await ch.send("file_slot", [sid, p.s.finding_id, p.s.function, p.s.audited_url, p.s.fix_url, p.s.chain, p.s.address, p.s.docs_url], GEN)
       : await ch.send("file_check", [p.s.report_url, p.s.finding_id, p.s.function, p.s.audited_url, p.s.fix_url, p.s.chain, p.s.address, p.s.docs_url], GEN);
     const r = await last(ch);
-    rec(p.tag, p.slot ? "file_slot" : "file_check", o, { result: r });
+    rec(p.tag, p.slot && slotOpen ? "file_slot" : "file_check", o, { result: r });
     log(p.tag, "file", o.status, o.hash, JSON.stringify(r));
     id = await idOf(p.s);
   }
