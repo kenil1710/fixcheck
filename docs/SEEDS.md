@@ -1,6 +1,6 @@
 # Seeds
 
-Read from the chain by `tools/seeds_md.mjs` on 2026-10-16T17:55Z. Every value comes from contract state.
+Read from the chain by `tools/seeds_md.mjs` on 2026-10-16T18:01Z. Every value comes from contract state.
 
 ## Canonical — 0x0ed096B1888ebbE08F268b42d528326aD65cA065
 

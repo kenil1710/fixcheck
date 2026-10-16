@@ -36,7 +36,7 @@ On the canonical contract (read from chain by `tools/seeds_md.mjs`): **28 checks
 * **Regressed** — 0: no watched proxy has been upgraded back to the audited code.
 * **Not checked** — every finding a report marks fixed that nobody filed a check for, counted per scorecard.
 
-The 22 checks of v1 were re-run on v2: 22 of 22 unchanged ([before/after](docs/SEEDS.md#the-22-v1-checks-re-run-on-v2-before--after)).
+The 22 checks of 21 findings from v1 (PoolTogether M-1 on two chains) were re-run on v2: 22 of 22 unchanged ([before/after](docs/SEEDS.md#the-22-v1-checks-re-run-on-v2-before--after)).
 <!-- RESULTS:END -->
 
 These are code facts, not claims about exploitability or anyone's intent.

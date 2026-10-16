@@ -90,7 +90,7 @@ const res = `On the canonical contract (read from chain by \`tools/seeds_md.mjs\
   `* **Inconclusive** — ${stats.inconclusive}: code could not prove which function runs (partially verified source) or the model's answers did not point at the fix. Everyone is refunded.\n` +
   `* **Regressed** — ${stats.regressed}: no watched proxy has been upgraded back to the audited code.\n` +
   `* **Not checked** — every finding a report marks fixed that nobody filed a check for, counted per scorecard.\n\n` +
-  `The 22 checks of v1 were re-run on v2: ${unchanged} of 22 unchanged ([before/after](docs/SEEDS.md#the-22-v1-checks-re-run-on-v2-before--after)).`;
+  `The 22 checks of 21 findings from v1 (PoolTogether M-1 on two chains) were re-run on v2: ${unchanged} of 22 unchanged ([before/after](docs/SEEDS.md#the-22-v1-checks-re-run-on-v2-before--after)).`;
 let out = rd.replace(/<!-- RESULTS:BEGIN -->[\s\S]*<!-- RESULTS:END -->/, `<!-- RESULTS:BEGIN -->\n${res}\n<!-- RESULTS:END -->`);
 let t = "| # | Auditor | Protocol | Finding | Function | Chain | Verdict | Basis |\n|---|---|---|---|---|---|---|---|\n";
 for (const x of canon) t += `| [${x.check_id}](${SITE}/checks/${x.check_id}) | ${aud(x.auditor)} | ${protoName(x.protocol)} | ${x.finding_id} | \`${x.function}\` | ${x.chain} | **${verdict(x)}** | ${x.basis} |\n`;
