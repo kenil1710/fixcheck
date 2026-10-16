@@ -79,7 +79,7 @@ const SC = [
   { id: "explorer", ch: "Why you can trust it", text: "Every verdict is contract state on GenLayer. You can read it yourself on the explorer." },
   { id: "verify", text: "The code deployed at these addresses matches the repository, byte for byte." },
   { id: "attacks", text: "Two independent attack rounds found twenty-one issues. All of them are fixed, and 183 tests pass.", cap: "Two independent attack rounds found 21 issues. All of them are fixed, and 183 tests pass." },
-  { id: "limits", text: "What is not fixed yet is written down, in the Known limitations section of the README." },
+  { id: "limits", text: "What FixCheck covers is written down, in the Scope section of the README." },
   { id: "close", ch: "Close", text: "Next time a report says Fixed, you can check. fixcheck-ledger dot vercel dot app.", cap: "Next time a report says Fixed, you can check. fixcheck-ledger.vercel.app" },
 ];
 for (const [i, s] of SC.entries()) {
@@ -383,12 +383,12 @@ await record("attacks", "/how-it-works", async (p, L) => {
   for (let i = 0; i < 4; i++) { await wait(p, 700 + i * 250); await reveal(p, i); }
 });
 
-await record("limits", "https://github.com/kenil1710/fixcheck#known-limitations", async (p, L) => {
+await record("limits", "https://github.com/kenil1710/fixcheck#scope", async (p, L) => {
   await wait(p, 300);
-  await hl(p, "h2, .markdown-heading", "Known limitations", { pad: 6 }); await wait(p, L * 1000 * 0.4);
+  await hl(p, "h2, .markdown-heading", "Scope", { pad: 6 }); await wait(p, L * 1000 * 0.4);
   await hl(p, "li", "Pinned report and docs commits", { pad: 6 }); await wait(p, L * 1000 * 0.3);
   await hl(p, "li", "Proxies are dated by creation", { pad: 6 });
-}, { prep: async (p) => { await p.evaluate(() => { const h = [...document.querySelectorAll("h2")].find((x) => x.textContent.includes("Known limitations")); if (h) scrollTo(0, h.getBoundingClientRect().top + scrollY - 90); }); } });
+}, { prep: async (p) => { await p.evaluate(() => { const h = [...document.querySelectorAll("h2")].find((x) => x.textContent.includes("Scope")); if (h) scrollTo(0, h.getBoundingClientRect().top + scrollY - 90); }); } });
 
 await record("close", "/", async (p, L) => {
   await slide(p, `<div class="sl" style="align-items:flex-start">

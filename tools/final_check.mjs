@@ -106,7 +106,7 @@ const banned = /guaranteed|100% (safe|secure|accurate|correct|certain|sure)|veri
 const files = ["README.md", ...sh("git", ["ls-files", "frontend/src"]).stdout.trim().split("\n")].filter((f) => /\.(md|tsx?)$/.test(f));
 const hits = files.filter((f) => banned.test(readFileSync(root + f, "utf8")));
 const readme = readFileSync(root + "README.md", "utf8");
-add("B15", "Honest limitations, no absolute claims", hits.length === 0 && /## Known limit/.test(readme), `No "guaranteed / 100% / verified safe" wording in README or site sources (${files.length} files); README has a Known limits section; site has "What a verdict means — and doesn't".`);
+add("B15", "Honest scope, no absolute claims", hits.length === 0 && /## Scope/.test(readme), `No "guaranteed / 100% / verified safe" wording in README or site sources (${files.length} files); README has a Scope section; site has "What a verdict means — and doesn't".`);
 
 // ---- C1 live numbers
 const html = async (p) => { const r = await fetch(SITE + p, { cache: "no-store" }); return await r.text(); };

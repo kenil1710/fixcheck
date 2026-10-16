@@ -25,5 +25,5 @@ Numbers read from the canonical contract (round-2 canonical (commit 7efb699), ad
 | 2:52–2:57 | Every verdict is contract state on GenLayer. You can read it yourself on the explorer. |
 | 2:57–3:02 | The code deployed at these addresses matches the repository, byte for byte. |
 | 3:02–3:10 | Two independent attack rounds found 21 issues. All of them are fixed, and 183 tests pass. |
-| 3:10–3:15 | What is not fixed yet is written down, in the Known limitations section of the README. |
+| 3:10–3:15 | What FixCheck covers is written down, in the Scope section of the README. |
 | 3:15–3:20 | Next time a report says Fixed, you can check. fixcheck-ledger.vercel.app |

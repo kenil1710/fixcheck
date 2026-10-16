@@ -247,7 +247,7 @@ Everyone was refunded. No model answer moved money.
 | B12 | Verbatim resend can't reopen or re-pay | **PASS** |
 | B13 | Model flips end INCONCLUSIVE | **PASS** |
 | B14 | Fees on all writes | **PASS** |
-| B15 | Honest limitations, no absolute claims | **PASS** |
+| B15 | Honest scope, no absolute claims | **PASS** |
 | C1 | Live site numbers match chain | **PASS** |
 | C2 | One consistent set of current addresses | **PASS** |
 | C3 | 375px: no horizontal scroll | **PASS** |

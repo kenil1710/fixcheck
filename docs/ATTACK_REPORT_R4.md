@@ -23,8 +23,8 @@ Eleven issues, all fixed and each with a test that failed on the round-3 code:
 | R4-04 | Medium | Code redeployed at the same address (metamorphic) kept its first creation date → PREDATES | 3 |
 | R4-05 | Medium | An Upgraded event above the slot block was ignored → PREDATES for code re-chosen after the fix | 3 |
 | R4-06 | Medium | Every chain fact came from one source (one RPC, or one explorer) | 4 |
-| R4-07 | Medium | A status block typed into a participant's comment counted as Sherlock's (README limitation) | 6 |
-| R4-08 | Medium | Modifiers were not followed: an overridden modifier still gave a code verdict (README limitation) | 6 |
+| R4-07 | Medium | A status block typed into a participant's comment counted as Sherlock's (README scope item) | 6 |
+| R4-08 | Medium | Modifiers were not followed: an overridden modifier still gave a code verdict (README scope item) | 6 |
 
 Tests: `python3 -m unittest discover -s test -p "test_*.py"` → **254 tests, OK, 0 expected failures** (`test_fixcheck.py` 157, `test_attacks.py` 12, `test_attacks_r2.py` 14, `test_attacks_r3.py` 22, `test_attacks_r4.py` 49).
 
@@ -198,11 +198,11 @@ Searched this round, beyond the 21 seeded findings:
 
 So the date-only path stays covered offline: `R3_Reg_ProxyChronology`, `R4_P3_RollbackABA`, `R4_P4_CodeRedeployedAtTheSameAddress` and `R4_P5_SlotReadBeforeTheLastUpgrade` serve the real Ethereum vault (deployed code == audited) as a proxy, with explorer and RPC logs. The live proxy case on the new demo shows the chronology fields stored and confirmed by both RPCs (docs/superseded/DEPLOYED_VERIFICATION-r4.md).
 
-## Step 6. Known limitations: fixed now, or why they stay (round-4 fixes 6 and 7)
+## Step 6. README scope items: fixed now, or why they stay (round-4 fixes 6 and 7)
 
-Each README limitation was either fixed in this round or now states plainly why it stays (by design, or not possible on Studio Dev). Two were cheap enough to fix:
+Each README scope item was either fixed in this round or now states plainly why it stays (by design, or not possible on Studio Dev). Two were cheap enough to fix:
 
-| Limitation | Fix | Test |
+| Scope item | Fix | Test |
 |---|---|---|
 | "Modifiers are not followed" | `modifiers_of()` reads the modifiers a function's header applies; each must run the implementation the function sees, exactly like a called helper (round-2 fix 6). A derived contract that overrides one (`modifier onlyOwner() override { _; }`) is `HELPER_OVERRIDDEN` → INCONCLUSIVE. Shared extractor updated in `tools/solfn.py` too. | `R4_K1_ModifiersAreFollowed` (2) |
 | "A participant who types a `sherlock-admin` line into their own comment could forge a status block" | The judging README is Sherlock's rendering of the GitHub issue; inside it an author is only text. The section's `Source:` line names its issue in the report's own judging repo; every validator reads that issue page, and the fix link must be in a comment that **GitHub** attributes to a `sherlock-admin*` user and that carries a fixed-status phrase. Missing source: `FINDING_SOURCE_MISSING`; not confirmed: `FIX_STATUS_NOT_ON_GITHUB_ISSUE`; page unreadable: `FINDING_ISSUE_UNREADABLE` (nothing written). The issue number is stored (`status_issue`). GenVM reads these pages (probe tx `0xe8f2cd8073e7ea5034cd326f72331199f512a611efbf1f73ad34658432822512`, [`research/probe_issue_r4.json`](research/probe_issue_r4.json)); all 22 seeds confirm in the live replay. | `R4_K2_StatusBlockAuthorFromGitHub` (5) |

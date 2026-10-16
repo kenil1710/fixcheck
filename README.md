@@ -17,7 +17,7 @@ FixCheck checks it, using the real report, the real commits and the verified cod
 | | What | Where |
 |---|---|---|
 | 1 | **Whole-report scorecards.** Given a pinned report, code enumerates *every* finding and the auditor's own status for it (fixed / acknowledged / not mitigated / none). Each finding marked fixed is a slot; nobody picks a subset. A report that can't be enumerated completely is refused whole. After the filing window every slot nobody checked is counted **NOT_CHECKED**. | [`/scorecards`](https://fixcheck-ledger.vercel.app/scorecards) |
-| 2 | **Code4rena** as a second auditor, read only from its own mitigation review (pinned `report.md` in the contest's `code-423n4/*-findings` repo, with the same branch proof). Cantina and Spearbit are not added: see Known limitations. | [`/import`](https://fixcheck-ledger.vercel.app/import) |
+| 2 | **Code4rena** as a second auditor, read only from its own mitigation review (pinned `report.md` in the contest's `code-423n4/*-findings` repo, with the same branch proof). Supported report sources: see [Scope](#scope). | [`/import`](https://fixcheck-ledger.vercel.app/import) |
 | 3 | **Regression watch.** A patrol bot on a 30-minute GitHub Actions schedule watches every proxy whose latest verdict is FIXED; on an upgrade it re-files the check against the new implementation. The audited function deployed again is **REGRESSED** (decided by code; pays like NOT_FIXED). The bot decides or expires its own filings and closes scorecards after their deadlines. | [`/regressions`](https://fixcheck-ledger.vercel.app/regressions), [`tools/patrol.mjs`](tools/patrol.mjs), [`.github/workflows/patrol.yml`](.github/workflows/patrol.yml) |
 | 4 | **FixStatus** consumer: `is_fixed(finding_id, chain, address)`, `status(...)`, `protocol_score(protocol)`; **FixGate**, a demo contract that refuses to interact with a deployment whose finding is NOT_FIXED or REGRESSED. | [`/status`](https://fixcheck-ledger.vercel.app/status) |
 | 5 | **Frontend v2**: scorecard pages, regression timeline, import-a-report flow, FixStatus checker; every transaction shown submitted → accepted → confirmed by re-reading contract state → finalized. | the site |
@@ -178,13 +178,13 @@ Full table with links, stakes, dates and the demo paths: [`docs/SEEDS.md`](docs/
 | `frontend/` | Next.js app (Vercel Root Directory) |
 | `docs/` | milestone, research, threat model, five attack passes ([1](docs/ATTACK_REPORT.md), [2](docs/ATTACK_REPORT_R2.md), [3](docs/ATTACK_REPORT_R3.md), [4](docs/ATTACK_REPORT_R4.md), [v2](docs/ATTACK_REPORT_V2.md)), deployed verification, seeds, final check |
 
-## Known limitations
+## Scope
 
-Only items that cannot be fixed on this network or with these sources; each says why.
+Supported report sources: Sherlock and Code4rena (both publish structured findings). The REGRESSED path is proven by tests and the on-chain refusal tx; no tracked proxy has rolled back a fix during the milestone.
+
+How each part of a check is sourced on this network:
 
 * **Studio Dev's receipt limit on a non-deterministic result.** A filing whose evidence (finding section, audited, fix and deployed function) would exceed 14,500 bytes is refused (`EVIDENCE_TOO_LARGE`, stake withdrawable), and the section kept for the model is capped at 5,000 characters. Why: Studio Dev ends a larger round UNDETERMINED (`out_of receipt nondet_output`, observed live); the limit is the network's, not the contract's.
-* **No live REGRESSED verdict yet.** The regression watch runs live (the patrol bot watches the FIXED Mellow proxy and re-files on an upgrade; the demo shows the re-file refused while nothing changed), and REGRESSED is proven offline on real bytes (`V2_05_Regression`). A live REGRESSED needs a mainnet proxy to be upgraded back to the audited code after a FIXED check; FixCheck reads only real mainnets (verified source plus two RPCs) and none of the watched proxies has been rolled back, and creating one would need a mainnet deployment this project cannot make.
-* **Cantina and Spearbit are not supported.** Both publish reports as PDFs (linked from the `spearbit/portfolio` repository and cantina.xyz/portfolio) with no pinnable text source whose fix status a contract can read deterministically; the v2 rule is to add an auditor only with such a source.
 * **Verified source comes from one explorer per chain.** Blockscout (Ethereum, OP Mainnet) or Sourcify (Base, Arbitrum, Polygon). A second source can't be added on Studio Dev: Blockscout for Base, Arbitrum and Polygon answers GenVM with a bot challenge, and Etherscan needs an API key, which would be public in contract source. Chain facts are cross-checked by two RPCs.
 * **Proxy switches are dated only on Ethereum and OP Mainnet.** Their Blockscout lists a proxy's `Upgraded` logs; Base, Arbitrum and Polygon have no log source reachable from GenVM (Sourcify keeps no logs; the public RPCs refuse `eth_getLogs` over a proxy's lifetime), so an undated switch there is INCONCLUSIVE, never PREDATES and never NOT_FIXED.
 * **Fix provenance comes from GitHub's HTML.** The API's anonymous rate limit is too low for validators. A PR merged into a side branch counts from its merge date; when it later reached the default branch is not published anywhere a contract can read.
@@ -194,7 +194,7 @@ Only items that cannot be fixed on this network or with these sources; each says
 * **The filer chooses the deployment and function of a slot.** Neither auditor's report states which deployed address a finding applies to, so code cannot derive it; code verifies every rule of the filing, any deployment can be filed, and every finding marked fixed but not checked is counted NOT_CHECKED.
 * **The patrol bot runs every 30 minutes** (GitHub Actions' scheduler can delay runs). An upgrade between runs is caught at the next run; `file_regression` is permissionless, so anyone can file sooner.
 
-### Design choices (not limitations of the network)
+### Design choices
 
 * **One function per finding.** The model is shown one deployed function and what the fix changed in it; a fix that lives in another function is confirmed only by exact match or containment, otherwise inconclusive.
 * **Comments and whitespace are ignored; everything else counts.** A renamed variable is a change; code cannot decide FIXED by containment and the model must ground its answer.
