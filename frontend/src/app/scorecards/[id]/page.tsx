@@ -2,7 +2,8 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { getScorecard, getScorecardSlots } from "@/lib/reads";
 import { CHAIN_NAMES, protocolMeta, severityOf } from "@/lib/catalog";
-import { CLASS_WORDS, auditorName } from "@/lib/classes";
+import { CLASS_WORDS, auditorName, cleanTitle } from "@/lib/classes";
+import { Title } from "@/components/Title";
 import { commit7, short, when } from "@/lib/format";
 import { Counts } from "@/components/Counts";
 import { Ring } from "@/components/Ring";
@@ -79,7 +80,7 @@ export default async function ScorecardPage({ params }: { params: Promise<{ id: 
                 <tr key={s.index} className="border-b hair align-top">
                   <td className="py-3 pr-3">
                     <span className="mono">{s.finding_id}</span> <span className="text-ink-3">{severityOf(s.finding_id).label}</span>
-                    <div className="mt-0.5 max-w-[46ch] text-ink-2 [overflow-wrap:anywhere]">{s.title.replace(/^\[\[[^\]]+\]\s*/, "").replace(/\]\(https?:[^)]*\)$/, "").replace(/^Issue [HMC]-\d+:\s*/, "")}</div>
+                    <div className="mt-0.5 max-w-[52ch] text-ink-2 [overflow-wrap:anywhere]"><Title text={cleanTitle(s.title)} /></div>
                   </td>
                   <td className="py-3 pr-3 text-ink-2">{CLASS_WORDS[s.cls].word}</td>
                   <td className="py-3">

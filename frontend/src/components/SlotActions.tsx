@@ -8,6 +8,7 @@ import { sendWrite, type TxState } from "@/lib/tx";
 import { readNow } from "@/lib/clientRead";
 import { DEPLOYMENTS, type Deployment } from "@/lib/deployments";
 import { untilText } from "@/lib/format";
+import { cleanTitle } from "@/lib/classes";
 
 type Fixed = { finding_id: string; title: string };
 
@@ -58,7 +59,7 @@ export function SlotActions({ dep, id, state, deadline, fixed, docs }: { dep: De
         }}>
           <label className="grid gap-1 t-small">Finding (marked fixed)
             <select className="field" value={f.finding_id} onChange={set("finding_id")}>
-              {fixed.map((x) => <option key={x.finding_id} value={x.finding_id}>{x.finding_id} — {x.title.replace(/^\[\[[^\]]+\]\s*|^Issue [HM]-\d+:\s*/, "").slice(0, 60)}</option>)}
+              {fixed.map((x) => <option key={x.finding_id} value={x.finding_id}>{x.finding_id} — {cleanTitle(x.title).replace(/`/g, "").slice(0, 60)}</option>)}
             </select>
           </label>
           <label className="grid gap-1 t-small">Function named in the finding<input className="field mono" value={f.function_name} onChange={set("function_name")} placeholder="claimPrizes" required /></label>
