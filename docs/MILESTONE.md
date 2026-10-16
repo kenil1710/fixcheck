@@ -16,7 +16,7 @@ FixCheck sha256 `bea3960114625bbb53e6d7313dcc6a63aa8bcf67469067916f56f58db9ce31a
 
 ## Compare
 
-**https://github.com/kenil1710/fixcheck/compare/27f30c059707f982771a6548f7e337a71ec85ed9...e5ec21c0fb6d61a112637b062558216588ba5a9f**
+**https://github.com/kenil1710/fixcheck/compare/27f30c059707f982771a6548f7e337a71ec85ed9...ccdd258b87f5632f78072870ef860940d18bbb4d**
 
 `git diff --shortstat 27f30c0 e5ec21c`: 87 files changed, 12684 insertions(+), 2099 deletions(-)
 
