@@ -76,12 +76,12 @@ Ledger invariant, checked after every call in the tests and shown live on `/bala
 
 | Contract | Address |
 |---|---|
-| FixCheck 2.0.0 — canonical (1 h counter, 24 h decide, 8 h to fill a scorecard) | `0xAE0e6f85D9C41027F5d0B03E4ED4Ae5A07B903e6` |
-| FixCheck 2.0.0 — demo (90 s counter, 300 s decide, 10 min scorecards) | `0xa2d6fCf5006e912197618c529C8612C4204B5A2a` |
-| FixStatus — read-only consumer (`is_fixed`, `status`, `protocol_score`) | `0x30dF4Fb5A884645a07D56F0202DeD370D5195046` |
-| FixGate — demo consumer (refuses NOT_FIXED / REGRESSED) | `0xa84D869b9Cd82fB247A5d5c2A9F375627DC7BCB8` |
+| FixCheck 2.0.0 — canonical (1 h counter, 24 h decide, 8 h to fill a scorecard) | `0x0ed096B1888ebbE08F268b42d528326aD65cA065` |
+| FixCheck 2.0.0 — demo (90 s counter, 300 s decide, 10 min scorecards) | `0xf6f036F7186487655F522dB6F5dAC07E0844F7DE` |
+| FixStatus — read-only consumer (`is_fixed`, `status`, `protocol_score`) | `0xFA0A5592FbE13B8b74b8f4bc8a5abf6568420B98` |
+| FixGate — demo consumer (refuses NOT_FIXED / REGRESSED) | `0x0B4FB25B50800Ac454e870F80011b6f3A06335Cb` |
 
-All four deployed from commit `4cf0bc4938b4192395d15f5389a62b667a94f2d6` with the bytes of `git show <commit>:<file>`; `node tools/verify_source.mjs` reads the code back from the chain (`gen_getContractCode`) and confirms each is byte-identical to HEAD. sha256 and deploy transactions: [`ADDRESSES.md`](ADDRESSES.md). Explorer: https://explorer-studio-dev.genlayer.com/
+All four deployed from commit `85396d9ed6e4a0f2076bcc65c5e0d7dd9e325768` with the bytes of `git show <commit>:<file>`; `node tools/verify_source.mjs` reads the code back from the chain (`gen_getContractCode`) and confirms each is byte-identical to HEAD. sha256 and deploy transactions: [`ADDRESSES.md`](ADDRESSES.md). Explorer: https://explorer-studio-dev.genlayer.com/
 
 Other apps read verdicts with `FixRegistry.fix_status(chain, address, "<pinned report url>#<finding id>")` (or `is_fixed` / `is_known_unfixed`; `is_known_unfixed` is false for PREDATES AUDIT) — free cross-contract views, no payable methods. Earlier versions are listed in [`docs/superseded/`](docs/superseded/).
 

@@ -491,6 +491,84 @@
       "reads": "0x50b1756dE161955Fd19b817F9CC5c0b11157f2be",
       "superseded_by": "0xa84D869b9Cd82fB247A5d5c2A9F375627DC7BCB8",
       "why": "never seeded: file_slot could only use the scorecard's own docs page (PoolTogether lists each chain on its own page)"
+    },
+    {
+      "name": "FixCheck",
+      "address": "0xAE0e6f85D9C41027F5d0B03E4ED4Ae5A07B903e6",
+      "deploy_tx": "0x8ea5701baede2348cc3cb1575d8206a9888b97d7e145a730ca8636c90cd847ec",
+      "file": "contracts/FixCheck.py",
+      "commit": "4cf0bc4938b4192395d15f5389a62b667a94f2d6",
+      "bytes": 199184,
+      "sha256": "a51256535e497509b45ef7a9ad09a6acfb860ab91b20065422546ca55e5e91c1",
+      "constructor_args": [
+        "CANONICAL",
+        3600,
+        86400,
+        200,
+        "0x8bfB2761bA064D3F829F382f444867EE10294b1C",
+        28800
+      ],
+      "deployer": "0x8bfB2761bA064D3F829F382f444867EE10294b1C",
+      "deployed_at": "2026-10-16T09:27:29.304Z",
+      "mode": "CANONICAL",
+      "superseded_by": "0x0ed096B1888ebbE08F268b42d528326aD65cA065",
+      "why": "Studio Dev's receipt limit: a filing whose evidence exceeded it ended UNDETERMINED (PoolTogether M-8 on Base); 3 scorecards and 4 checks were on it"
+    },
+    {
+      "name": "FixCheckDemo",
+      "address": "0xa2d6fCf5006e912197618c529C8612C4204B5A2a",
+      "deploy_tx": "0x5f328eb80bf261aa52c79ec2a0e3bad24c96d5fa634c9774986f878d9631a983",
+      "file": "contracts/FixCheck.py",
+      "commit": "4cf0bc4938b4192395d15f5389a62b667a94f2d6",
+      "bytes": 199184,
+      "sha256": "a51256535e497509b45ef7a9ad09a6acfb860ab91b20065422546ca55e5e91c1",
+      "constructor_args": [
+        "DEMO",
+        90,
+        300,
+        200,
+        "0x8bfB2761bA064D3F829F382f444867EE10294b1C",
+        600
+      ],
+      "deployer": "0x8bfB2761bA064D3F829F382f444867EE10294b1C",
+      "deployed_at": "2026-10-16T09:27:43.447Z",
+      "mode": "DEMO",
+      "superseded_by": "0xf6f036F7186487655F522dB6F5dAC07E0844F7DE",
+      "why": "Studio Dev's receipt limit: a filing whose evidence exceeded it ended UNDETERMINED (PoolTogether M-8 on Base); 3 scorecards and 4 checks were on it"
+    },
+    {
+      "name": "FixStatus",
+      "address": "0x30dF4Fb5A884645a07D56F0202DeD370D5195046",
+      "deploy_tx": "0x85446664a23d77c2382cf07f765fb679a21b9c0e51b461efd29cb2a72b27ab11",
+      "file": "contracts/FixStatus.py",
+      "commit": "4cf0bc4938b4192395d15f5389a62b667a94f2d6",
+      "bytes": 3765,
+      "sha256": "fc573fbf81dbf2d502d2fde6891428d748f66dbff8a5af69935899c63c5b617d",
+      "constructor_args": [
+        "0xAE0e6f85D9C41027F5d0B03E4ED4Ae5A07B903e6"
+      ],
+      "deployer": "0x8bfB2761bA064D3F829F382f444867EE10294b1C",
+      "deployed_at": "2026-10-16T09:27:52.707Z",
+      "reads": "0xAE0e6f85D9C41027F5d0B03E4ED4Ae5A07B903e6",
+      "superseded_by": "0xFA0A5592FbE13B8b74b8f4bc8a5abf6568420B98",
+      "why": "Studio Dev's receipt limit: a filing whose evidence exceeded it ended UNDETERMINED (PoolTogether M-8 on Base); 3 scorecards and 4 checks were on it"
+    },
+    {
+      "name": "FixGate",
+      "address": "0xa84D869b9Cd82fB247A5d5c2A9F375627DC7BCB8",
+      "deploy_tx": "0x3c0db8e3ef5ec5cb1376593e9eb8a855adbf74a56d13fb2a8d0b31545e0c7a09",
+      "file": "contracts/FixGate.py",
+      "commit": "4cf0bc4938b4192395d15f5389a62b667a94f2d6",
+      "bytes": 3272,
+      "sha256": "66f0117810acda22c16177f0e9feaa21634f463000641869fe24272bcf244a83",
+      "constructor_args": [
+        "0x30dF4Fb5A884645a07D56F0202DeD370D5195046"
+      ],
+      "deployer": "0x8bfB2761bA064D3F829F382f444867EE10294b1C",
+      "deployed_at": "2026-10-16T09:28:04.854Z",
+      "reads": "0x30dF4Fb5A884645a07D56F0202DeD370D5195046",
+      "superseded_by": "0x0B4FB25B50800Ac454e870F80011b6f3A06335Cb",
+      "why": "Studio Dev's receipt limit: a filing whose evidence exceeded it ended UNDETERMINED (PoolTogether M-8 on Base); 3 scorecards and 4 checks were on it"
     }
   ]
 }
