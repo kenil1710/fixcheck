@@ -413,6 +413,84 @@
       "superseded_by": "0x50b1756dE161955Fd19b817F9CC5c0b11157f2be",
       "why": "v1 (accepted submission, BASE 27f30c0): superseded by FixCheck 2.0.0 (whole-report scorecards, Code4rena, regression watch); kept untouched",
       "name": "FixRegistry"
+    },
+    {
+      "name": "FixCheck",
+      "address": "0xDc494719D5E29Ac26f23d7064128640C8E2863a3",
+      "deploy_tx": "0xe739bf4d3475e5741b6c2fea4e6bc134cc49b8750633c671fbfbb97c0d973dfe",
+      "file": "contracts/FixCheck.py",
+      "commit": "c0a2410f9a9ac7b3b30fe333ebe1d54cabbecde8",
+      "bytes": 198868,
+      "sha256": "0a50766fe7922e76a7fb492bc60b4aee2f845ae4a3823b06d8ef05f2bee765b5",
+      "constructor_args": [
+        "CANONICAL",
+        3600,
+        86400,
+        200,
+        "0x8bfB2761bA064D3F829F382f444867EE10294b1C",
+        28800
+      ],
+      "deployer": "0x8bfB2761bA064D3F829F382f444867EE10294b1C",
+      "deployed_at": "2026-10-16T09:25:20.545Z",
+      "mode": "CANONICAL",
+      "superseded_by": "0xAE0e6f85D9C41027F5d0B03E4ED4Ae5A07B903e6",
+      "why": "never seeded: file_slot could only use the scorecard's own docs page (PoolTogether lists each chain on its own page)"
+    },
+    {
+      "name": "FixCheckDemo",
+      "address": "0x5016957BEb2E8f8904Dfe8f9a968c23dca8151B6",
+      "deploy_tx": "0x284afa08ee895c46d0032c1510f3d55f0aebfe2fecc0e35ea9c23eb24237dede",
+      "file": "contracts/FixCheck.py",
+      "commit": "c0a2410f9a9ac7b3b30fe333ebe1d54cabbecde8",
+      "bytes": 198868,
+      "sha256": "0a50766fe7922e76a7fb492bc60b4aee2f845ae4a3823b06d8ef05f2bee765b5",
+      "constructor_args": [
+        "DEMO",
+        90,
+        300,
+        200,
+        "0x8bfB2761bA064D3F829F382f444867EE10294b1C",
+        600
+      ],
+      "deployer": "0x8bfB2761bA064D3F829F382f444867EE10294b1C",
+      "deployed_at": "2026-10-16T09:25:34.363Z",
+      "mode": "DEMO",
+      "superseded_by": "0xa2d6fCf5006e912197618c529C8612C4204B5A2a",
+      "why": "never seeded: file_slot could only use the scorecard's own docs page (PoolTogether lists each chain on its own page)"
+    },
+    {
+      "name": "FixStatus",
+      "address": "0x50b1756dE161955Fd19b817F9CC5c0b11157f2be",
+      "deploy_tx": "0xd017b400158fa3cdda7ada148be5ce3645ab0da3ae8550515cfae3630812af9e",
+      "file": "contracts/FixStatus.py",
+      "commit": "c0a2410f9a9ac7b3b30fe333ebe1d54cabbecde8",
+      "bytes": 3765,
+      "sha256": "fc573fbf81dbf2d502d2fde6891428d748f66dbff8a5af69935899c63c5b617d",
+      "constructor_args": [
+        "0xDc494719D5E29Ac26f23d7064128640C8E2863a3"
+      ],
+      "deployer": "0x8bfB2761bA064D3F829F382f444867EE10294b1C",
+      "deployed_at": "2026-10-16T09:25:43.703Z",
+      "reads": "0xDc494719D5E29Ac26f23d7064128640C8E2863a3",
+      "superseded_by": "0x30dF4Fb5A884645a07D56F0202DeD370D5195046",
+      "why": "never seeded: file_slot could only use the scorecard's own docs page (PoolTogether lists each chain on its own page)"
+    },
+    {
+      "name": "FixGate",
+      "address": "0x3c546811AB2b53b284131A35bE105bc937e425CE",
+      "deploy_tx": "0xa61d9f8ee6bcbd88350b7f0463d2e21ab60d55da891b4dbb2f9cc51d63421af1",
+      "file": "contracts/FixGate.py",
+      "commit": "c0a2410f9a9ac7b3b30fe333ebe1d54cabbecde8",
+      "bytes": 3272,
+      "sha256": "66f0117810acda22c16177f0e9feaa21634f463000641869fe24272bcf244a83",
+      "constructor_args": [
+        "0x50b1756dE161955Fd19b817F9CC5c0b11157f2be"
+      ],
+      "deployer": "0x8bfB2761bA064D3F829F382f444867EE10294b1C",
+      "deployed_at": "2026-10-16T09:25:49.530Z",
+      "reads": "0x50b1756dE161955Fd19b817F9CC5c0b11157f2be",
+      "superseded_by": "0xa84D869b9Cd82fB247A5d5c2A9F375627DC7BCB8",
+      "why": "never seeded: file_slot could only use the scorecard's own docs page (PoolTogether lists each chain on its own page)"
     }
   ]
 }
