@@ -136,8 +136,10 @@ add("C1", "Live site numbers match chain", c1, nums.map((n) => `${n.where} ${n.l
 // ---- C2 one set of addresses
 const cur = [dep.FixCheck.address, dep.FixCheckDemo.address, dep.FixStatus.address, dep.FixGate.address].map((a) => a.toLowerCase());
 const old = JSON.parse(readFileSync(root + "docs/superseded/deployments.json", "utf8")).superseded.map((x) => x.address.toLowerCase());
-// the BASE proof (MILESTONE, SUBMISSION, tools/base_proof.mjs) names the accepted v1 addresses on purpose
-const tracked = sh("git", ["ls-files"]).stdout.trim().split("\n").filter((f) => !f.startsWith("docs/superseded/") && !["docs/MILESTONE.md", "docs/SUBMISSION.md", "tools/base_proof.mjs", "docs/research/seed-v2-import.log"].includes(f) && !/\.(png|mp4|webm|ttf|ico|json|log)$/.test(f) || f === "deployments.json");
+// the BASE proof (MILESTONE, SUBMISSION, tools/base_proof.mjs) names the accepted v1 addresses on purpose, as do
+// the dated records of v1 (its round-4 attack report, the steward response, the v1 demo video notes)
+const V1_RECORDS = ["docs/MILESTONE.md", "docs/SUBMISSION.md", "tools/base_proof.mjs", "docs/research/seed-v2-import.log", "docs/ATTACK_REPORT_R4.md", "docs/STEWARD_RESPONSE.md", "docs/demo/youtube.md", "docs/FINAL_CHECK.md"];
+const tracked = sh("git", ["ls-files"]).stdout.trim().split("\n").filter((f) => !f.startsWith("docs/superseded/") && !V1_RECORDS.includes(f) && !/\.(png|mp4|webm|ttf|ico|json|log)$/.test(f) || f === "deployments.json");
 const leaks = tracked.filter((f) => { const s = readFileSync(root + f, "utf8").toLowerCase(); return old.some((a) => s.includes(a)); });
 const siteHtml = (await html("/")).toLowerCase() + (await html("/how-it-works")).toLowerCase();
 const siteOk = cur.every((a) => siteHtml.includes(a)) && !old.some((a) => siteHtml.includes(a));

@@ -7,7 +7,7 @@
  *   D3 INCONCLUSIVE      PoolTogether M-19 `claimPrize` filed against the PrizePool
  *                        (listed in the docs, verified, but Claimable.sol is not in it)
  *   D4 NO-DEFENDER FEE   PoolTogether M-5 (deployed == fix), nobody defends
- *   D5 EXPIRY            Cap M-1 (Cap M-3 is the live round-3 proxy case, docs/DEPLOYED_VERIFICATION.md), never decided; expire() after the decide deadline
+ *   D5 EXPIRY            Cap M-1 (Cap M-3 is the live round-3 proxy case, docs/superseded/DEPLOYED_VERIFICATION-r4.md), never decided; expire() after the decide deadline
  *   D6 MODEL             Mellow M-5 (deployed function changed) decided by the model
  *   D7 REFUSAL           an unpinned report URL: refused, stake stays withdrawable
  *   D8 PREDATES AUDIT    PoolTogether M-9 on OP (deployed 2024-04-18, before the audit) vs a defender: refund

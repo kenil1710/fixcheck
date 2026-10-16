@@ -1,5 +1,5 @@
 /**
- * Round-3 live verification on the DEMO contract (docs/DEPLOYED_VERIFICATION.md).
+ * Round-3 live verification on the DEMO contract (docs/superseded/DEPLOYED_VERIFICATION-r4.md).
  *
  *   V1  report pinned to a commit that exists only in a fork of the Sherlock
  *       judging repo (minanew12's "Update README.md", 6035289) -> refused

@@ -1,5 +1,5 @@
 /**
- * Round-4 live verification on the DEMO contract (docs/DEPLOYED_VERIFICATION.md):
+ * Round-4 live verification on the DEMO contract (docs/superseded/DEPLOYED_VERIFICATION-r4.md):
  * the three round-3 cases again on the round-4 contracts, plus V4.
  *
  *   V1  report pinned to a commit that exists only in a fork of the Sherlock

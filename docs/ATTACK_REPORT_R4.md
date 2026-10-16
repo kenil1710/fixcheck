@@ -196,7 +196,7 @@ Searched this round, beyond the 21 seeded findings:
 - The 99 Sherlock contests in `research_cache/fixed.json` (835 findings marked fixed) were reviewed by name for deployment chain and proxy pattern (from what is publicly known about each protocol, not re-read on chain). Those with upgradeable proxies are mostly on Arbitrum or Base (no log source: Perennial, Tapioca, Superfluid, Ethos), beacon-based (Arrakis: now `BEACON_PROXY`), or route through a dispatcher whose function is not in the compiled contract (Notional). None was checked to the point of a filing.
 - Among the seeded findings the only proxies are Cap's Lender (two checks) and OP's DisputeGameFactory, all partial matches, so (2) fails; the live replay confirms their switches are dated and confirmed by both RPCs (`EVENT`).
 
-So the date-only path stays covered offline: `R3_Reg_ProxyChronology`, `R4_P3_RollbackABA`, `R4_P4_CodeRedeployedAtTheSameAddress` and `R4_P5_SlotReadBeforeTheLastUpgrade` serve the real Ethereum vault (deployed code == audited) as a proxy, with explorer and RPC logs. The live proxy case on the new demo shows the chronology fields stored and confirmed by both RPCs (docs/DEPLOYED_VERIFICATION.md).
+So the date-only path stays covered offline: `R3_Reg_ProxyChronology`, `R4_P3_RollbackABA`, `R4_P4_CodeRedeployedAtTheSameAddress` and `R4_P5_SlotReadBeforeTheLastUpgrade` serve the real Ethereum vault (deployed code == audited) as a proxy, with explorer and RPC logs. The live proxy case on the new demo shows the chronology fields stored and confirmed by both RPCs (docs/superseded/DEPLOYED_VERIFICATION-r4.md).
 
 ## Step 6. Known limitations: fixed now, or why they stay (round-4 fixes 6 and 7)
 
@@ -276,4 +276,4 @@ The round-3 addresses moved to [`superseded/README.md`](superseded/README.md).
 22 checks; 22 unchanged, 0 changed.
 
 
-No seed pins a fork, pull-request or tag commit; every seed's status comment is confirmed on GitHub; every creation proof is `OK`; the three proxies' switches are `EVENT`, confirmed by both RPCs; no seeded function applies an overridden modifier. So no verdict changes. The issues this round closes are shown live in [`DEPLOYED_VERIFICATION.md`](DEPLOYED_VERIFICATION.md) (fork-only report and docs commits refused, a pull-request-only docs commit refused, the Cap proxy's chronology stored and confirmed by both RPCs) and offline in `test/test_attacks_r4.py`.
+No seed pins a fork, pull-request or tag commit; every seed's status comment is confirmed on GitHub; every creation proof is `OK`; the three proxies' switches are `EVENT`, confirmed by both RPCs; no seeded function applies an overridden modifier. So no verdict changes. The issues this round closes are shown live in [`DEPLOYED_VERIFICATION.md`](superseded/DEPLOYED_VERIFICATION-r4.md) (fork-only report and docs commits refused, a pull-request-only docs commit refused, the Cap proxy's chronology stored and confirmed by both RPCs) and offline in `test/test_attacks_r4.py`.
