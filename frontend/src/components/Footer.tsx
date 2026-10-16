@@ -1,12 +1,13 @@
 import Link from "next/link";
-import { DEPLOYMENTS, REGISTRY_ADDRESS, COMMIT, EXPLORER } from "@/lib/deployments";
+import { DEPLOYMENTS, FIXSTATUS_ADDRESS, FIXGATE_ADDRESS, COMMIT, EXPLORER } from "@/lib/deployments";
 import { Mark } from "./Logo";
 
 export function Footer() {
   const rows = [
     ["FixCheck (canonical)", DEPLOYMENTS.canonical.address],
     ["FixCheck (demo, short windows)", DEPLOYMENTS.demo.address],
-    ["FixRegistry (read-only)", REGISTRY_ADDRESS],
+    ["FixStatus (read-only)", FIXSTATUS_ADDRESS],
+    ["FixGate (demo consumer)", FIXGATE_ADDRESS],
   ];
   return (
     <footer className="mt-24 border-t hair">

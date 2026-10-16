@@ -9,8 +9,8 @@ import { Status, statusOf, type StatusKind } from "./Status";
 import { Inline } from "./Inline";
 
 type SortKey = "severity" | "status" | "id";
-const ORDER: Record<StatusKind, number> = { NOT_FIXED: 0, PREDATES_FIX: 1, PREDATES: 2, INCONCLUSIVE: 3, EXPIRED: 4, OPEN: 5, FIXED: 6 };
-const FILTERS: [string, string][] = [["all", "All"], ["FIXED", "Fixed"], ["NOT_FIXED", "Not fixed"], ["PREDATES", "Predates audit"], ["PREDATES_FIX", "Predates fix"], ["INCONCLUSIVE", "Inconclusive"], ["OPEN", "Being checked"]];
+const ORDER: Record<StatusKind, number> = { NOT_FIXED: 0, REGRESSED: 0, PREDATES_FIX: 1, PREDATES: 2, INCONCLUSIVE: 3, EXPIRED: 4, OPEN: 5, FIXED: 6 };
+const FILTERS: [string, string][] = [["all", "All"], ["FIXED", "Fixed"], ["NOT_FIXED", "Not fixed"], ["REGRESSED", "Regressed"], ["PREDATES", "Predates audit"], ["PREDATES_FIX", "Predates fix"], ["INCONCLUSIVE", "Inconclusive"], ["OPEN", "Being checked"]];
 
 export function FindingsTable({ items, showProtocol = false, base = "/checks" }: { items: Check[]; showProtocol?: boolean; base?: string }) {
   const [sort, setSort] = useState<SortKey>("severity");

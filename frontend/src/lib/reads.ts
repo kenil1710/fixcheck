@@ -10,7 +10,7 @@ import { createClient } from "genlayer-js";
 import { studioDevnet } from "genlayer-js/chains";
 import { DEPLOYMENTS, type Deployment } from "./deployments";
 import { plain } from "./plain";
-import type { Check, CheckCode, Config, Defender, Ledger, ProtocolScore, Stats } from "./types";
+import type { AuditorScore, Check, CheckCode, Config, Defender, Ledger, ProtocolScore, ProtocolTotals, Regression, Scorecard, Slot, Stats } from "./types";
 
 export type Result<T> = { ok: true; data: T } | { ok: false; error: string };
 
@@ -49,7 +49,7 @@ export async function view<T>(dep: Deployment, fn: string, args: unknown[] = [])
   } catch (e) {
     if (hit) return { ok: true, data: hit.value as T };
     const msg = String((e as Error)?.message ?? e);
-    return { ok: false, error: /no check #/i.test(msg) ? "NOT_FOUND" : msg.slice(0, 200) };
+    return { ok: false, error: /no check #|no scorecard #|no finding /i.test(msg) ? "NOT_FOUND" : msg.slice(0, 200) };
   }
 }
 
@@ -64,3 +64,18 @@ export const getCheckCode = (id: number, d: Deployment = "canonical") => view<Ch
 export const getDefenders = (id: number, d: Deployment = "canonical") => view<Defender[]>(d, "get_defenders", [id]);
 export const getLedger = (d: Deployment = "canonical") => view<Ledger>(d, "get_ledger");
 export const getConfig = (d: Deployment = "canonical") => view<Config>(d, "get_config");
+
+// v2
+export const getScorecards = (d: Deployment = "canonical", offset = 0, limit = 100) =>
+  view<{ total: number; offset: number; items: Scorecard[] }>(d, "get_scorecards", [offset, limit]);
+export const getScorecard = (id: number, d: Deployment = "canonical") => view<Scorecard>(d, "get_scorecard", [id]);
+export const getScorecardSlots = (id: number, d: Deployment = "canonical") =>
+  view<{ scorecard_id: number; total: number; offset: number; items: Slot[] }>(d, "get_scorecard_slots", [id, 0, 100]);
+export const getSlotChecks = (id: number, fid: string, d: Deployment = "canonical") =>
+  view<{ total: number; offset: number; items: Check[] }>(d, "get_slot_checks", [id, fid, 0, 100]);
+export const getProtocolScorecards = (key: string, d: Deployment = "canonical") =>
+  view<{ total: number; offset: number; items: Scorecard[] }>(d, "get_protocol_scorecards", [key, 0, 100]);
+export const getAuditors = (d: Deployment = "canonical") => view<AuditorScore[]>(d, "get_auditors");
+export const getRegressions = (d: Deployment = "canonical") =>
+  view<{ total: number; offset: number; items: Regression[] }>(d, "get_regressions", [0, 100]);
+export const getProtocolScore = (key: string, d: Deployment = "canonical") => view<ProtocolTotals>(d, "protocol_score", [key]);

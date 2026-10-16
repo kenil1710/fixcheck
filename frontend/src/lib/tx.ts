@@ -1,12 +1,18 @@
 "use client";
 /**
  * Send a write through the injected wallet and follow it to a decision.
- * Phases: signing -> submitted -> validators (reading sources / deciding) -> done | failed.
+ * Phases: signing -> submitted -> validators (reading sources / deciding) ->
+ * accepted -> done | failed, then `finalized` once the network finalizes it.
+ * "done" is shown ONLY after the transaction is ACCEPTED (or FINALIZED), did
+ * not revert, and the contract state was read back and shows the effect
+ * (`confirm`, or the caller's own result for payable methods).
  */
 import { friendly } from "./errors";
 
-export type Phase = "idle" | "signing" | "submitted" | "validators" | "done" | "failed";
-export type TxState = { phase: Phase; hash?: string; status?: string; error?: string; result?: Record<string, unknown> | null; returned?: unknown };
+export type Phase = "idle" | "signing" | "submitted" | "validators" | "accepted" | "done" | "failed";
+export type TxState = { phase: Phase; hash?: string; status?: string; error?: string; result?: Record<string, unknown> | null; returned?: unknown; finalized?: boolean };
+/** Reads the contract after acceptance; true when the write's effect is visible. */
+export type Confirm = () => Promise<boolean>;
 
 const TERMINAL = ["ACCEPTED", "FINALIZED", "UNDETERMINED", "CANCELED"];
 
@@ -26,7 +32,7 @@ function outcome(tx: any, names: Record<string, string>) {
 
 export async function sendWrite(
   account: `0x${string}`, address: `0x${string}`, functionName: string, args: unknown[], value: bigint,
-  on: (s: TxState) => void,
+  on: (s: TxState) => void, confirm?: Confirm,
 ): Promise<TxState> {
   let state: TxState = { phase: "signing" };
   const set = (s: Partial<TxState>) => { state = { ...state, ...s }; on(state); };
@@ -67,15 +73,38 @@ export async function sendWrite(
         if (o.status !== "ACCEPTED" && o.status !== "FINALIZED")
           return (set({ phase: "failed", status: o.status, error: "Validators could not agree (" + o.status.toLowerCase() + "). Nothing was recorded, nothing was taken; you can try again." }), state);
         if (o.reverted) return (set({ phase: "failed", status: o.status, error: friendly(o.reason) }), state);
+        set({ phase: "accepted", status: o.status });
         let result: Record<string, unknown> | null = null;
-        if (functionName === "file_check" || functionName === "counter_stake" || functionName === "withdraw") {
+        if (["file_check", "file_slot", "file_regression", "counter_stake", "withdraw"].includes(functionName)) {
           try {
             const raw = await read.readContract({ address, functionName: "get_last_result", args: [account] });
             result = JSON.parse(plain<string>(raw));
           } catch { /* no result */ }
+          if (result && result.status === "REFUSED") return (set({ phase: "failed", status: o.status, error: friendly(String(result.reason)), result }), state);
+          if (!result || result.status !== "OK") return (set({ phase: "failed", status: o.status, error: "Accepted, but the contract's state could not be read back yet. Reload in a moment before relying on it." }), state);
         }
-        if (result && result.status === "REFUSED") return (set({ phase: "failed", status: o.status, error: friendly(String(result.reason)), result }), state);
-        return (set({ phase: "done", status: o.status, result }), state);
+        if (confirm) {
+          let seen = false;
+          for (let i = 0; i < 6 && !seen; i++) {
+            try { seen = await confirm(); } catch { /* retry */ }
+            if (!seen) await new Promise((r) => setTimeout(r, 3000));
+          }
+          if (!seen) return (set({ phase: "failed", status: o.status, error: "Accepted, but the change is not visible in the contract's state yet. Reload in a moment before relying on it." }), state);
+        }
+        set({ phase: "done", status: o.status, result, finalized: o.status === "FINALIZED" });
+        if (o.status !== "FINALIZED") {
+          void (async () => {
+            const until = Date.now() + 20 * 60_000;
+            while (Date.now() < until) {
+              await new Promise((r) => setTimeout(r, 8000));
+              try {
+                const f = outcome(await read.getTransaction({ hash: hash as never }), names as unknown as Record<string, string>);
+                if (f.status === "FINALIZED") { set({ finalized: true, status: f.status }); return; }
+              } catch { /* keep polling */ }
+            }
+          })();
+        }
+        return state;
       }
       if (Date.now() - started > 15 * 60_000) return (set({ phase: "failed", error: "Still not final after 15 minutes. Follow the transaction in the explorer." }), state);
     }

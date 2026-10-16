@@ -14,8 +14,9 @@ writeFileSync(root + "ADDRESSES.md", md);
 const rd = readFileSync(root + "README.md", "utf8");
 const a = rd.indexOf("## Contracts (Studio Dev, chain 61997)\n\n") + "## Contracts (Studio Dev, chain 61997)\n\n".length;
 const b = rd.indexOf("\n\nOther apps read verdicts");
+if (a < 0 || b < 0) throw new Error("README contracts section not found");
 const c = d.contracts;
-const table = `| Contract | Address |\n|---|---|\n| FixCheck — canonical (1 h counter, 24 h decide) | \`${c.FixCheck.address}\` |\n| FixCheck — demo (90 s counter, 300 s decide) | \`${c.FixCheckDemo.address}\` |\n| FixRegistry — read-only consumer | \`${c.FixRegistry.address}\` |\n\nDeployed from commit \`${c.FixCheck.commit}\` with the bytes of \`git show <commit>:<file>\`; \`node tools/verify_source.mjs\` reads the code back from the chain and confirms all three are byte-identical to HEAD. sha256 and deploy transactions: [\`ADDRESSES.md\`](ADDRESSES.md). Explorer: https://explorer-studio-dev.genlayer.com/`;
+const table = `| Contract | Address |\n|---|---|\n| FixCheck 2.0.0 — canonical (1 h counter, 24 h decide, 8 h to fill a scorecard) | \`${c.FixCheck.address}\` |\n| FixCheck 2.0.0 — demo (90 s counter, 300 s decide, 10 min scorecards) | \`${c.FixCheckDemo.address}\` |\n| FixStatus — read-only consumer (\`is_fixed\`, \`status\`, \`protocol_score\`) | \`${c.FixStatus.address}\` |\n| FixGate — demo consumer (refuses NOT_FIXED / REGRESSED) | \`${c.FixGate.address}\` |\n\nAll four deployed from commit \`${c.FixCheck.commit}\` with the bytes of \`git show <commit>:<file>\`; \`node tools/verify_source.mjs\` reads the code back from the chain (\`gen_getContractCode\`) and confirms each is byte-identical to HEAD. sha256 and deploy transactions: [\`ADDRESSES.md\`](ADDRESSES.md). Explorer: https://explorer-studio-dev.genlayer.com/`;
 writeFileSync(root + "README.md", rd.slice(0, a) + table + rd.slice(b));
 console.log(md);
 // frontend constants
@@ -24,7 +25,9 @@ export const DEPLOYMENTS = {
   canonical: { address: "${c.FixCheck.address}" as \`0x\${string}\`, counterWindowS: ${c.FixCheck.constructor_args[1]}, decideWindowS: ${c.FixCheck.constructor_args[2]}, label: "Canonical" },
   demo: { address: "${c.FixCheckDemo.address}" as \`0x\${string}\`, counterWindowS: ${c.FixCheckDemo.constructor_args[1]}, decideWindowS: ${c.FixCheckDemo.constructor_args[2]}, label: "Demo" },
 } as const;
-export const REGISTRY_ADDRESS = "${c.FixRegistry.address}" as \`0x\${string}\`;
+export const FIXSTATUS_ADDRESS = "${c.FixStatus.address}" as \`0x\${string}\`;
+export const FIXGATE_ADDRESS = "${c.FixGate.address}" as \`0x\${string}\`;
+export const SCORECARD_WINDOW_S = ${c.FixCheck.constructor_args[5]};
 export const COMMIT = "${c.FixCheck.commit}";
 export const EXPLORER = "https://explorer-studio-dev.genlayer.com";
 export type Deployment = keyof typeof DEPLOYMENTS;

@@ -1,0 +1,8 @@
+09:31:09 import sherlock-audit/2024-05-pooltogether-judging/88298eacec6f178fd0b5f9 ACCEPTED true 0x8c06b1f89e3ef9cdd2acd2e1193b0d89ec854403cfa21163014d3b05e92d3923 116s >acknowledgedAfile_deadline��˴5findings�marked_fixedqnot_mitigatedscorecard_id	unmarked
+09:31:47 import code-423n4/2023-07-pooltogether-findings/ec193297735caa64d472a6d89 ACCEPTED true 0x9e7e400df626366b2dfcbe3037b32dcb324d9d7e5368d8e8630c6e0335d5ab4b 37s >acknowledged	file_deadline��˴5findings�marked_fixed�not_mitigated9scorecard_idunmarked	
+09:32:35 import sherlock-audit/2025-07-mellow-flexible-vaults-judging/4bcbdcfe6437 ACCEPTED true 0x7a4830da9e44599932049efb1b4166830911a1c2a2c3868cb232345c119b61db 45s >acknowledgedfile_deadline��˴5findingsymarked_fixedinot_mitigatedscorecard_idunmarked
+GenLayer RPC error (gen_call): fetch failed
+  … get_scorecards attempt 1 hit transient RPC noise, waiting 4s
+09:33:30 scorecard 3 sherlock github:mellow-finance/docs 15 findings, 13 marked fixed, 0 ack, 0 not mitigated, 2 unmarked; filing until 2026-10-16T17:32:19.000Z
+09:33:30 scorecard 2 code4rena github:generationsoftware/pt-dev-docs 36 findings, 27 marked fixed, 1 ack, 7 not mitigated, 1 unmarked; filing until 2026-10-16T17:31:19.000Z
+09:33:30 scorecard 1 sherlock github:generationsoftware/pt-dev-docs 22 findings, 14 marked fixed, 8 ack, 0 not mitigated, 0 unmarked; filing until 2026-10-16T17:30:48.000Z

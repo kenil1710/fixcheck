@@ -1,4 +1,4 @@
-export type Verdict = "FIXED" | "NOT_FIXED" | "INCONCLUSIVE" | "PREDATES_AUDIT" | "PREDATES_FIX" | "";
+export type Verdict = "FIXED" | "NOT_FIXED" | "INCONCLUSIVE" | "PREDATES_AUDIT" | "PREDATES_FIX" | "REGRESSED" | "";
 export type CheckState = "OPEN" | "DECIDED" | "EXPIRED";
 
 export type Check = {
@@ -13,11 +13,26 @@ export type Check = {
   counter_deadline: number; decide_deadline: number; state: CheckState; verdict: Verdict; basis: string;
   model_votes: string; quote_lines: string; quote_sha256: string; decided_at: number;
   challenger_paid_wei: string; fee_paid_wei: string;
+  switch_status?: string; switch_block?: number; switched_at?: number; code_born?: number;
+  prior_check: number; scorecard: number; auditor: string;
 };
 export type CheckCode = { check_id: number; audited: string; fix: string; deployed: string; section: string };
 export type Defender = { address: string; stake_wei: string; at: number };
-export type Score = { checks: number; open: number; fixed: number; not_fixed: number; inconclusive: number; expired: number; predates_audit: number; predates_fix: number };
+export type Score = { checks: number; open: number; fixed: number; not_fixed: number; inconclusive: number; expired: number; predates_audit: number; predates_fix: number; regressed: number };
 export type ProtocolScore = Score & { protocol: string };
-export type Stats = Score & { protocols: number; staked_open_wei: string };
+export type Stats = Score & { protocols: number; scorecards: number; regressions: number; staked_open_wei: string };
 export type Ledger = { balance_wei: string; open_stakes_wei: string; claimable_wei: string; fees_wei: string; total_withdrawn_wei: string; total_fees_swept_wei: string; invariant_holds: boolean };
-export type Config = { version: string; mode: string; counter_window_s: number; decide_window_s: number; fee_bps: number; fee_recipient: string; min_stake_wei: string; max_defenders: number; chains: string[] };
+export type Config = { version: string; mode: string; counter_window_s: number; decide_window_s: number; fee_bps: number; fee_recipient: string; min_stake_wei: string; max_defenders: number; chains: string[]; scorecard_window_s: number; max_findings: number; auditors: string[] };
+export type FindingClass = "FIXED_MARKED" | "ACKNOWLEDGED" | "NOT_MITIGATED" | "UNMARKED";
+export type Scorecard = {
+  scorecard_id: number; auditor: string; report_url: string; docs_url: string; protocol: string; report_sha256: string;
+  report_reach: string; docs_reach: string; findings: number; marked_fixed: number; acknowledged: number; not_mitigated: number;
+  unmarked: number; opened_at: number; file_deadline: number; state: "OPEN" | "CLOSED"; closed_at: number; filed: number;
+  not_checked: number; verdicts: Score;
+};
+export type SlotCheck = { check_id: number; chain: string; address: string; state: CheckState; verdict: Verdict; basis: string };
+export type Slot = { index: number; finding_id: string; cls: FindingClass; title: string; checks_n: number; checks: SlotCheck[]; outcome: string };
+export type AuditorScore = Score & { auditor: string; scorecards: number };
+export type Regression = { check: Check; prior: { check_id: number; implementation: string; verdict: string; basis: string; decided_at: number; slot_block: number } };
+export type ProtocolTotals = Score & { protocol: string; total: number };
+export type FixStatusAnswer = { status: string; check_id: number; basis: string; decided_at: number; open_check_id: number; reachable: boolean; error?: string };
