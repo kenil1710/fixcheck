@@ -567,5 +567,57 @@ class V2_06_Consumers(unittest.TestCase):
             self.assertNotIn(".replace(", src)
 
 
+
+# =============================================================================
+# 7. Studio Dev's receipt limit on a non-deterministic result
+# =============================================================================
+
+class V2_07_ReceiptLimit(unittest.TestCase):
+    """Studio Dev ends a round UNDETERMINED when the leader's result is larger
+    than its receipt limit ("out_of receipt nondet_output", seen live on the
+    Base filing of PoolTogether M-8 at 17,655 bytes). v2 refuses such a
+    result deterministically (EVIDENCE_TOO_LARGE) and keeps every real case
+    under the budget."""
+
+    def test_every_real_case_fits(self):
+        for case in list(B.CASES.values()):
+            w = B.World()
+            p = {"report_url": MOD._clean_url(case["report"]), "fid": case["id"], "fn": case["fn"],
+                 "audited_url": MOD._clean_url(case["audited"]), "fix_url": MOD._clean_url(case["fix"]),
+                 "chain": case["chain"], "address": case["address"].lower(), "docs_url": MOD._clean_url(case["docs"])}
+            ev = MOD.gather(p)
+            self.assertNotEqual(ev.get("refused"), "EVIDENCE_TOO_LARGE", case["protocol"] + " " + case["id"])
+            if "refused" not in ev:
+                self.assertLessEqual(len(json.dumps(ev, sort_keys=True)), MOD.NONDET_BUDGET)
+                self.assertLessEqual(len(ev["section"]), MOD.SECTION_CAP)
+        w = c4_world()
+        self.assertLessEqual(len(json.dumps(MOD.gather_import({"report_url": C4_REPORT, "docs_url": PT_DOCS,
+                                                                 "auditor": "code4rena"}), sort_keys=True)),
+                             MOD.NONDET_BUDGET)
+
+    def test_an_oversize_result_is_refused_and_the_stake_stays_withdrawable(self):
+        w = B.World()
+        old = MOD.NONDET_BUDGET
+        MOD.NONDET_BUDGET = 3000
+        try:
+            out = w.file(B.CLAIMER)
+        finally:
+            MOD.NONDET_BUDGET = old
+        self.assertEqual((out["status"], out["reason"]), ("REFUSED", "EVIDENCE_TOO_LARGE"))
+        self.assertEqual(int(w.c.checks_n), 0)
+        self.assertEqual(w.claimable(B.CHALLENGER), GEN)
+
+    def test_an_oversize_import_is_refused_whole(self):
+        w = B.World()
+        old = MOD.NONDET_BUDGET
+        MOD.NONDET_BUDGET = 1000
+        try:
+            with self.assertRaises(MOD.gl.vm.UserError) as e:
+                w.call(B.ANYONE, "import_report", PT_REPORT, PT_DOCS)
+        finally:
+            MOD.NONDET_BUDGET = old
+        self.assertIn("EVIDENCE_TOO_LARGE", e.exception.message)
+
+
 if __name__ == "__main__":
     unittest.main()

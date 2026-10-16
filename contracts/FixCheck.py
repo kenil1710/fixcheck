@@ -284,7 +284,13 @@ MAX_URL = 300
 MAX_FN = 64
 MAX_FID = 16
 FUNCTION_CAP = 16000                # chars of one extracted function
-SECTION_CAP = 12000                 # chars of the finding section kept
+SECTION_CAP = 5000                  # chars of the finding section kept (v2: Studio's receipt limit)
+# v2: GenLayer Studio Dev refuses a non-deterministic result larger than its
+# receipt limit ("out_of receipt nondet_output": the round ends UNDETERMINED
+# and nothing is written). A larger result is refused deterministically
+# instead, so the filer sees why and the stake stays withdrawable.
+NONDET_BUDGET = 14500               # bytes of a gather result (JSON)
+IMPORT_TITLE_CAP = 100              # chars of each finding title kept by import_report
 TITLE_CAP = 200
 MAX_QUOTES = 12                     # lines one answer may quote
 MAX_STORED_QUOTES = 6               # substantive lines kept per verdict
@@ -3253,7 +3259,7 @@ def gather(p: dict, slot_block: int = -1) -> dict:
     title = sec["title"]
     if len(title) > TITLE_CAP:
         title = title[:TITLE_CAP]
-    return {
+    return within_budget({
         "title": title,
         "section": sec["text"][:SECTION_CAP],
         "section_sha256": _sha(sec["text"]),
@@ -3293,7 +3299,15 @@ def gather(p: dict, slot_block: int = -1) -> dict:
         "aud_canon_sha256": _sha(aud["canon"]),
         "fix_canon_sha256": _sha(fix["canon"]),
         "dep_canon_sha256": _sha(dep["canon"]) if dep.get("ok") else "",
-    }
+    })
+
+
+def within_budget(out: dict) -> dict:
+    """v2: the result itself, or a refusal when it would exceed Studio's
+    receipt limit (NONDET_BUDGET)."""
+    if len(json.dumps(out, sort_keys=True)) > NONDET_BUDGET:
+        return {"refused": "EVIDENCE_TOO_LARGE"}
+    return out
 
 
 def gather_import(p: dict) -> dict:
@@ -3335,8 +3349,9 @@ def gather_import(p: dict) -> dict:
     # scorecard - one of the auditor's own fix links is in its GitHub account
     if docs_repo(p["docs_url"])["owner"] not in fix_owners(rep["text"], p["auditor"], en["items"]):
         return {"refused": "PROTOCOL_NOT_IN_REPORT"}
-    return {"report_sha256": rep["sha256"], "report_reach": report_reach, "docs_reach": got["proof"],
-            "items": en["items"]}
+    items = [[x[0], x[1], x[2][:IMPORT_TITLE_CAP]] for x in en["items"]]
+    return within_budget({"report_sha256": rep["sha256"], "report_reach": report_reach, "docs_reach": got["proof"],
+                          "items": items})
 
 
 def gather_regression(p: dict, slot_block: int = -1) -> dict:
@@ -3370,14 +3385,14 @@ def gather_regression(p: dict, slot_block: int = -1) -> dict:
     if "refused" in sw:
         return sw
     dep = d["dep"]
-    return {
+    return within_budget({
         "impl": d["impl"], "impl_source_sha256": d["impl_source_sha256"], "source_sha256": d["source_sha256"],
         "slot_block": d["slot_block"], "compiled": d["compiled"], "dep_status": d["dep_status"],
         "impl_created_at": ib["at"], "impl_code_status": impl_code_st,
         "switch_status": sw["status"], "switch_block": sw["block"], "switched_at": sw["at"],
         "dep_code": dep["code"] if dep.get("ok") else "",
         "dep_canon_sha256": _sha(dep["canon"]) if dep.get("ok") else "",
-    }
+    })
 
 
 def code_born(impl: str, created_at: int, impl_created_at: int, switched_at: int = 0) -> int:
